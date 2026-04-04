@@ -1,0 +1,17 @@
+{
+  "name": "product_intro",
+  "default_output_mode": "pptx+html",
+  "brief_hints": {
+    "产品定位": "产品介绍型材料",
+    "第一购买理由": "快速理解产品价值与商业回报",
+    "最强证据": "一眼看懂的产品样例页",
+    "最终 CTA": "约一次 demo 或试跑"
+  },
+  "hero_pages": [
+    { "locator": "first", "role": "hero_cover", "label": "封面" },
+    { "locator": "ratio:0.13", "role": "hero_proof", "label": "样例/证据" },
+    { "locator": "ratio:0.16", "role": "hero_value", "label": "核心能力" },
+    { "locator": "ratio:0.61", "role": "hero_diff", "label": "差异化" },
+    { "locator": "last", "role": "hero_cta", "label": "CTA" }
+  ]
+}

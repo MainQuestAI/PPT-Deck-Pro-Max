@@ -1,0 +1,17 @@
+{
+  "name": "internal_strategy",
+  "default_output_mode": "pptx+html",
+  "brief_hints": {
+    "产品定位": "内部战略汇报材料",
+    "第一购买理由": "统一内部判断，锁定战略方向与资源优先级",
+    "最强证据": "关键矛盾诊断页 + 战略路径页",
+    "最终 CTA": "确认方向、责任与阶段目标"
+  },
+  "hero_pages": [
+    { "locator": "first", "role": "hero_cover", "label": "封面" },
+    { "locator": "ratio:0.10", "role": "hero_problem", "label": "核心矛盾" },
+    { "locator": "ratio:0.36", "role": "hero_system", "label": "战略路径" },
+    { "locator": "ratio:0.58", "role": "hero_diff", "label": "取舍逻辑" },
+    { "locator": "last", "role": "hero_cta", "label": "行动收口" }
+  ]
+}

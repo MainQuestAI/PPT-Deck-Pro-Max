@@ -1,0 +1,169 @@
+{
+  "layout_alignment": {
+    "rollback_stage": "geometry",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_page_skeletons.md",
+      "deck_geometry_rules.md",
+      "deck_visual_system.md"
+    ],
+    "why": "对齐、共轴、居中和组件锚点属于页面骨架与几何规则问题，不应只在出图代码层做临时补丁。",
+    "suggested_action": "先修页面骨架、对齐轴和锚点规则，再重建该页。"
+  },
+  "layout_balance": {
+    "rollback_stage": "geometry",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_page_skeletons.md",
+      "deck_geometry_rules.md"
+    ],
+    "why": "主体区失衡、重心偏移和留白预算失控，通常是 archetype 占比与 skeleton 设计错误。",
+    "suggested_action": "先重算主体区占比和内容密度，再进入出图。"
+  },
+  "geometry_broken": {
+    "rollback_stage": "geometry",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_page_skeletons.md",
+      "deck_geometry_rules.md"
+    ],
+    "why": "线断、节点不在轴上、时间轴不共心属于结构性几何错误，应回退到骨架层修复。",
+    "suggested_action": "优先修复几何规则与连接锚点，不要直接改单条线坐标。"
+  },
+  "visual_hierarchy": {
+    "rollback_stage": "visual_system",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_visual_system.md",
+      "deck_component_tokens.md",
+      "deck_theme_tokens.json"
+    ],
+    "why": "主次层级不清、视觉重心失焦通常源于视觉系统和组件权重设计不足。",
+    "suggested_action": "重新定义主角、标题层级、重点色与组件权重，再重建该页。"
+  },
+  "audience_mismatch": {
+    "rollback_stage": "brief",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_brief.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "材料没有对准真正决策者，本质上是产品主语、受众和语言层级没有锁准。",
+    "suggested_action": "先回到 brief 重锁第一受众与价值表达，再重写前几页。"
+  },
+  "buying_reason_blurry": {
+    "rollback_stage": "brief",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_brief.md",
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "客户看完不知道为什么现在值得买，说明第一购买理由没有被前置。",
+    "suggested_action": "先重锁第一购买理由和前五页的推进顺序，再回到页面。"
+  },
+  "hero_page_weak": {
+    "rollback_stage": "hero_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "关键页打不穿通常不是画得不够多，而是胜负点、证据点和结论句没有锁住。",
+    "suggested_action": "先重写关键页的结论、证据与主视觉主角，再回到设计层。"
+  },
+  "proof_not_visible": {
+    "rollback_stage": "hero_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "证据没有被看见，本质上是业务弹药被埋没或没有被提升为页面主角。",
+    "suggested_action": "先提升样例、数据或案例证据的主位置，再重建页面结构。"
+  },
+  "objection_unanswered": {
+    "rollback_stage": "hero_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_brief.md",
+      "deck_clean_pages.md",
+      "deck_hero_pages.md"
+    ],
+    "why": "关键顾虑没有被回答，会直接削弱成交意愿。",
+    "suggested_action": "先把可信度、数据安全或落地门槛前置回应，再调整证明页顺序。"
+  },
+  "proof_sequence_broken": {
+    "rollback_stage": "hero_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "证据顺序错了，即使单页成立，也无法形成整体说服链。",
+    "suggested_action": "先重排问题、方案、样例、差异化和 CTA 的顺序，再进入重建。"
+  },
+  "cta_weak": {
+    "rollback_stage": "brief",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_brief.md",
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "CTA 弱往往反映商业动作没有锁死，不能只在结尾页改一句文案。",
+    "suggested_action": "先回到 brief 重锁最终商业动作，再同步 CTA 页与收口逻辑。"
+  },
+  "commercial_ask_unclear": {
+    "rollback_stage": "brief",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_brief.md",
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "商业动作不明确，会让客户知道你在说什么，但不知道下一步怎么合作。",
+    "suggested_action": "先重写合作入口、试点范围和下一步动作，再更新收口页。"
+  },
+  "component_drift": {
+    "rollback_stage": "visual_system",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_visual_system.md",
+      "deck_component_tokens.md",
+      "deck_theme_tokens.json"
+    ],
+    "why": "组件漂移说明页面使用了未定义的视觉语法或偏离既有 token。",
+    "suggested_action": "先修组件家族与 token，再统一重建相关页。"
+  },
+  "density_issue": {
+    "rollback_stage": "clean_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_clean_pages.md",
+      "deck_layout_v1.md"
+    ],
+    "why": "信息过密或过空首先是逐页内容压缩和结构分配问题，不应只靠缩字号。",
+    "suggested_action": "先重做该页的内容压缩或拆页，再回到构建。"
+  },
+  "generic_ai_feel": {
+    "rollback_stage": "visual_system",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_vibe_brief.md",
+      "deck_visual_system.md",
+      "deck_component_tokens.md"
+    ],
+    "why": "普通 AI 味通常来自视觉系统松散、组件泛化和证据页缺乏产品化表达。",
+    "suggested_action": "先收紧 vibe、组件与关键页表达，再重建页面。"
+  },
+  "other": {
+    "rollback_stage": "manual_review",
+    "recommended_role": "review",
+    "target_files": [
+      "deck_review_report.md"
+    ],
+    "why": "无法自动分类的问题需要先由 Review AI 或老板重新定性，再分配回退层。",
+    "suggested_action": "先补定性，再决定回退到 brief、visual、geometry 还是 build。"
+  }
+}

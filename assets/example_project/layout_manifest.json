@@ -1,0 +1,254 @@
+{
+  "pages": [
+    {
+      "page_id": "slide_01",
+      "role": "hero_cover",
+      "archetype": "hero_cover",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.38,
+        "min": 0.26,
+        "max": 0.56
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "left_column + right_visual",
+        "主视觉边界": "x=7.1..12.4",
+        "对齐轴": "right_visual_center@0.84",
+        "组件组关系": "title_group -> proof_strip -> right_flow_cluster",
+        "预期占比": "0.38"
+      }
+    },
+    {
+      "page_id": "slide_02",
+      "role": "hero_value",
+      "archetype": "diagnostic_board",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.52,
+        "min": 0.4,
+        "max": 0.7
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "three_cards",
+        "主视觉边界": "none",
+        "对齐轴": "main_group_center@0.50",
+        "组件组关系": "title -> statement_bar -> three_cards",
+        "预期占比": "0.52"
+      }
+    },
+    {
+      "page_id": "slide_03",
+      "role": "hero_problem",
+      "archetype": "diagnostic_board",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.58,
+        "min": 0.45999999999999996,
+        "max": 0.76
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "dual_timeline",
+        "主视觉边界": "none",
+        "对齐轴": "dual_columns@0.50",
+        "组件组关系": "title -> statement_bar -> dual_timeline",
+        "预期占比": "0.58"
+      }
+    },
+    {
+      "page_id": "slide_04",
+      "role": "hero_value",
+      "archetype": "diagnostic_board",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.5,
+        "min": 0.38,
+        "max": 0.6799999999999999
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "three_readiness_cards",
+        "主视觉边界": "none",
+        "对齐轴": "main_group_center@0.50",
+        "组件组关系": "title -> statement_bar -> readiness_cards -> closing_bar",
+        "预期占比": "0.50"
+      }
+    },
+    {
+      "page_id": "slide_05",
+      "role": "hero_proof",
+      "archetype": "proof_board",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.61,
+        "min": 0.49,
+        "max": 0.79
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "input_feedback_result",
+        "主视觉边界": "center_band",
+        "对齐轴": "comparison_grid@0.50",
+        "组件组关系": "input_card -> feedback_cards -> result_strip",
+        "预期占比": "0.61"
+      }
+    },
+    {
+      "page_id": "slide_06",
+      "role": "hero_system",
+      "archetype": "system_map",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.56,
+        "min": 0.44000000000000006,
+        "max": 0.74
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "central_loop",
+        "主视觉边界": "x=2.0..11.1",
+        "对齐轴": "system_center@0.50",
+        "组件组关系": "data_layer -> persona_layer -> execution_layer",
+        "预期占比": "0.56"
+      }
+    },
+    {
+      "page_id": "slide_07",
+      "role": "hero_diff",
+      "archetype": "comparison_board",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.54,
+        "min": 0.42000000000000004,
+        "max": 0.72
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "two_columns",
+        "主视觉边界": "none",
+        "对齐轴": "dual_columns@0.50",
+        "组件组关系": "old_way vs mirrorworld",
+        "预期占比": "0.54"
+      }
+    },
+    {
+      "page_id": "slide_08",
+      "role": "hero_value",
+      "archetype": "value_stack",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.48,
+        "min": 0.36,
+        "max": 0.6599999999999999
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "four_value_cards",
+        "主视觉边界": "none",
+        "对齐轴": "card_grid@0.50",
+        "组件组关系": "speed -> confidence -> reuse -> governance",
+        "预期占比": "0.48"
+      }
+    },
+    {
+      "page_id": "slide_09",
+      "role": "hero_value",
+      "archetype": "process_or_timeline",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.53,
+        "min": 0.41000000000000003,
+        "max": 0.71
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "phased_roadmap",
+        "主视觉边界": "none",
+        "对齐轴": "horizontal_flow@0.50",
+        "组件组关系": "pilot -> scale -> institutionalize",
+        "预期占比": "0.53"
+      }
+    },
+    {
+      "page_id": "slide_10",
+      "role": "hero_cta",
+      "archetype": "cta_board",
+      "main_group": {
+        "center_x": 0.5,
+        "expected_center_x": 0.5,
+        "tolerance": 0.06
+      },
+      "occupancy": {
+        "ratio": 0.41,
+        "min": 0.29,
+        "max": 0.59
+      },
+      "alignment_groups": [],
+      "connectors": [],
+      "cards": [],
+      "skeleton": {
+        "主体区边界": "left_value + right_action",
+        "主视觉边界": "none",
+        "对齐轴": "dual_columns@0.50",
+        "组件组关系": "offer -> next_step",
+        "预期占比": "0.41"
+      }
+    }
+  ]
+}

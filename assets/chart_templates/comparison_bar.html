@@ -1,0 +1,76 @@
+<!--
+Template: comparison_bar
+Replace placeholders before rendering:
+{{TITLE}}
+{{SUBTITLE}}
+{{ROWS}}
+
+Example row:
+<div class="row">
+  <div class="label">品牌记忆</div>
+  <div class="track"><div class="bar positive" style="width: 72%"></div></div>
+  <div class="value">72</div>
+</div>
+-->
+<section class="comparison-bar-card">
+  <div class="meta">COMPARISON BAR</div>
+  <h3>{{TITLE}}</h3>
+  <p>{{SUBTITLE}}</p>
+  <div class="rows">
+    {{ROWS}}
+  </div>
+</section>
+
+<style>
+  .comparison-bar-card {
+    width: 100%;
+    padding: 28px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #f5f7fa;
+    font-family: "Noto Sans SC", sans-serif;
+  }
+  .comparison-bar-card .meta {
+    font: 11px/1.2 "IBM Plex Sans", sans-serif;
+    letter-spacing: 0.12em;
+    color: #4da3ff;
+    margin-bottom: 10px;
+  }
+  .comparison-bar-card h3 {
+    margin: 0 0 8px;
+    font: 700 28px/1.25 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+  }
+  .comparison-bar-card p {
+    margin: 0 0 20px;
+    color: #b9c2cf;
+    font-size: 14px;
+  }
+  .comparison-bar-card .rows {
+    display: grid;
+    gap: 14px;
+  }
+  .comparison-bar-card .row {
+    display: grid;
+    grid-template-columns: 120px 1fr 44px;
+    gap: 12px;
+    align-items: center;
+  }
+  .comparison-bar-card .label,
+  .comparison-bar-card .value {
+    font-size: 14px;
+  }
+  .comparison-bar-card .track {
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .comparison-bar-card .bar {
+    height: 100%;
+    border-radius: 999px;
+  }
+  .comparison-bar-card .bar.positive { background: linear-gradient(90deg, #16c79a, #4da3ff); }
+  .comparison-bar-card .bar.warning { background: linear-gradient(90deg, #ff8b5c, #ffb36a); }
+  .comparison-bar-card .bar.neutral { background: linear-gradient(90deg, #90a4b7, #c1cad5); }
+</style>

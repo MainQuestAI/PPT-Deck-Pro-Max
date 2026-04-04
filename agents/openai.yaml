@@ -1,0 +1,54 @@
+interface:
+  display_name: "商业Deck编排器"
+  short_description: "将业务Brief、胜负页、视觉系统、出图与评审组织成高质量商业Deck生产流程"
+  default_prompt: "Use $deck-production-orchestrator 将这份业务Brief、方案文档或参考Deck编排成高质量商业Deck生产流程。"
+
+policy:
+  allow_implicit_invocation: true
+
+agents:
+  brief:
+    mission: "锁产品主语、购买理由、证据链与 CTA，避免材料退化成解释型文档。"
+    inputs:
+      - deck_brief.md
+      - 原始业务材料
+      - 参考 deck
+    outputs:
+      - deck_brief.md
+      - deck_hero_pages.md
+
+  visual:
+    mission: "锁视觉世界观、组件系统、几何规则和 archetype，避免风格漂移和版面不稳。"
+    inputs:
+      - deck_vibe_brief.md
+      - deck_clean_pages.md
+      - deck_visual_system.md
+      - deck_component_tokens.md
+      - deck_geometry_rules.md
+      - deck_page_skeletons.md
+    outputs:
+      - deck_visual_system.md
+      - deck_component_tokens.md
+      - deck_theme_tokens.json
+      - deck_geometry_rules.md
+      - deck_page_skeletons.md
+
+  build:
+    mission: "按页构建成品，只消费当前页上下文和已锁定视觉系统。"
+    inputs:
+      - build_context.json
+      - slide_state.json
+      - layout_manifest.json
+    outputs:
+      - pptx/html 成品页
+      - 页级 PNG
+      - layout_manifest.json
+
+  review:
+    mission: "基于 montage、页级 PNG 和状态文件做多模态商业评审，并返回结构化 findings。"
+    inputs:
+      - review_package.json
+      - deck_review_report.md
+    outputs:
+      - deck_review_findings.json
+      - review_rollback_plan.json

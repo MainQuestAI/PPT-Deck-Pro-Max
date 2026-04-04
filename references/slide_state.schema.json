@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Slide State",
+  "type": "object",
+  "required": ["project_id", "global_status", "visual_locked", "output_mode", "pages"],
+  "properties": {
+    "project_id": { "type": "string", "minLength": 1 },
+    "global_status": {
+      "type": "string",
+      "enum": ["briefing", "designing", "building", "awaiting_review", "reworking", "qa_failed", "ready"]
+    },
+    "visual_locked": { "type": "boolean" },
+    "output_mode": {
+      "type": "string",
+      "enum": ["pptx", "html", "pptx+html"]
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_id", "role", "status", "qa_status", "qa_reason", "visual_status", "content_hash", "css_components_used"],
+        "properties": {
+          "page_id": { "type": "string", "pattern": "^slide_[0-9]{2,}$" },
+          "role": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "awaiting_visual_lock", "building", "awaiting_review", "reworking", "ready", "qa_failed", "done"]
+          },
+          "qa_status": {
+            "type": "string",
+            "enum": ["pending", "passed", "failed"]
+          },
+          "qa_reason": { "type": "string" },
+          "visual_status": {
+            "type": "string",
+            "enum": ["pending", "locked", "needs_rework"]
+          },
+          "rollback_stage": { "type": "string" },
+          "rollback_owner": { "type": "string" },
+          "rollback_targets": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "rollback_reason": { "type": "string" },
+          "rollback_routes": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "content_hash": { "type": "string" },
+          "css_components_used": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

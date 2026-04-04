@@ -1,0 +1,16 @@
+{
+  "name": "comparison_bar",
+  "use_for": "对比关系、优先级对比、前后差异",
+  "template_file": "./comparison_bar.html",
+  "structure": {
+    "type": "horizontal_bar",
+    "series_count": 1,
+    "category_axis": "left",
+    "value_axis": "bottom"
+  },
+  "rules": [
+    "默认不超过 6 个类别",
+    "优先显示相对大小，不强行塞入过多标签",
+    "正向值用 positive，风险值用 warning"
+  ]
+}

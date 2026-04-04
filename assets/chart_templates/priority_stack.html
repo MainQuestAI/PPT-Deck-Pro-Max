@@ -1,0 +1,81 @@
+<!--
+Template: priority_stack
+Replace placeholders before rendering:
+{{TITLE}}
+{{SUBTITLE}}
+{{STACKS}}
+
+Example stack:
+<div class="stack">
+  <div class="level">P1</div>
+  <div class="label">新品概念测试</div>
+  <div class="text">优先进入首批试点，ROI 最直接。</div>
+</div>
+-->
+<section class="priority-stack-card">
+  <div class="meta">PRIORITY STACK</div>
+  <h3>{{TITLE}}</h3>
+  <p>{{SUBTITLE}}</p>
+  <div class="stacks">
+    {{STACKS}}
+  </div>
+</section>
+
+<style>
+  .priority-stack-card {
+    width: 100%;
+    padding: 28px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #f5f7fa;
+    font-family: "Noto Sans SC", sans-serif;
+  }
+  .priority-stack-card .meta {
+    font: 11px/1.2 "IBM Plex Sans", sans-serif;
+    letter-spacing: 0.12em;
+    color: #4da3ff;
+    margin-bottom: 10px;
+  }
+  .priority-stack-card h3 {
+    margin: 0 0 8px;
+    font: 700 28px/1.25 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+  }
+  .priority-stack-card p {
+    margin: 0 0 20px;
+    color: #b9c2cf;
+    font-size: 14px;
+  }
+  .priority-stack-card .stacks {
+    display: grid;
+    gap: 12px;
+  }
+  .priority-stack-card .stack {
+    display: grid;
+    grid-template-columns: 52px 180px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .priority-stack-card .level {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255,139,92,0.18), rgba(77,163,255,0.16));
+    color: #ffb36a;
+    font: 700 15px/1 "IBM Plex Sans", sans-serif;
+  }
+  .priority-stack-card .label {
+    font: 700 16px/1.3 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+  }
+  .priority-stack-card .text {
+    color: #b9c2cf;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+</style>

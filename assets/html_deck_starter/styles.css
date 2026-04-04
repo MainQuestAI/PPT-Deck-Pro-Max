@@ -1,0 +1,31 @@
+:root {
+  --bg: #07131e;
+  --panel: rgba(255, 255, 255, 0.06);
+  --text: #eaf2f9;
+  --accent: #36a3ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #11263a 0%, var(--bg) 55%);
+  color: var(--text);
+  font-family: "Source Han Sans SC", sans-serif;
+}
+
+.slide {
+  width: 1280px;
+  min-height: 720px;
+  margin: 0 auto;
+  padding: 48px 64px;
+}
+
+.section-label {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

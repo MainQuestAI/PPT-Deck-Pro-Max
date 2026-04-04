@@ -1,0 +1,15 @@
+{
+  "name": "closed_loop",
+  "use_for": "闭环机制、系统链路、反馈回流",
+  "template_file": "./closed_loop.html",
+  "structure": {
+    "type": "circular_flow",
+    "node_count": 4,
+    "center_label": true
+  },
+  "rules": [
+    "优先用四节点结构",
+    "中心标签必须是一句话结论",
+    "周边节点文字短于 12 个字"
+  ]
+}

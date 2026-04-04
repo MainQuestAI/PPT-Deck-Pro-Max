@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Review Findings",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "page_id",
+      "severity",
+      "type",
+      "reason",
+      "suggested_fix",
+      "source_image"
+    ],
+    "properties": {
+      "page_id": {
+        "type": "string",
+        "pattern": "^slide_[0-9]{2,}$"
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["low", "medium", "high", "critical"]
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "layout_alignment",
+          "layout_balance",
+          "geometry_broken",
+          "visual_hierarchy",
+          "audience_mismatch",
+          "buying_reason_blurry",
+          "hero_page_weak",
+          "objection_unanswered",
+          "proof_not_visible",
+          "proof_sequence_broken",
+          "cta_weak",
+          "commercial_ask_unclear",
+          "component_drift",
+          "density_issue",
+          "generic_ai_feel",
+          "other"
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "minLength": 5
+      },
+      "suggested_fix": {
+        "type": "string",
+        "minLength": 5
+      },
+      "source_image": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "additionalProperties": true
+  }
+}

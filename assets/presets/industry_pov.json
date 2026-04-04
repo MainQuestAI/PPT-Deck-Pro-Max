@@ -1,0 +1,17 @@
+{
+  "name": "industry_pov",
+  "default_output_mode": "pptx+html",
+  "brief_hints": {
+    "产品定位": "行业观点型材料",
+    "第一购买理由": "建立对趋势变化的共识，并把我方方法放进正确的位置",
+    "最强证据": "行业断裂诊断页 + 新范式页",
+    "最终 CTA": "约深聊、联合研讨或进入下一步方案讨论"
+  },
+  "hero_pages": [
+    { "locator": "first", "role": "hero_cover", "label": "封面" },
+    { "locator": "ratio:0.12", "role": "hero_problem", "label": "行业断裂" },
+    { "locator": "ratio:0.28", "role": "hero_proof", "label": "关键证据" },
+    { "locator": "ratio:0.45", "role": "hero_system", "label": "新范式" },
+    { "locator": "last-1", "role": "hero_cta", "label": "收口" }
+  ]
+}

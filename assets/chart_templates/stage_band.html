@@ -1,0 +1,83 @@
+<!--
+Template: stage_band
+Replace placeholders before rendering:
+{{TITLE}}
+{{SUBTITLE}}
+{{BANDS}}
+
+Example band:
+<div class="band">
+  <div class="step">01</div>
+  <div class="content">
+    <div class="label">定义任务</div>
+    <div class="text">锁定业务问题与研究对象</div>
+  </div>
+</div>
+-->
+<section class="stage-band-card">
+  <div class="meta">STAGE BAND</div>
+  <h3>{{TITLE}}</h3>
+  <p>{{SUBTITLE}}</p>
+  <div class="bands">
+    {{BANDS}}
+  </div>
+</section>
+
+<style>
+  .stage-band-card {
+    width: 100%;
+    padding: 28px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #f5f7fa;
+    font-family: "Noto Sans SC", sans-serif;
+  }
+  .stage-band-card .meta {
+    font: 11px/1.2 "IBM Plex Sans", sans-serif;
+    letter-spacing: 0.12em;
+    color: #4da3ff;
+    margin-bottom: 10px;
+  }
+  .stage-band-card h3 {
+    margin: 0 0 8px;
+    font: 700 28px/1.25 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+  }
+  .stage-band-card p {
+    margin: 0 0 20px;
+    color: #b9c2cf;
+    font-size: 14px;
+  }
+  .stage-band-card .bands {
+    display: grid;
+    gap: 12px;
+  }
+  .stage-band-card .band {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 14px;
+    align-items: stretch;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .stage-band-card .step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(77,163,255,0.15);
+    color: #4da3ff;
+    font: 700 16px/1 "IBM Plex Sans", sans-serif;
+  }
+  .stage-band-card .label {
+    font: 700 16px/1.3 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+    margin-bottom: 4px;
+  }
+  .stage-band-card .text {
+    color: #b9c2cf;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+</style>

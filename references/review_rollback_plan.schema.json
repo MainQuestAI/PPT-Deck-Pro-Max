@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Review Rollback Plan",
+  "type": "object",
+  "required": ["project_dir", "summary", "page_actions", "stage_actions"],
+  "properties": {
+    "project_dir": { "type": "string", "minLength": 1 },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_findings": { "type": "integer", "minimum": 0 },
+        "impacted_pages": { "type": "integer", "minimum": 0 },
+        "total_pages": { "type": "integer", "minimum": 0 },
+        "by_severity": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "by_type": { "type": "object", "additionalProperties": { "type": "integer" } }
+      },
+      "additionalProperties": true
+    },
+    "page_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_id"],
+        "properties": {
+          "page_id": { "type": "string", "pattern": "^slide_[0-9]{2,}$" },
+          "primary_route": { "type": "object" },
+          "routes": { "type": "array", "items": { "type": "object" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "stage_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rollback_stage": { "type": "string" },
+          "rollback_owner": { "type": "string" },
+          "targets": { "type": "array", "items": { "type": "string" } },
+          "reasons": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

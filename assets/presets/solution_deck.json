@@ -1,0 +1,18 @@
+{
+  "name": "solution_deck",
+  "default_output_mode": "pptx+html",
+  "brief_hints": {
+    "产品定位": "解决方案型产品 / 业务方案",
+    "第一购买理由": "更快验证业务判断，并降低错误决策成本",
+    "最强证据": "样例页 + 结构化差异化页",
+    "最终 CTA": "启动一个低风险试点或 demo"
+  },
+  "hero_pages": [
+    { "locator": "first", "role": "hero_cover", "label": "封面" },
+    { "locator": "ratio:0.08", "role": "hero_problem", "label": "痛点/诊断" },
+    { "locator": "ratio:0.13", "role": "hero_proof", "label": "样例/证据" },
+    { "locator": "ratio:0.40", "role": "hero_system", "label": "核心能力/系统" },
+    { "locator": "ratio:0.61", "role": "hero_diff", "label": "差异化" },
+    { "locator": "last-1", "role": "hero_cta", "label": "CTA" }
+  ]
+}

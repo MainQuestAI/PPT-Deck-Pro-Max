@@ -1,0 +1,14 @@
+{
+  "name": "priority_stack",
+  "use_for": "优先级关系、试点排序、阶段优先次序",
+  "template_file": "./priority_stack.html",
+  "structure": {
+    "type": "priority_stack",
+    "level_count": 3
+  },
+  "rules": [
+    "推荐 3 到 4 层",
+    "每层保留优先级标签、对象名称和一句解释",
+    "适合试点排序、资源优先级和路线选择"
+  ]
+}

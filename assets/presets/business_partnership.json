@@ -1,0 +1,17 @@
+{
+  "name": "business_partnership",
+  "default_output_mode": "pptx+html",
+  "brief_hints": {
+    "产品定位": "商务合作提案材料",
+    "第一购买理由": "让对方快速看到合作价值、合作方式与推进可行性",
+    "最强证据": "合作模式页 + 分工与收益页",
+    "最终 CTA": "进入试点、联合方案或商务评估"
+  },
+  "hero_pages": [
+    { "locator": "first", "role": "hero_cover", "label": "封面" },
+    { "locator": "ratio:0.12", "role": "hero_value", "label": "合作价值" },
+    { "locator": "ratio:0.34", "role": "hero_system", "label": "合作机制" },
+    { "locator": "ratio:0.60", "role": "hero_diff", "label": "为什么是我们" },
+    { "locator": "last", "role": "hero_cta", "label": "下一步" }
+  ]
+}

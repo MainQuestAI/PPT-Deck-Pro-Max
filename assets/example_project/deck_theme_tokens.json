@@ -1,0 +1,27 @@
+{
+  "theme": "default_dark_glass",
+  "colors": {
+    "bg": "#07131E",
+    "panel": "rgba(255,255,255,0.06)",
+    "text": "#EAF2F9",
+    "accent": "#36A3FF",
+    "positive": "#0CC9A3",
+    "warning": "#FF8B5C"
+  },
+  "typography": {
+    "title": "Source Han Sans SC",
+    "body": "Source Han Sans SC",
+    "metric": "IBM Plex Sans"
+  },
+  "spacing": {
+    "page_gutter": 0.72,
+    "section_gap": 0.32
+  },
+  "components": {
+    "glass-panel": {},
+    "section-label": {},
+    "flow-node": {},
+    "metric-chip": {},
+    "diagnosis-card": {}
+  }
+}

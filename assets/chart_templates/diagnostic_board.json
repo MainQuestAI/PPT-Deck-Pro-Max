@@ -1,0 +1,14 @@
+{
+  "name": "diagnostic_board",
+  "use_for": "诊断关系、三栏分析、为什么/做什么/做到什么",
+  "template_file": "./diagnostic_board.html",
+  "structure": {
+    "type": "diagnostic_board",
+    "column_count": 3
+  },
+  "rules": [
+    "推荐 3 栏",
+    "每栏保留一个短标题和一段判断",
+    "适合摘要页、诊断页和方案总览页"
+  ]
+}

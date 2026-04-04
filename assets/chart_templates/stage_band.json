@@ -1,0 +1,14 @@
+{
+  "name": "stage_band",
+  "use_for": "阶段关系、流程说明、研究步骤",
+  "template_file": "./stage_band.html",
+  "structure": {
+    "type": "stage_band",
+    "band_count": 3
+  },
+  "rules": [
+    "推荐 3 到 5 个阶段",
+    "每个阶段保留一句标签和一句解释",
+    "适合流程页、方法页和工作流页"
+  ]
+}

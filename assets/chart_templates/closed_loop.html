@@ -1,0 +1,109 @@
+<!--
+Template: closed_loop
+Replace placeholders before rendering:
+{{CENTER_LABEL}}
+{{NODE_1_LABEL}} {{NODE_1_TEXT}}
+{{NODE_2_LABEL}} {{NODE_2_TEXT}}
+{{NODE_3_LABEL}} {{NODE_3_TEXT}}
+{{NODE_4_LABEL}} {{NODE_4_TEXT}}
+-->
+<section class="closed-loop-card">
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="loop-shell">
+    <div class="loop-center">{{CENTER_LABEL}}</div>
+    <div class="node node-top">
+      <strong>{{NODE_1_LABEL}}</strong>
+      <span>{{NODE_1_TEXT}}</span>
+    </div>
+    <div class="node node-right">
+      <strong>{{NODE_2_LABEL}}</strong>
+      <span>{{NODE_2_TEXT}}</span>
+    </div>
+    <div class="node node-bottom">
+      <strong>{{NODE_3_LABEL}}</strong>
+      <span>{{NODE_3_TEXT}}</span>
+    </div>
+    <div class="node node-left">
+      <strong>{{NODE_4_LABEL}}</strong>
+      <span>{{NODE_4_TEXT}}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .closed-loop-card {
+    position: relative;
+    min-height: 520px;
+    padding: 24px;
+    border-radius: 28px;
+    background: radial-gradient(circle at 50% 50%, rgba(77,163,255,0.08), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+  }
+  .closed-loop-card .orb {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    filter: blur(60px);
+    opacity: 0.22;
+  }
+  .closed-loop-card .orb-a {
+    left: -40px;
+    top: -30px;
+    background: #4da3ff;
+  }
+  .closed-loop-card .orb-b {
+    right: -30px;
+    bottom: -40px;
+    background: #16c79a;
+  }
+  .closed-loop-card .loop-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 470px;
+  }
+  .closed-loop-card .loop-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: #f5f7fa;
+    font: 700 24px/1.3 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+    box-shadow: 0 0 0 1px rgba(77,163,255,0.18), 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .closed-loop-card .node {
+    position: absolute;
+    width: 220px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #f5f7fa;
+    display: grid;
+    gap: 6px;
+  }
+  .closed-loop-card .node strong {
+    font: 700 15px/1.2 "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+  }
+  .closed-loop-card .node span {
+    color: #b9c2cf;
+    font: 13px/1.45 "Noto Sans SC", sans-serif;
+  }
+  .closed-loop-card .node-top { left: 50%; top: 8px; transform: translateX(-50%); }
+  .closed-loop-card .node-right { right: 8px; top: 50%; transform: translateY(-50%); }
+  .closed-loop-card .node-bottom { left: 50%; bottom: 8px; transform: translateX(-50%); }
+  .closed-loop-card .node-left { left: 8px; top: 50%; transform: translateY(-50%); }
+</style>

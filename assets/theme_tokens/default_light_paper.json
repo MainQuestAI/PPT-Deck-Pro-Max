@@ -1,0 +1,41 @@
+{
+  "theme": "default-light-paper",
+  "colors": {
+    "background": "#f5f8fc",
+    "surface": "#ffffff",
+    "surface_border": "#d9e4f0",
+    "text_primary": "#0a3553",
+    "text_secondary": "#506b83",
+    "accent": "#2f80ff",
+    "positive": "#14b889",
+    "warning": "#ff9d5c"
+  },
+  "typography": {
+    "title_font": "Plus Jakarta Sans",
+    "body_font": "Noto Sans SC",
+    "metric_font": "IBM Plex Sans"
+  },
+  "spacing": {
+    "section_gap": 24,
+    "block_gap": 16,
+    "panel_padding": 20
+  },
+  "components": {
+    "paper-panel": {
+      "background": "#ffffff",
+      "border": "#d9e4f0"
+    },
+    "system-label": {
+      "font": "IBM Plex Sans",
+      "size": 11
+    },
+    "diagnostic-card": {
+      "background": "#f8fbff",
+      "border": "#d6e3f0"
+    },
+    "metric-chip": {
+      "background": "rgba(47,128,255,0.10)",
+      "border": "rgba(47,128,255,0.22)"
+    }
+  }
+}
