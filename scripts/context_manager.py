@@ -69,6 +69,27 @@ def main() -> None:
         bundle["inputs"]["deck_component_tokens"] = read(Path(args.component_tokens))
     if args.theme_tokens:
         bundle["inputs"]["deck_theme_tokens"] = read(Path(args.theme_tokens))
+    # Include asset references for build context
+    asset_manifest_path = Path(args.clean_pages).parent / "asset_manifest.json" if args.clean_pages else None
+    if asset_manifest_path and asset_manifest_path.exists():
+        try:
+            manifest = json.loads(asset_manifest_path.read_text(encoding="utf-8"))
+            page_assets: dict[str, list[dict]] = {}
+            for asset in manifest.get("assets", []):
+                pid = asset.get("page_id", "")
+                if not args.page_ids or pid in args.page_ids:
+                    page_assets.setdefault(pid, []).append({
+                        "id": asset.get("id"),
+                        "final_path": asset.get("final_path", ""),
+                        "frame": asset.get("frame", ""),
+                        "position": asset.get("position", ""),
+                        "desc": asset.get("desc", ""),
+                    })
+            if page_assets:
+                bundle["inputs"]["assets"] = page_assets
+        except (json.JSONDecodeError, OSError):
+            pass
+
     if args.slide_state:
         slide_state_text = read(Path(args.slide_state))
         try:

@@ -16,6 +16,7 @@
 - 不写风格语言
 - 如果 `deck_narrative_arc.md` 已存在，后续页面文稿必须尊重 beat 序列和过渡逻辑
 - hero pages 的 clean pages 必须附带 `> 演讲备注:` 区块
+- proof beat 和 hero 页应使用 `> 配图:` 声明所需的产品截图（参见 `references/asset_pipeline_guide.md`）
 - 如果需要补充后续页面文稿约束，统一要求 `deck_clean_pages.md` 使用 `## 第 N 页` 作为分页符
 - 如果处于返工期，优先接收按角色过滤后的 rework handoff，不要自行扫描完整 rollback plan
 
@@ -57,6 +58,7 @@
 - 不做额外解释
 - 只输出当前页需要的实现
 - 如果 clean pages 包含 `> 演讲备注:`，必须传递到成品（pptx 的 speaker notes 或 html 的注释）
+- 如果 build context 包含 `assets` 字段，按路径引用图片嵌入到页面的指定位置
 - 如果需要回补或修正 `deck_clean_pages.md`，必须保持 `## 第 N 页` 分页格式
 - 如果处于返工期，只处理 build rework handoff 中列出的页面
 

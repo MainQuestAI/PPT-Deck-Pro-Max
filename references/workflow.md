@@ -10,6 +10,8 @@
 2. `deck_vibe_brief.md`
 3. `deck_narrative_arc.md`
 4. `deck_hero_pages.md`
+5. `deck_asset_plan.md`
+6. `asset_manifest.json`
 4. `deck_layout_v1.md`
 5. `deck_clean_pages.md`
 6. `deck_visual_system.md`
@@ -114,9 +116,10 @@ python scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
 
 至少锁 3 到 5 页决定成败的页面，且 hero page 选择必须与 beat 类型对齐。
 
-### Gate 4：Clean Pages 完成
+### Gate 4：Clean Pages + Asset Plan 完成
 
 出图 AI 只吃纯净逐页稿，不吃长文档。
+proof beat 和 hero 页应完成配图需求梳理（`deck_asset_plan.md`），用户已确认获取方式。
 
 ### Gate 5：Visual System 锁定
 

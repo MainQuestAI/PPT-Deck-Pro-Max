@@ -1,0 +1,10 @@
+/* Deck Production Orchestrator — Font Loading
+   Uses Google Fonts CDN for consistent typography across environments. */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-title: "Plus Jakarta Sans", "Noto Sans SC", system-ui, -apple-system, sans-serif;
+  --font-body: "Noto Sans SC", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-metric: "IBM Plex Sans", "Plus Jakarta Sans", monospace;
+}

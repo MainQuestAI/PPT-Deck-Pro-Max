@@ -124,6 +124,10 @@ def build_build_prompt(project_dir: Path, page_ids: list[str], context_path: Pat
             "## 可选几何回写",
             "",
             "如有真实页级几何数据，请用 `scripts/update_layout_manifest.py` 回写当前页。",
+            "",
+            "## 配图资产",
+            "",
+            "如果 build context 的 `inputs.assets` 包含当前页的图片引用，请按 `position` 和 `final_path` 将图片嵌入到页面的正确区域。",
         ]
     )
 

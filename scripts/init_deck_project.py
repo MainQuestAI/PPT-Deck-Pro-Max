@@ -18,6 +18,8 @@ TEMPLATES = {
     "deck_page_skeletons.md": "# Deck Page Skeletons\n\n## 第 1 页\n- archetype:\n- 主体区边界:\n- 主视觉边界:\n- 对齐轴:\n- 组件组关系:\n- 预期占比:\n\n## 第 2 页\n- archetype:\n- 主体区边界:\n- 主视觉边界:\n- 对齐轴:\n- 组件组关系:\n- 预期占比:\n",
     "deck_theme_tokens.json": "{\n  \"theme\": \"default\",\n  \"colors\": {},\n  \"typography\": {},\n  \"spacing\": {},\n  \"components\": {}\n}\n",
     "layout_manifest.json": "{\n  \"pages\": []\n}\n",
+    "deck_asset_plan.md": "# Asset Plan\n\n## 配图需求总览\n\n| 页码 | 角色 | 需要什么 | 优先级 | 来源 |\n|------|------|---------|--------|------|\n\n## 逐页配图说明\n\n（待生成）\n",
+    "asset_manifest.json": "{\n  \"assets\": []\n}\n",
     "deck_review_report.md": "# Deck Review Report\n",
     "deck_review_findings.json": "[]\n",
     "review_rollback_plan.json": "{\n  \"project_dir\": \"\",\n  \"summary\": {},\n  \"page_actions\": [],\n  \"stage_actions\": []\n}\n",
@@ -31,6 +33,7 @@ EXAMPLE_DIR_NAME = "example_project"
 
 def init_project(out_dir: Path, with_example: bool = False) -> list[str]:
     out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "assets").mkdir(exist_ok=True)
 
     created = []
     for name, content in TEMPLATES.items():

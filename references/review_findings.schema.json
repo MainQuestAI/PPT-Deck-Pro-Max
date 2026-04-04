@@ -43,6 +43,7 @@
           "pacing_monotone",
           "transition_missing",
           "speaker_notes_missing",
+          "asset_missing",
           "other"
         ]
       },

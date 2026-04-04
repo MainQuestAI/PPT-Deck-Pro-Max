@@ -112,6 +112,27 @@ def detect_density_issues(state: dict, clean_pages_text: str | None, warn_chars:
     return issues
 
 
+def detect_missing_assets(state: dict, asset_manifest: dict | None) -> dict[str, list[str]]:
+    issues: dict[str, list[str]] = {}
+    if not isinstance(asset_manifest, dict):
+        return issues
+    asset_lookup: dict[str, list[dict]] = {}
+    for asset in asset_manifest.get("assets", []):
+        pid = asset.get("page_id", "")
+        asset_lookup.setdefault(pid, []).append(asset)
+    proof_roles = {"hero_proof", "hero_system", "hero_diff", "hero_value"}
+    for page in state.get("pages", []):
+        role = page.get("role", "")
+        if role not in proof_roles:
+            continue
+        page_id = page.get("page_id", "")
+        page_assets = asset_lookup.get(page_id, [])
+        has_real = any(a.get("status") in ("captured", "provided", "mockup_applied") for a in page_assets)
+        if not has_real:
+            issues.setdefault(page_id, []).append("asset_missing")
+    return issues
+
+
 def detect_missing_speaker_notes(state: dict, clean_pages_text: str | None) -> dict[str, list[str]]:
     issues: dict[str, list[str]] = {}
     if not clean_pages_text:
@@ -267,6 +288,8 @@ def main() -> None:
         else (project_dir / "layout_manifest.json")
     )
     layout_manifest = load_json(layout_manifest_path) if layout_manifest_path.exists() else None
+    asset_manifest_path = project_dir / "asset_manifest.json"
+    asset_manifest = load_json(asset_manifest_path) if asset_manifest_path.exists() else None
     theme = load_json(Path(args.theme_tokens).expanduser().resolve()) if args.theme_tokens else None
     review_findings = load_json(Path(args.review_findings).expanduser().resolve()) if args.review_findings else None
     commercial_scorecard = load_json(Path(args.commercial_scorecard).expanduser().resolve()) if args.commercial_scorecard else None
@@ -300,6 +323,7 @@ def main() -> None:
         detect_component_drift(state, theme if isinstance(theme, dict) else None),
         detect_density_issues(state, clean_pages_text, args.warn_chars, args.fail_chars),
         detect_missing_speaker_notes(state, clean_pages_text),
+        detect_missing_assets(state, asset_manifest if isinstance(asset_manifest, dict) else None),
         layout_issues,
         merge_review_findings(review_findings),
         commercial_issues,

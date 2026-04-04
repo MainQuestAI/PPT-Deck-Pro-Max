@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Asset Manifest",
+  "type": "object",
+  "required": ["assets"],
+  "properties": {
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "page_id", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "page_id": { "type": "string" },
+          "desc": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["url", "file", "pending", "declared", "inferred"]
+          },
+          "url": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "captured", "provided", "placeholder", "mockup_applied", "missing"]
+          },
+          "raw_path": { "type": "string" },
+          "final_path": { "type": "string" },
+          "frame": {
+            "type": "string",
+            "enum": ["macbook", "browser", "iphone", "tablet", "terminal", "none"]
+          },
+          "position": {
+            "type": "string",
+            "enum": ["left", "right", "center", "full"]
+          },
+          "viewport": { "type": "string" },
+          "wait": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

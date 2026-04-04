@@ -1,2 +1,4 @@
 python-pptx>=0.6.21
 Pillow>=9.0.0
+# Optional: for automatic screenshot capture and page-level visual QA
+# playwright>=1.40.0

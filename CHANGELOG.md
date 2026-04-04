@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.9.0
+
+### Asset Pipeline — 产品截图采集与配图系统
+- 新增 `> 配图:` 声明格式，在 `deck_clean_pages.md` 中声明配图需求。
+- 新增 `scripts/generate_asset_plan.py`：AI 分析 clean pages 自动输出 `deck_asset_plan.md` + `asset_manifest.json`。
+- 新增 `scripts/capture_assets.py`：Playwright 自动截图，支持 `--cookies` 导入登录态。
+- 新增 `scripts/apply_mockup.py`：设备壳渲染（MacBook/Browser/iPhone/Tablet/Terminal），纯 Pillow 绘制。
+- 新增 `scripts/generate_placeholders.py`：品牌色占位符生成。
+- 新增 `assets/mockup_frames/mockup_spec.json`：5 种设备壳规格定义。
+- 新增 `references/asset_pipeline_guide.md`：配图系统完整指引。
+- 新增 `references/asset_manifest.schema.json`：资产清单 schema。
+- SKILL.md 新增 Step 5.5: Plan Assets。
+- Pipeline 新增 4 个子命令：`asset-plan`、`capture-assets`、`apply-mockups`、`generate-placeholders`。
+- QA 新增 `detect_missing_assets()` 检查 proof 页配图缺失。
+- `review_findings.schema.json` 新增 `asset_missing` 类型。
+- `review_rollback_map.json` 新增 `asset_missing` 路由。
+- Build context 自动包含 asset 引用。
+
+### 页面截图自动化
+- 新增 `scripts/screenshot_pages.py`：Playwright 逐页截图 HTML deck。
+
+### Speaker Notes 交付
+- 新增 `scripts/inject_speaker_notes.py`：向 PPTX 注入 speaker notes + 导出 `speaker_notes.json`。
+
+### 字体配置
+- 新增 `assets/fonts/fonts.css`：Google Fonts CDN 加载。
+- 新增 `references/font_loading_guide.md`：HTML/PPTX 字体配置指引。
+- HTML starter 引用 fonts.css，使用 CSS 变量引用字体。
+
+### 构建合同
+- 新增 `references/build_contract.md`：HTML/PPTX 多页组装规范、speaker notes 传递合同、asset 引用合同、输出命名约定。
+
 ## 0.8.0
 
 ### Narrative Arc System

@@ -365,6 +365,53 @@ def cmd_rework_handoff(args: argparse.Namespace) -> None:
     run_script("generate_rework_handoff.py", *cmd)
 
 
+def cmd_asset_plan(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.clean_pages:
+        cmd.extend(["--clean-pages", str(Path(args.clean_pages).expanduser().resolve())])
+    if args.state:
+        cmd.extend(["--state", str(Path(args.state).expanduser().resolve())])
+    if args.output:
+        cmd.extend(["--output", str(Path(args.output).expanduser().resolve())])
+    if args.manifest:
+        cmd.extend(["--manifest", str(Path(args.manifest).expanduser().resolve())])
+    run_script("generate_asset_plan.py", *cmd)
+
+
+def cmd_capture_assets(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.manifest:
+        cmd.extend(["--manifest", str(Path(args.manifest).expanduser().resolve())])
+    if args.cookies:
+        cmd.extend(["--cookies", str(Path(args.cookies).expanduser().resolve())])
+    cmd.extend(["--viewport", args.viewport])
+    if args.only_ids:
+        cmd.extend(["--only-ids", *args.only_ids])
+    run_script("capture_assets.py", *cmd)
+
+
+def cmd_apply_mockups(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.manifest:
+        cmd.extend(["--manifest", str(Path(args.manifest).expanduser().resolve())])
+    if args.spec:
+        cmd.extend(["--spec", str(Path(args.spec).expanduser().resolve())])
+    run_script("apply_mockup.py", *cmd)
+
+
+def cmd_generate_placeholders(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.manifest:
+        cmd.extend(["--manifest", str(Path(args.manifest).expanduser().resolve())])
+    if args.theme_tokens:
+        cmd.extend(["--theme-tokens", str(Path(args.theme_tokens).expanduser().resolve())])
+    run_script("generate_placeholders.py", *cmd)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the deck production pipeline stages with one orchestration script.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -493,6 +540,34 @@ def build_parser() -> argparse.ArgumentParser:
     p_rework.add_argument("--page-ids", nargs="*", default=[])
     p_rework.add_argument("--output")
     p_rework.set_defaults(func=cmd_rework_handoff)
+
+    p_asset_plan = sub.add_parser("asset-plan", help="Generate asset plan from clean pages and slide state")
+    p_asset_plan.add_argument("--project-dir", required=True)
+    p_asset_plan.add_argument("--clean-pages")
+    p_asset_plan.add_argument("--state")
+    p_asset_plan.add_argument("--output")
+    p_asset_plan.add_argument("--manifest")
+    p_asset_plan.set_defaults(func=cmd_asset_plan)
+
+    p_capture = sub.add_parser("capture-assets", help="Capture product screenshots from URLs")
+    p_capture.add_argument("--project-dir", required=True)
+    p_capture.add_argument("--manifest")
+    p_capture.add_argument("--cookies")
+    p_capture.add_argument("--viewport", default="1280x800")
+    p_capture.add_argument("--only-ids", nargs="*", default=[])
+    p_capture.set_defaults(func=cmd_capture_assets)
+
+    p_mockups = sub.add_parser("apply-mockups", help="Apply device mockup frames to captured screenshots")
+    p_mockups.add_argument("--project-dir", required=True)
+    p_mockups.add_argument("--manifest")
+    p_mockups.add_argument("--spec")
+    p_mockups.set_defaults(func=cmd_apply_mockups)
+
+    p_placeholders = sub.add_parser("generate-placeholders", help="Generate branded placeholder images for missing assets")
+    p_placeholders.add_argument("--project-dir", required=True)
+    p_placeholders.add_argument("--manifest")
+    p_placeholders.add_argument("--theme-tokens")
+    p_placeholders.set_defaults(func=cmd_generate_placeholders)
 
     return parser
 

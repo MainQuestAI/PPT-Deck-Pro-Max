@@ -1,0 +1,57 @@
+{
+  "macbook": {
+    "canvas": [1400, 900],
+    "viewport": [1200, 750],
+    "viewport_offset": [100, 40],
+    "corner_radius": 8,
+    "bezel_color": "#1a1a1a",
+    "bezel_width": 16,
+    "base_height": 28,
+    "shadow_offset": 12,
+    "shadow_blur": 30
+  },
+  "browser": {
+    "canvas": [1360, 880],
+    "viewport": [1280, 800],
+    "viewport_offset": [40, 52],
+    "corner_radius": 10,
+    "toolbar_height": 40,
+    "toolbar_color": "#2d2d2d",
+    "dot_colors": ["#ff5f57", "#febc2e", "#28c840"],
+    "shadow_offset": 8,
+    "shadow_blur": 24
+  },
+  "iphone": {
+    "canvas": [440, 900],
+    "viewport": [375, 812],
+    "viewport_offset": [32, 44],
+    "corner_radius": 40,
+    "bezel_color": "#1a1a1a",
+    "bezel_width": 12,
+    "notch_width": 120,
+    "notch_height": 28,
+    "shadow_offset": 8,
+    "shadow_blur": 20
+  },
+  "tablet": {
+    "canvas": [900, 680],
+    "viewport": [820, 600],
+    "viewport_offset": [40, 40],
+    "corner_radius": 18,
+    "bezel_color": "#1a1a1a",
+    "bezel_width": 14,
+    "shadow_offset": 8,
+    "shadow_blur": 20
+  },
+  "terminal": {
+    "canvas": [1360, 880],
+    "viewport": [1280, 808],
+    "viewport_offset": [40, 44],
+    "corner_radius": 10,
+    "toolbar_height": 32,
+    "toolbar_color": "#1e1e1e",
+    "title": "Terminal",
+    "shadow_offset": 8,
+    "shadow_blur": 24
+  }
+}

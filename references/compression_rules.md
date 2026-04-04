@@ -36,6 +36,27 @@
 
 不要为了版面好看而丢掉证据。
 
+## 配图声明
+
+需要产品截图或真实素材的页面，应使用 `> 配图:` 声明：
+
+```markdown
+> 配图: id=dashboard_main | desc=产品主仪表盘全景 | frame=macbook
+> 配图: id=before_after | desc=优化前后对比 | frame=browser | position=right
+```
+
+字段说明：
+
+- `id` — 资产唯一标识，对应 `assets/` 目录下的文件名
+- `desc` — 描述"需要什么截图"，给 AI 和用户都看
+- `frame` — 设备壳类型：macbook / browser / iphone / tablet / terminal / none
+- `position` — 在页面中的位置提示：left / right / center / full
+- `url` — 可选，自动截图的目标 URL
+- `wait` — 可选，等待 CSS 选择器出现后再截
+- `viewport` — 可选，截图视口尺寸（默认 1280x800）
+
+proof beat 页和 hero pages 强烈建议声明配图。没有配图的 proof 页只是在"描述产品"，不是"展示产品"。
+
 ## 演讲备注
 
 每页可选附带演讲备注。hero pages 的演讲备注是强制的。

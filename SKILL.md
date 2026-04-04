@@ -129,6 +129,24 @@ Enforce:
 
 Read `references/compression_rules.md` before compressing.
 
+### Step 5.5: Plan Assets
+
+After compression, review each page and identify which pages need real product screenshots.
+
+Create or update `deck_asset_plan.md` and `asset_manifest.json`.
+
+For proof beat pages, hero_proof, hero_system, and sample pages, strongly recommend real product screenshots over abstract illustrations.
+
+Pause and ask the user:
+
+1. Can you provide a product URL for automatic screenshots?
+2. Do you have screenshot files to provide directly?
+3. Should we use placeholders for now?
+
+If the user provides URLs, use `scripts/capture_assets.py` with optional `--cookies` for authenticated pages. If not, use `scripts/generate_placeholders.py` to create branded placeholders that maintain deck structure.
+
+Read `references/asset_pipeline_guide.md`.
+
 ### Step 6: Lock the Visual Component System
 
 Create or update:
@@ -336,6 +354,12 @@ Use these files intentionally:
   - density alternation, breathing pages, and transition logic
 - `references/objection_handling_guide.md`
   - common objection categories and placement strategy
+- `references/asset_pipeline_guide.md`
+  - product screenshot capture, device mockups, and placeholder system
+- `references/build_contract.md`
+  - multi-page assembly and output naming conventions for build skills
+- `references/font_loading_guide.md`
+  - web font and PPTX font configuration
 - `references/hero_pages_guide.md`
   - hero page selection and priority rules
 - `references/layout_page_guide.md`

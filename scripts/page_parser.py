@@ -29,6 +29,38 @@ def page_id_to_number(page_id: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+ASSET_DECL_PATTERN = re.compile(
+    r"^>\s*配图\s*[:：]\s*(.+?)$",
+    re.MULTILINE,
+)
+
+
+def _parse_asset_fields(raw: str) -> dict[str, str]:
+    """Parse 'key=value | key=value' into a dict."""
+    fields: dict[str, str] = {}
+    for part in raw.split("|"):
+        part = part.strip()
+        if "=" in part:
+            key, _, value = part.partition("=")
+            fields[key.strip()] = value.strip()
+    return fields
+
+
+def extract_asset_declarations(text: str) -> dict[int, list[dict[str, str]]]:
+    """Extract asset declarations from deck_clean_pages.md.
+
+    Returns a mapping of page number to list of asset declaration dicts.
+    Declarations are expected in the format: > 配图: id=xxx | desc=xxx | frame=macbook
+    """
+    slices = extract_page_slices(text)
+    assets: dict[int, list[dict[str, str]]] = {}
+    for page_no, section in slices.items():
+        matches = ASSET_DECL_PATTERN.findall(section)
+        if matches:
+            assets[page_no] = [_parse_asset_fields(m) for m in matches]
+    return assets
+
+
 SPEAKER_NOTE_PATTERN = re.compile(
     r"^>\s*演讲备注\s*[:：]\s*(.+?)$",
     re.MULTILINE,
