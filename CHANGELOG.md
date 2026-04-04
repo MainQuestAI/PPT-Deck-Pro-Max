@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+
+### 工程可靠性
+- Review 循环收敛：`slide_state.json` 新增 `review_iteration` 计数器；`route_review_findings.py` 支持 `--max-iterations`（默认 3）和 `--recurrence-threshold`（默认 3），超限自动 escalate 为 `manual_review`。
+- Runtime schema 校验：新增 `scripts/validate_schema.py`，支持 `--project-dir` 批量校验和 `--file` 单文件校验。Pipeline 新增 `validate-schema` 子命令。
+- 端到端集成测试：新增 `tests/test_pipeline_integration.py`（12 个测试），覆盖 init → preset → asset-plan → QA → convergence 全链路。
+- GitHub Actions CI：新增 `.github/workflows/ci.yml`，Python 3.10/3.11/3.12 矩阵，语法检查 + JSON 校验 + pytest。
+
 ## 0.9.0
 
 ### Asset Pipeline — 产品截图采集与配图系统

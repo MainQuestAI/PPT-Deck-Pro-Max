@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install python-pptx Pillow pytest
+
+      - name: Compile all scripts
+        run: |
+          python -c "
+          import py_compile, glob
+          for f in glob.glob('scripts/*.py'):
+              py_compile.compile(f, doraise=True)
+              print(f'OK: {f}')
+          "
+
+      - name: Validate all JSON files
+        run: |
+          python -c "
+          import json, glob
+          for f in glob.glob('references/*.json') + glob.glob('assets/**/*.json', recursive=True):
+              json.loads(open(f).read())
+              print(f'OK: {f}')
+          "
+
+      - name: Run tests
+        run: python -m pytest tests/ -v

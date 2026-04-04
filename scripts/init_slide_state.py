@@ -11,6 +11,7 @@ def build_state(project_id: str, pages: int, output_mode: str) -> dict:
         "project_id": project_id,
         "global_status": "briefing",
         "visual_locked": False,
+        "review_iteration": 0,
         "output_mode": output_mode,
         "pages": [
             {

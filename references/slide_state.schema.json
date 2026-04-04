@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Deck Slide State",
   "type": "object",
-  "required": ["project_id", "global_status", "visual_locked", "output_mode", "pages"],
+  "required": ["project_id", "global_status", "visual_locked", "review_iteration", "output_mode", "pages"],
   "properties": {
     "project_id": { "type": "string", "minLength": 1 },
     "global_status": {
@@ -10,6 +10,7 @@
       "enum": ["briefing", "designing", "building", "awaiting_review", "reworking", "qa_failed", "ready"]
     },
     "visual_locked": { "type": "boolean" },
+    "review_iteration": { "type": "integer", "minimum": 0 },
     "output_mode": {
       "type": "string",
       "enum": ["pptx", "html", "pptx+html"]

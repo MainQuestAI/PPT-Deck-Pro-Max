@@ -227,6 +227,34 @@ def write_markdown(path: Path, plan: dict) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def detect_recurring_findings(state: dict, findings: list[dict], threshold: int = 3) -> list[dict]:
+    """Escalate findings that recur on the same page with the same type across iterations."""
+    history: dict[str, dict[str, int]] = {}
+    for page in state.get("pages", []):
+        page_id = page.get("page_id", "")
+        for route in page.get("rollback_routes", []):
+            key = route.get("type", "")
+            if key:
+                history.setdefault(page_id, {}).setdefault(key, 0)
+                history[page_id][key] += 1
+
+    escalated: list[dict] = []
+    for item in findings:
+        page_id = item.get("page_id", "")
+        ftype = item.get("type", "")
+        past_count = history.get(page_id, {}).get(ftype, 0)
+        if past_count >= threshold:
+            escalated.append({
+                **item,
+                "type": "other",
+                "reason": f"[ESCALATED x{past_count + 1}] {item.get('reason', '')}",
+                "suggested_fix": f"同一问题已连续 {past_count + 1} 轮未解决，需人工介入。原建议：{item.get('suggested_fix', '')}",
+            })
+        else:
+            escalated.append(item)
+    return escalated
+
+
 def apply_plan_to_state(state: dict, plan: dict) -> dict:
     lookup = {page.get("page_id"): page for page in state.get("pages", [])}
     routed_pages = {item["page_id"]: item for item in plan.get("page_actions", [])}
@@ -247,6 +275,7 @@ def apply_plan_to_state(state: dict, plan: dict) -> dict:
         page["rollback_routes"] = action.get("routes", [])
         if page.get("qa_status") == "failed" and page.get("status") == "ready":
             page["status"] = "qa_failed"
+    state["review_iteration"] = state.get("review_iteration", 0) + 1
     if plan.get("page_actions"):
         state["global_status"] = "qa_failed"
     return state
@@ -258,6 +287,8 @@ def main() -> None:
     parser.add_argument("--review-findings", required=True)
     parser.add_argument("--commercial-scorecard")
     parser.add_argument("--min-commercial-dimension-score", type=float, default=3.0)
+    parser.add_argument("--max-iterations", type=int, default=3, help="Max review iterations before global escalation")
+    parser.add_argument("--recurrence-threshold", type=int, default=3, help="Same page+type recurrence count to auto-escalate")
     parser.add_argument("--state")
     parser.add_argument("--map-file")
     parser.add_argument("--output-json", required=True)
@@ -286,6 +317,14 @@ def main() -> None:
             scorecard = load_json(scorecard_path)
             if isinstance(scorecard, dict):
                 all_findings.extend(synthesize_scorecard_findings(scorecard, args.min_commercial_dimension_score))
+
+    # Convergence: check iteration count
+    current_iteration = (state.get("review_iteration", 0) if isinstance(state, dict) else 0) + 1
+    if current_iteration > args.max_iterations:
+        print(f"[WARN] review iteration {current_iteration} exceeds max {args.max_iterations} — escalating all findings to manual_review")
+        all_findings = [{**f, "type": "other", "reason": f"[ESCALATED iter={current_iteration}] {f.get('reason', '')}"} for f in all_findings]
+    elif isinstance(state, dict):
+        all_findings = detect_recurring_findings(state, all_findings, args.recurrence_threshold)
 
     plan = build_plan(project_dir, all_findings, rollback_map, state if isinstance(state, dict) else None)
     save_json(output_json, plan)

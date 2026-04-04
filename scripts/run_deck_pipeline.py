@@ -402,6 +402,14 @@ def cmd_apply_mockups(args: argparse.Namespace) -> None:
     run_script("apply_mockup.py", *cmd)
 
 
+def cmd_validate_schema(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.strict:
+        cmd.append("--strict")
+    run_script("validate_schema.py", *cmd)
+
+
 def cmd_generate_placeholders(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -568,6 +576,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_placeholders.add_argument("--manifest")
     p_placeholders.add_argument("--theme-tokens")
     p_placeholders.set_defaults(func=cmd_generate_placeholders)
+
+    p_schema = sub.add_parser("validate-schema", help="Validate project JSON files against their schemas")
+    p_schema.add_argument("--project-dir", required=True)
+    p_schema.add_argument("--strict", action="store_true")
+    p_schema.set_defaults(func=cmd_validate_schema)
 
     return parser
 
