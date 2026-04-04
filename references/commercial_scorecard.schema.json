@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["overall_score", "dimensions", "summary", "recommended_action"],
   "properties": {
-    "overall_score": { "type": "number", "minimum": 1, "maximum": 5 },
+    "overall_score": { "type": ["number", "null"], "minimum": 1, "maximum": 5 },
     "dimensions": {
       "type": "object",
       "required": [
@@ -16,12 +16,12 @@
         "commercial_ask"
       ],
       "properties": {
-        "audience_fit": { "type": "number", "minimum": 1, "maximum": 5 },
-        "buying_reason_clarity": { "type": "number", "minimum": 1, "maximum": 5 },
-        "proof_strength": { "type": "number", "minimum": 1, "maximum": 5 },
-        "objection_coverage": { "type": "number", "minimum": 1, "maximum": 5 },
-        "narrative_flow": { "type": "number", "minimum": 1, "maximum": 5 },
-        "commercial_ask": { "type": "number", "minimum": 1, "maximum": 5 }
+        "audience_fit": { "type": ["number", "null"], "minimum": 1, "maximum": 5 },
+        "buying_reason_clarity": { "type": ["number", "null"], "minimum": 1, "maximum": 5 },
+        "proof_strength": { "type": ["number", "null"], "minimum": 1, "maximum": 5 },
+        "objection_coverage": { "type": ["number", "null"], "minimum": 1, "maximum": 5 },
+        "narrative_flow": { "type": ["number", "null"], "minimum": 1, "maximum": 5 },
+        "commercial_ask": { "type": ["number", "null"], "minimum": 1, "maximum": 5 }
       },
       "additionalProperties": false
     },

@@ -8,6 +8,7 @@ from pathlib import Path
 TEMPLATES = {
     "deck_brief.md": "# Deck Brief\n\n## 产品主语\n\n## 产品定位\n\n## 第一受众\n\n## 第一购买理由\n\n## 最强差异化\n\n## 最强证据\n\n## 首单入口\n\n## 最终 CTA\n",
     "deck_vibe_brief.md": "# Vibe Brief\n\n## 视觉气质\n\n## 配色系统\n\n## 字体系统\n\n## 图形语言\n\n## 密度上限\n",
+    "deck_narrative_arc.md": "# Narrative Arc\n\n## 弧线模板\n\n（待锁定）\n\n## 逐页 Beat\n\n| 页码 | Beat | 情绪目标 | 过渡逻辑 |\n|------|------|---------|--------|\n\n## 信心拐点\n\n（待锁定）\n\n## 呼吸页\n\n（待锁定）\n",
     "deck_hero_pages.md": "# Hero Pages\n\n## 关键页\n\n1. 封面\n2. 痛点/诊断\n3. 样例/证据\n4. 核心能力/系统\n5. CTA\n",
     "deck_layout_v1.md": "# Layout Draft\n",
     "deck_clean_pages.md": "# Clean Pages\n",
@@ -22,7 +23,7 @@ TEMPLATES = {
     "review_rollback_plan.json": "{\n  \"project_dir\": \"\",\n  \"summary\": {},\n  \"page_actions\": [],\n  \"stage_actions\": []\n}\n",
     "review_rollback_plan.md": "# Review Rollback Plan\n",
     "review_package.json": "{\n  \"project_dir\": \"\",\n  \"artifacts\": {},\n  \"page_images\": [],\n  \"required_output\": {}\n}\n",
-    "commercial_scorecard.json": "{\n  \"overall_score\": 0,\n  \"dimensions\": {\n    \"audience_fit\": 0,\n    \"buying_reason_clarity\": 0,\n    \"proof_strength\": 0,\n    \"objection_coverage\": 0,\n    \"narrative_flow\": 0,\n    \"commercial_ask\": 0\n  },\n  \"summary\": \"\",\n  \"recommended_action\": \"\",\n  \"weak_dimensions\": []\n}\n",
+    "commercial_scorecard.json": "{\n  \"overall_score\": null,\n  \"dimensions\": {\n    \"audience_fit\": null,\n    \"buying_reason_clarity\": null,\n    \"proof_strength\": null,\n    \"objection_coverage\": null,\n    \"narrative_flow\": null,\n    \"commercial_ask\": null\n  },\n  \"summary\": \"\",\n  \"recommended_action\": \"\",\n  \"weak_dimensions\": []\n}\n",
 }
 
 EXAMPLE_DIR_NAME = "example_project"

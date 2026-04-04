@@ -76,29 +76,33 @@ def bbox_norm(shape, slide_w: float, slide_h: float) -> dict:
     }
 
 
-def is_line_like(shape, box: dict) -> bool:
-    tag = local_tag(shape)
+def classify_line_like(item: dict) -> bool:
+    tag = item.get("tag", "")
     if tag == "cxnSp":
         return True
-    st = getattr(shape, "shape_type", None)
-    if st == MSO_SHAPE_TYPE.LINE:
+    shape_type_int = item.get("shape_type_int")
+    if shape_type_int is not None and shape_type_int == int(MSO_SHAPE_TYPE.LINE):
         return True
-    return (box["w"] < 0.02 and box["h"] > 0.12) or (box["h"] < 0.02 and box["w"] > 0.12)
+    box = item.get("box", {})
+    return (box.get("w", 0) < 0.02 and box.get("h", 0) > 0.12) or (box.get("h", 0) < 0.02 and box.get("w", 0) > 0.12)
 
 
-def is_circle_like(shape, box: dict) -> bool:
-    if local_tag(shape) != "sp":
+def classify_circle_like(item: dict) -> bool:
+    if item.get("tag", "") != "sp":
         return False
-    if box["area"] < 0.001 or box["area"] > 0.03:
+    box = item.get("box", {})
+    area = box.get("area", 0)
+    if area < 0.001 or area > 0.03:
         return False
-    return abs(box["w"] - box["h"]) <= min(box["w"], box["h"]) * 0.25 and not shape_text(shape)
+    w, h = box.get("w", 0), box.get("h", 0)
+    return abs(w - h) <= min(w, h) * 0.25 and not item.get("text", "")
 
 
-def is_card_like(shape, box: dict) -> bool:
-    if is_line_like(shape, box):
+def classify_card_like(item: dict) -> bool:
+    if classify_line_like(item):
         return False
-    text = shape_text(shape)
-    return bool(text) and box["w"] >= 0.12 and box["h"] >= 0.05
+    box = item.get("box", {})
+    return bool(item.get("text", "")) and box.get("w", 0) >= 0.12 and box.get("h", 0) >= 0.05
 
 
 def is_noise(box: dict) -> bool:
@@ -153,39 +157,22 @@ def build_page_entry(slide, page_id: str, role: str, slide_w: float, slide_h: fl
     extracted: list[dict] = []
     for idx, shape in enumerate(iter_shapes(slide.shapes), start=1):
         box = bbox_norm(shape, slide_w, slide_h)
+        st = getattr(shape, "shape_type", None)
         extracted.append(
             {
                 "id": shape_name(shape) or f"shape_{idx}",
                 "text": shape_text(shape),
                 "tag": local_tag(shape),
-                "shape_type": str(getattr(shape, "shape_type", "")),
+                "shape_type": str(st or ""),
+                "shape_type_int": int(st) if st is not None else None,
                 "box": box,
             }
         )
 
     meaningful = [item for item in extracted if not is_noise(item["box"])]
-    non_lines = [item for item in meaningful if not is_line_like(type("S", (), {"element": type("E", (), {"tag": item["tag"]})})(), item["box"])]
-    # Recompute line-like with original shape metadata
-    line_like = []
-    circle_like = []
-    card_like = []
-    for item in meaningful:
-        class _ShapeProxy:
-            def __init__(self, tag: str, shape_type: str, text: str):
-                self.element = type("E", (), {"tag": tag})()
-                self.shape_type = shape_type
-                self._text = text
-                self.has_text_frame = bool(text)
-                self.text_frame = type("TF", (), {"paragraphs": [type("P", (), {"text": text})()]})() if text else None
-
-        proxy = _ShapeProxy(item["tag"], item["shape_type"], item["text"])
-        box = item["box"]
-        if is_line_like(proxy, box):
-            line_like.append(item)
-        if is_circle_like(proxy, box):
-            circle_like.append(item)
-        if is_card_like(proxy, box):
-            card_like.append(item)
+    line_like = [item for item in meaningful if classify_line_like(item)]
+    circle_like = [item for item in meaningful if classify_circle_like(item)]
+    card_like = [item for item in meaningful if classify_card_like(item)]
 
     major = [item for item in meaningful if item["box"]["area"] >= 0.004]
     if not major:

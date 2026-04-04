@@ -171,11 +171,24 @@ def validate_review_findings(findings: dict | list | None) -> None:
             raise SystemExit(f"[ERROR] review finding #{idx} invalid page_id: {item['page_id']}")
 
 
+def is_scorecard_scaffold(scorecard: dict) -> bool:
+    """Return True if the scorecard is an unfilled scaffold (all scores are null)."""
+    overall = scorecard.get("overall_score")
+    if overall is None:
+        return True
+    dimensions = scorecard.get("dimensions")
+    if isinstance(dimensions, dict) and all(v is None for v in dimensions.values()):
+        return True
+    return False
+
+
 def validate_commercial_scorecard(scorecard: dict | None) -> None:
     if scorecard is None:
         return
     if not isinstance(scorecard, dict):
         raise SystemExit("[ERROR] commercial_scorecard must be an object.")
+    if is_scorecard_scaffold(scorecard):
+        return
     for field in REQUIRED_SCORECARD_FIELDS:
         if field not in scorecard:
             raise SystemExit(f"[ERROR] commercial_scorecard missing field: {field}")
@@ -184,12 +197,14 @@ def validate_commercial_scorecard(scorecard: dict | None) -> None:
         raise SystemExit("[ERROR] commercial_scorecard.dimensions must be an object.")
     for key in REQUIRED_SCORECARD_DIMENSIONS:
         value = dimensions.get(key)
+        if value is None:
+            continue
         if not isinstance(value, (int, float)):
             raise SystemExit(f"[ERROR] commercial_scorecard dimension `{key}` must be numeric.")
         if value < 1 or value > 5:
             raise SystemExit(f"[ERROR] commercial_scorecard dimension `{key}` must be within 1-5.")
     overall = scorecard.get("overall_score")
-    if not isinstance(overall, (int, float)) or overall < 1 or overall > 5:
+    if overall is not None and (not isinstance(overall, (int, float)) or overall < 1 or overall > 5):
         raise SystemExit("[ERROR] commercial_scorecard.overall_score must be within 1-5.")
 
 
@@ -268,7 +283,7 @@ def main() -> None:
     )
 
     commercial_issues: dict[str, list[str]] = {}
-    if isinstance(commercial_scorecard, dict):
+    if isinstance(commercial_scorecard, dict) and not is_scorecard_scaffold(commercial_scorecard):
         weak_dimensions = [
             key for key, value in commercial_scorecard.get("dimensions", {}).items()
             if isinstance(value, (int, float)) and value < 3
@@ -277,8 +292,8 @@ def main() -> None:
             commercial_issues.setdefault("__commercial__", []).append(
                 "commercial_score_low:" + ",".join(sorted(weak_dimensions))
             )
-        overall = float(commercial_scorecard.get("overall_score", 0))
-        if overall < args.min_commercial_score:
+        overall = commercial_scorecard.get("overall_score")
+        if isinstance(overall, (int, float)) and overall < args.min_commercial_score:
             commercial_issues.setdefault("__commercial__", []).append(f"commercial_score_overall:{overall:.2f}")
 
     issues = merge_issue_maps(

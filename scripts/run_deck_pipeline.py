@@ -173,6 +173,8 @@ def cmd_qa(args: argparse.Namespace) -> None:
             "--output-json", str(rollback_plan),
             "--output-md", str(rollback_plan_md),
         ]
+        if commercial_scorecard.exists():
+            route_cmd.extend(["--commercial-scorecard", str(commercial_scorecard)])
         if args.write_state:
             route_cmd.append("--write-state")
         run_script("route_review_findings.py", *route_cmd)

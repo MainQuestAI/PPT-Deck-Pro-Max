@@ -7,14 +7,14 @@ from pathlib import Path
 
 
 DEFAULT_SCORECARD = {
-    "overall_score": 0,
+    "overall_score": None,
     "dimensions": {
-        "audience_fit": 0,
-        "buying_reason_clarity": 0,
-        "proof_strength": 0,
-        "objection_coverage": 0,
-        "narrative_flow": 0,
-        "commercial_ask": 0,
+        "audience_fit": None,
+        "buying_reason_clarity": None,
+        "proof_strength": None,
+        "objection_coverage": None,
+        "narrative_flow": None,
+        "commercial_ask": None,
     },
     "summary": "",
     "recommended_action": "",

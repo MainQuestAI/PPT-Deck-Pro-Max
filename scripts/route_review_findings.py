@@ -32,8 +32,9 @@ def validate_findings(findings: list[dict]) -> None:
                 raise SystemExit(f"[ERROR] review finding #{idx} missing field: {field}")
         if item["severity"] not in SEVERITY_ORDER:
             raise SystemExit(f"[ERROR] review finding #{idx} invalid severity: {item['severity']}")
-        if not str(item["page_id"]).startswith("slide_"):
-            raise SystemExit(f"[ERROR] review finding #{idx} invalid page_id: {item['page_id']}")
+        page_id = str(item["page_id"])
+        if not page_id.startswith("slide_") and not page_id.startswith("__"):
+            raise SystemExit(f"[ERROR] review finding #{idx} invalid page_id: {page_id}")
 
 
 def pick_primary_route(routes: list[dict]) -> dict | None:
@@ -47,6 +48,39 @@ def pick_primary_route(routes: list[dict]) -> dict | None:
         ),
         reverse=True,
     )[0]
+
+
+DIMENSION_TO_FINDING_TYPE: dict[str, str] = {
+    "audience_fit": "audience_mismatch",
+    "buying_reason_clarity": "buying_reason_blurry",
+    "proof_strength": "proof_not_visible",
+    "objection_coverage": "objection_unanswered",
+    "narrative_flow": "narrative_broken",
+    "commercial_ask": "commercial_ask_unclear",
+}
+
+
+def synthesize_scorecard_findings(scorecard: dict | None, min_score: float = 3.0) -> list[dict]:
+    """Convert low-scoring commercial scorecard dimensions into routable findings."""
+    if not isinstance(scorecard, dict):
+        return []
+    overall = scorecard.get("overall_score")
+    if overall is None:
+        return []
+    findings: list[dict] = []
+    for key, value in scorecard.get("dimensions", {}).items():
+        if not isinstance(value, (int, float)) or value >= min_score:
+            continue
+        finding_type = DIMENSION_TO_FINDING_TYPE.get(key, "cta_weak")
+        findings.append({
+            "page_id": "__global__",
+            "severity": "high" if value < 2 else "medium",
+            "type": finding_type,
+            "reason": f"商业评分维度 `{key}` 得分 {value}/5，低于最低阈值 {min_score}",
+            "suggested_fix": scorecard.get("recommended_action", f"重点加强 {key} 相关页面"),
+            "source_image": "",
+        })
+    return findings
 
 
 def build_plan(project_dir: Path, findings: list[dict], rollback_map: dict, state: dict | None) -> dict:
@@ -222,6 +256,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Route structured review findings into rollback stages and target files.")
     parser.add_argument("--project-dir", required=True)
     parser.add_argument("--review-findings", required=True)
+    parser.add_argument("--commercial-scorecard")
+    parser.add_argument("--min-commercial-dimension-score", type=float, default=3.0)
     parser.add_argument("--state")
     parser.add_argument("--map-file")
     parser.add_argument("--output-json", required=True)
@@ -243,7 +279,15 @@ def main() -> None:
     if not isinstance(rollback_map, dict):
         raise SystemExit("[ERROR] rollback map must be an object.")
 
-    plan = build_plan(project_dir, findings if isinstance(findings, list) else [], rollback_map, state if isinstance(state, dict) else None)
+    all_findings = list(findings if isinstance(findings, list) else [])
+    if args.commercial_scorecard:
+        scorecard_path = Path(args.commercial_scorecard).expanduser().resolve()
+        if scorecard_path.exists():
+            scorecard = load_json(scorecard_path)
+            if isinstance(scorecard, dict):
+                all_findings.extend(synthesize_scorecard_findings(scorecard, args.min_commercial_dimension_score))
+
+    plan = build_plan(project_dir, all_findings, rollback_map, state if isinstance(state, dict) else None)
     save_json(output_json, plan)
     print(f"[OK] wrote rollback plan: {output_json}")
 
