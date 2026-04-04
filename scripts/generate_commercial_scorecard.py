@@ -16,8 +16,8 @@ DEFAULT_SCORECARD = {
         "narrative_flow": None,
         "commercial_ask": None,
     },
-    "summary": "",
-    "recommended_action": "",
+    "summary": None,
+    "recommended_action": None,
     "weak_dimensions": [],
 }
 

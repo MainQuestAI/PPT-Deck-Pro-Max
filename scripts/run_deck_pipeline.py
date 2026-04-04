@@ -182,7 +182,10 @@ def cmd_qa(args: argparse.Namespace) -> None:
 
 def cmd_validate(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
-    run_script("validate_deck_outputs.py", "--project-dir", str(project_dir), "--output-mode", args.output_mode)
+    cmd = ["--project-dir", str(project_dir), "--output-mode", args.output_mode]
+    if args.require_review:
+        cmd.append("--require-review")
+    run_script("validate_deck_outputs.py", *cmd)
 
 
 def cmd_preset(args: argparse.Namespace) -> None:
@@ -480,6 +483,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate = sub.add_parser("validate", help="Validate output completeness")
     p_validate.add_argument("--project-dir", required=True)
     p_validate.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
+    p_validate.add_argument("--require-review", action="store_true", help="Also check review/QA artifacts including montage and review_package")
     p_validate.set_defaults(func=cmd_validate)
 
     p_preset = sub.add_parser("preset", help="Apply a common deck preset")

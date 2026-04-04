@@ -25,7 +25,7 @@ TEMPLATES = {
     "review_rollback_plan.json": "{\n  \"project_dir\": \"\",\n  \"summary\": {},\n  \"page_actions\": [],\n  \"stage_actions\": []\n}\n",
     "review_rollback_plan.md": "# Review Rollback Plan\n",
     "review_package.json": "{\n  \"project_dir\": \"\",\n  \"artifacts\": {},\n  \"page_images\": [],\n  \"required_output\": {}\n}\n",
-    "commercial_scorecard.json": "{\n  \"overall_score\": null,\n  \"dimensions\": {\n    \"audience_fit\": null,\n    \"buying_reason_clarity\": null,\n    \"proof_strength\": null,\n    \"objection_coverage\": null,\n    \"narrative_flow\": null,\n    \"commercial_ask\": null\n  },\n  \"summary\": \"\",\n  \"recommended_action\": \"\",\n  \"weak_dimensions\": []\n}\n",
+    "commercial_scorecard.json": "{\n  \"overall_score\": null,\n  \"dimensions\": {\n    \"audience_fit\": null,\n    \"buying_reason_clarity\": null,\n    \"proof_strength\": null,\n    \"objection_coverage\": null,\n    \"narrative_flow\": null,\n    \"commercial_ask\": null\n  },\n  \"summary\": null,\n  \"recommended_action\": null,\n  \"weak_dimensions\": []\n}\n",
 }
 
 EXAMPLE_DIR_NAME = "example_project"

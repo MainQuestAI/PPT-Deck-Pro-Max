@@ -20,6 +20,8 @@ CORE_ARTIFACTS = [
 ]
 
 REVIEW_ARTIFACTS = [
+    "montage.png",
+    "review_package.json",
     "deck_review_report.md",
     "deck_review_findings.json",
     "commercial_scorecard.json",

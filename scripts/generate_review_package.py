@@ -100,10 +100,12 @@ def main() -> None:
         if args.montage
         else find_latest_matching(candidate_dirs, ["montage*.png", "*montage*.png"])
     )
+    deck_pptx = find_latest_matching(candidate_dirs, ["deck*.pptx", "*deck*.pptx", "*.pptx"])
+    deck_html = find_latest_matching(candidate_dirs, ["deck*.html", "*deck*.html", "index.html", "*.html"])
     deck_path = (
         Path(args.deck_path).expanduser().resolve()
         if args.deck_path
-        else find_latest_matching(candidate_dirs, ["deck*.pptx", "*deck*.pptx", "*.pptx"])
+        else (deck_pptx or deck_html)
     )
 
     skill_root = Path(__file__).resolve().parent.parent
@@ -119,6 +121,8 @@ def main() -> None:
         ],
         "artifacts": {
             "deck": str(deck_path) if deck_path and deck_path.exists() else "",
+            "deck_pptx": str(deck_pptx) if deck_pptx and deck_pptx.exists() else "",
+            "deck_html": str(deck_html) if deck_html and deck_html.exists() else "",
             "montage": str(montage) if montage and montage.exists() else "",
             "rendered_dir": str(rendered_dir) if rendered_dir.exists() else "",
             "clean_pages": str((project_dir / "deck_clean_pages.md").resolve()) if (project_dir / "deck_clean_pages.md").exists() else "",
