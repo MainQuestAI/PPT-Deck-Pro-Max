@@ -25,6 +25,7 @@ def build_brief_prompt(project_dir: Path) -> str:
             "## 输出要求",
             "",
             "- 锁定产品主语、产品定位、目标受众、第一购买理由、最强差异化、最强证据、首单入口、最终 CTA",
+            "- 如果 `deck_narrative_arc.md` 已存在，后续页面文稿必须尊重 beat 序列和过渡逻辑",
             "- 不进入视觉系统，不进入逐页排版",
             "- 如果需要补建后续页面文稿约束，请统一要求 `deck_clean_pages.md` 使用 `## 第 N 页` 作为分页符，不得改成纯加粗标题或自由格式",
             f"- 如果 `{rollback_plan.name}` 已存在，优先处理其中分配给 `brief` 的返工项",

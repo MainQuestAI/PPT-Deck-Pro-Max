@@ -146,6 +146,45 @@
     "why": "信息过密或过空首先是逐页内容压缩和结构分配问题，不应只靠缩字号。",
     "suggested_action": "先重做该页的内容压缩或拆页，再回到构建。"
   },
+  "narrative_broken": {
+    "rollback_stage": "narrative_arc",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_narrative_arc.md",
+      "deck_hero_pages.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "叙事弧线断裂意味着 beat 序列不合理、情绪拐点缺失或过渡逻辑断开。",
+    "suggested_action": "先重锁 beat 序列和信心拐点，再同步 hero pages 和 clean pages。"
+  },
+  "pacing_monotone": {
+    "rollback_stage": "clean_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_clean_pages.md",
+      "deck_narrative_arc.md"
+    ],
+    "why": "节奏单调通常是连续高密度页或缺少呼吸页导致的。",
+    "suggested_action": "先在弧线中标记呼吸页位置，再调整 clean pages 的密度分布。"
+  },
+  "transition_missing": {
+    "rollback_stage": "clean_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_clean_pages.md"
+    ],
+    "why": "页间过渡逻辑缺失，会让受众觉得页面之间没有关系。",
+    "suggested_action": "为缺失过渡的页面补写收口句和下一页的承接逻辑。"
+  },
+  "speaker_notes_missing": {
+    "rollback_stage": "clean_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_clean_pages.md"
+    ],
+    "why": "关键页缺少演讲备注，会让演讲者在最重要的页面失去话术锚点。",
+    "suggested_action": "为 hero pages 补写演讲备注，包含核心话术、重点数字和过渡衔接。"
+  },
   "generic_ai_feel": {
     "rollback_stage": "visual_system",
     "recommended_role": "visual",

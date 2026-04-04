@@ -39,6 +39,10 @@
           "component_drift",
           "density_issue",
           "generic_ai_feel",
+          "narrative_broken",
+          "pacing_monotone",
+          "transition_missing",
+          "speaker_notes_missing",
           "other"
         ]
       },

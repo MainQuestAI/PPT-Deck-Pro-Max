@@ -8,7 +8,8 @@
 
 1. `deck_brief.md`
 2. `deck_vibe_brief.md`
-3. `deck_hero_pages.md`
+3. `deck_narrative_arc.md`
+4. `deck_hero_pages.md`
 4. `deck_layout_v1.md`
 5. `deck_clean_pages.md`
 6. `deck_visual_system.md`
@@ -102,9 +103,16 @@ python scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
 - 这套 Deck 长什么样
 - 哪些页是重视觉，哪些页是重分析
 
-### Gate 3：Hero Pages 锁定
+### Gate 3：叙事弧线 + Hero Pages 锁定
 
-至少锁 3 到 5 页决定成败的页面。
+必须回答：
+
+- 每页归属什么 beat（setup / tension / resolution / proof / action）
+- 信心拐点在第几页
+- 哪些页是呼吸页
+- 前 3 页是否建立了紧迫感或识别感
+
+至少锁 3 到 5 页决定成败的页面，且 hero page 选择必须与 beat 类型对齐。
 
 ### Gate 4：Clean Pages 完成
 

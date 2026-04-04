@@ -1,6 +1,7 @@
 {
   "name": "product_intro",
   "default_output_mode": "pptx+html",
+  "narrative_template": ["setup", "proof", "resolution", "proof", "tension", "action"],
   "brief_hints": {
     "产品定位": "产品介绍型材料",
     "第一购买理由": "快速理解产品价值与商业回报",

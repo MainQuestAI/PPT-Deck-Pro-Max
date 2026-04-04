@@ -1,6 +1,7 @@
 {
   "name": "solution_deck",
   "default_output_mode": "pptx+html",
+  "narrative_template": ["setup", "tension", "tension", "resolution", "proof", "proof", "resolution", "proof", "resolution", "action"],
   "brief_hints": {
     "产品定位": "解决方案型产品 / 业务方案",
     "第一购买理由": "更快验证业务判断，并降低错误决策成本",

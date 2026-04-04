@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 from check_layout_stability import detect_layout_stability_issues
-from page_parser import extract_page_slices
+from page_parser import extract_page_slices, extract_speaker_notes
 
 try:
     from PIL import Image, ImageDraw
@@ -109,6 +109,25 @@ def detect_density_issues(state: dict, clean_pages_text: str | None, warn_chars:
                 issues.setdefault(page_id, []).append(f"hero_page_density:{char_count}")
         elif char_count > role_warn:
             issues.setdefault(page_id, []).append(f"text_dense:{char_count}")
+    return issues
+
+
+def detect_missing_speaker_notes(state: dict, clean_pages_text: str | None) -> dict[str, list[str]]:
+    issues: dict[str, list[str]] = {}
+    if not clean_pages_text:
+        return issues
+    notes = extract_speaker_notes(clean_pages_text)
+    for page in state.get("pages", []):
+        role = page.get("role", "")
+        if not role.startswith("hero_"):
+            continue
+        page_id = page.get("page_id", "")
+        match = re.search(r"(\d+)", page_id)
+        if not match:
+            continue
+        page_no = int(match.group(1))
+        if page_no not in notes:
+            issues.setdefault(page_id, []).append("speaker_notes_missing")
     return issues
 
 
@@ -265,6 +284,7 @@ def main() -> None:
     issues = merge_issue_maps(
         detect_component_drift(state, theme if isinstance(theme, dict) else None),
         detect_density_issues(state, clean_pages_text, args.warn_chars, args.fail_chars),
+        detect_missing_speaker_notes(state, clean_pages_text),
         layout_issues,
         merge_review_findings(review_findings),
         commercial_issues,

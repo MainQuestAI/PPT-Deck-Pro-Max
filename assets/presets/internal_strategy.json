@@ -1,6 +1,7 @@
 {
   "name": "internal_strategy",
   "default_output_mode": "pptx+html",
+  "narrative_template": ["tension", "tension", "resolution", "resolution", "proof", "action"],
   "brief_hints": {
     "产品定位": "内部战略汇报材料",
     "第一购买理由": "统一内部判断，锁定战略方向与资源优先级",

@@ -5,7 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
-from page_parser import extract_page_slices, page_id_to_number
+from page_parser import extract_page_slices, extract_speaker_notes, page_id_to_number
 
 
 def read(path: Path) -> str:
@@ -54,6 +54,15 @@ def main() -> None:
         selected, warnings = select_clean_pages(clean_pages_text, args.page_ids, args.allow_full_fallback)
         bundle["inputs"]["deck_clean_pages"] = selected
         bundle["warnings"].extend(warnings)
+        notes = extract_speaker_notes(clean_pages_text)
+        if notes:
+            page_notes: dict[str, str] = {}
+            for page_id in args.page_ids or []:
+                page_no = page_id_to_number(page_id)
+                if page_no and page_no in notes:
+                    page_notes[page_id] = notes[page_no]
+            if page_notes:
+                bundle["inputs"]["speaker_notes"] = page_notes
     if args.visual_system:
         bundle["inputs"]["deck_visual_system"] = read(Path(args.visual_system))
     if args.component_tokens:

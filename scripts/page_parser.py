@@ -29,6 +29,27 @@ def page_id_to_number(page_id: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+SPEAKER_NOTE_PATTERN = re.compile(
+    r"^>\s*演讲备注\s*[:：]\s*(.+?)$",
+    re.MULTILINE,
+)
+
+
+def extract_speaker_notes(text: str) -> dict[int, str]:
+    """Extract speaker notes from deck_clean_pages.md.
+
+    Returns a mapping of page number to speaker note text.
+    Notes are expected in the format: > 演讲备注: ...
+    """
+    slices = extract_page_slices(text)
+    notes: dict[int, str] = {}
+    for page_no, section in slices.items():
+        matches = SPEAKER_NOTE_PATTERN.findall(section)
+        if matches:
+            notes[page_no] = " ".join(m.strip() for m in matches)
+    return notes
+
+
 def extract_page_slices(text: str) -> dict[int, str]:
     matches = list(HEADING_PATTERN.finditer(text))
     if not matches:

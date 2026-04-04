@@ -72,9 +72,20 @@ It must lock:
 
 Read `references/vibe_brief_template.md` and `references/component_system.md`.
 
-### Step 3: Define Hero Pages
+### Step 3: Define Narrative Arc & Hero Pages
 
-Create or update `deck_hero_pages.md`.
+First create or update `deck_narrative_arc.md`.
+
+The narrative arc must lock:
+
+1. Beat sequence (setup / tension / resolution / proof / action per page)
+2. Emotional curve with at least one confidence inflection point
+3. Transition logic between pages
+4. Breathing page placement
+
+Read `references/narrative_arc_guide.md` and `references/pacing_rhythm_guide.md`.
+
+Then create or update `deck_hero_pages.md`.
 
 Hero pages usually include:
 
@@ -85,7 +96,9 @@ Hero pages usually include:
 5. Differentiation
 6. CTA / commercial entry
 
-Read `references/hero_pages_guide.md`.
+Hero page selection must align with beat types: tension beats and strong proof beats are more likely to be heroes.
+
+Read `references/hero_pages_guide.md` and `references/objection_handling_guide.md`.
 
 At the end of this step, pause for lightweight human confirmation when the user is collaborating live.
 
@@ -317,6 +330,12 @@ Use these files intentionally:
   - brief structure
 - `references/vibe_brief_template.md`
   - visual direction structure
+- `references/narrative_arc_guide.md`
+  - beat types, arc templates, and emotional curve validation
+- `references/pacing_rhythm_guide.md`
+  - density alternation, breathing pages, and transition logic
+- `references/objection_handling_guide.md`
+  - common objection categories and placement strategy
 - `references/hero_pages_guide.md`
   - hero page selection and priority rules
 - `references/layout_page_guide.md`

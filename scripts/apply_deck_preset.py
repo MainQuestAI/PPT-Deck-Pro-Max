@@ -108,6 +108,47 @@ def apply_to_hero_pages(project_dir: Path, hero_pages: list[dict]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def apply_narrative_arc(project_dir: Path, preset: dict, state: dict) -> None:
+    template = preset.get("narrative_template")
+    if not template:
+        return
+    total_pages = len(state.get("pages", []))
+    beats = list(template)
+    # Stretch or trim template to match page count
+    if len(beats) < total_pages:
+        # Repeat the last non-action beat before the final action
+        filler = beats[-2] if len(beats) >= 2 else "resolution"
+        while len(beats) < total_pages:
+            beats.insert(-1, filler)
+    elif len(beats) > total_pages:
+        beats = beats[:total_pages]
+    lines = [
+        "# Narrative Arc",
+        "",
+        f"## 弧线模板",
+        "",
+        f"{preset.get('name', 'custom')}: {' → '.join(template)}",
+        "",
+        "## 逐页 Beat",
+        "",
+        "| 页码 | Beat | 情绪目标 | 过渡逻辑 |",
+        "|------|------|---------|---------|",
+    ]
+    beat_emotion = {
+        "setup": "识别感",
+        "tension": "紧迫感",
+        "resolution": "清晰感",
+        "proof": "信心",
+        "action": "动作感",
+    }
+    for idx, beat in enumerate(beats, start=1):
+        emotion = beat_emotion.get(beat, beat)
+        lines.append(f"| 第 {idx} 页 | {beat} | {emotion} | |")
+    lines.extend(["", "## 信心拐点", "", "（待锁定）", "", "## 呼吸页", "", "（待锁定）", ""])
+    path = project_dir / "deck_narrative_arc.md"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def apply_to_state(project_dir: Path, preset: dict, hero_pages: list[dict]) -> dict | None:
     path = project_dir / "slide_state.json"
     if not path.exists():
@@ -135,6 +176,7 @@ def main() -> None:
     hero_pages = resolve_hero_pages(state, preset)
     apply_to_brief(project_dir, preset)
     apply_to_hero_pages(project_dir, hero_pages)
+    apply_narrative_arc(project_dir, preset, state)
     apply_to_state(project_dir, preset, hero_pages)
     print(f"[OK] applied preset: {preset.get('name', 'unknown')} -> {project_dir}")
 

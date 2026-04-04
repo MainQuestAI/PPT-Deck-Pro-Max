@@ -14,6 +14,8 @@
 - 用业务语言
 - 不写技术实现
 - 不写风格语言
+- 如果 `deck_narrative_arc.md` 已存在，后续页面文稿必须尊重 beat 序列和过渡逻辑
+- hero pages 的 clean pages 必须附带 `> 演讲备注:` 区块
 - 如果需要补充后续页面文稿约束，统一要求 `deck_clean_pages.md` 使用 `## 第 N 页` 作为分页符
 - 如果处于返工期，优先接收按角色过滤后的 rework handoff，不要自行扫描完整 rollback plan
 
@@ -54,6 +56,7 @@
 - 不引入未定义组件
 - 不做额外解释
 - 只输出当前页需要的实现
+- 如果 clean pages 包含 `> 演讲备注:`，必须传递到成品（pptx 的 speaker notes 或 html 的注释）
 - 如果需要回补或修正 `deck_clean_pages.md`，必须保持 `## 第 N 页` 分页格式
 - 如果处于返工期，只处理 build rework handoff 中列出的页面
 
@@ -78,4 +81,6 @@
 - 每条必须包含 `page_id`、`severity`、`type`、`reason`、`suggested_fix`、`source_image`
 - 优先结合 `montage.png`、页级 PNG 或截图做多模态评审，再回看文字与状态文件
 - 重点检查是否有普通 AI 味、视觉层级是否清晰、关键页是否失焦、是否偏离既定视觉系统
+- 检查叙事弧线是否连贯：beat 序列是否合理、过渡逻辑是否成立、有无节奏单调
+- 检查 hero pages 是否有演讲备注
 - findings 会被系统自动映射成 `review_rollback_plan.json/.md`，所以 `type` 必须认真选择，不能滥用 `other`

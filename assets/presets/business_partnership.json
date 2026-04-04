@@ -1,6 +1,7 @@
 {
   "name": "business_partnership",
   "default_output_mode": "pptx+html",
+  "narrative_template": ["setup", "resolution", "proof", "proof", "tension", "action"],
   "brief_hints": {
     "产品定位": "商务合作提案材料",
     "第一购买理由": "让对方快速看到合作价值、合作方式与推进可行性",
