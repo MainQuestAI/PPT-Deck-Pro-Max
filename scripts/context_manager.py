@@ -38,6 +38,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build a minimal context bundle for deck roles.")
     parser.add_argument("--role", required=True, choices=["brief", "visual", "build", "review"])
     parser.add_argument("--clean-pages")
+    parser.add_argument("--visual-composition")
     parser.add_argument("--visual-system")
     parser.add_argument("--component-tokens")
     parser.add_argument("--theme-tokens")
@@ -63,6 +64,24 @@ def main() -> None:
                     page_notes[page_id] = notes[page_no]
             if page_notes:
                 bundle["inputs"]["speaker_notes"] = page_notes
+    # Visual composition — slice per page for build context
+    if args.visual_composition:
+        vc_text = read(Path(args.visual_composition))
+        if vc_text:
+            vc_slices = extract_page_slices(vc_text)
+            if args.page_ids:
+                selected_vc: dict[str, str] = {}
+                for page_id in args.page_ids:
+                    page_no = page_id_to_number(page_id)
+                    if page_no and page_no in vc_slices:
+                        selected_vc[page_id] = vc_slices[page_no]
+                if selected_vc:
+                    bundle["inputs"]["visual_composition"] = selected_vc
+                else:
+                    bundle["warnings"].append("missing_visual_composition_slices")
+            else:
+                bundle["inputs"]["visual_composition"] = {"full_document": vc_text}
+
     if args.visual_system:
         bundle["inputs"]["deck_visual_system"] = read(Path(args.visual_system))
     if args.component_tokens:

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 — 视觉沟通层的运行时集成收尾
+
+### 4 个运行时断点修复
+- **context_manager.py 注入 visual_composition**：新增 `--visual-composition` 参数，Build context 现在按页切片包含视觉施工图。`run_deck_pipeline.py build-context` 自动传入 `deck_visual_composition.md`。Build AI 不再需要"根据文字自行猜视觉"。
+- **generate_visual_composition.py 升级到完整施工图**：每页输出补齐主角位置/占比、视觉重量分布、模板引用、强调方式、概念化 UI 声明。从"视觉建议"升级为"视觉施工图"。
+- **validate_deck_outputs.py 纳入视觉层产物**：CORE_ARTIFACTS 新增 `deck_visual_composition.md`、`deck_asset_plan.md`、`asset_manifest.json`。正式验收合同与 v1.0 视觉沟通系统完全对齐。
+- **validate 子命令暴露 formal 模式**：新增 `--formal` 别名，一键启用正式评审验收（等同 `--require-review`）。
+
 ## 1.1.0 — 从"方案 Deck"升级为"世界观闭合的 Category Deck"
 
 ### 三个底层假设变更

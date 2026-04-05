@@ -13,9 +13,12 @@ CORE_ARTIFACTS = [
     "deck_hero_pages.md",
     "deck_layout_v1.md",
     "deck_clean_pages.md",
+    "deck_visual_composition.md",
     "deck_visual_system.md",
     "deck_component_tokens.md",
     "deck_theme_tokens.json",
+    "deck_asset_plan.md",
+    "asset_manifest.json",
     "slide_state.json",
 ]
 
