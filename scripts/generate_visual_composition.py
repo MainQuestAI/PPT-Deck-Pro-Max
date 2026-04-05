@@ -129,16 +129,22 @@ ICON_MAP = {
 }
 
 
+LAYER_KEYWORDS = ["输入", "处理", "输出", "三层", "输入层", "输出层", "上下文"]
+TIMELINE_KEYWORDS = ["演进", "三代", "代际", "第一代", "第二代", "Gen 1", "Gen 2", "GEN"]
+
+
 def detect_relationship(text: str) -> str:
     """Detect the primary data relationship in a page's content."""
     text_lower = text.lower()
     scores = {
-        "comparison": sum(1 for k in COMPARISON_KEYWORDS if k in text),
-        "degree_gap": sum(1 for k in GAP_KEYWORDS if k in text),
-        "flow_process": sum(1 for k in FLOW_KEYWORDS if k in text),
-        "closed_loop": sum(1 for k in LOOP_KEYWORDS if k in text),
-        "category": sum(1 for k in CATEGORY_KEYWORDS if k in text),
-        "big_metric": sum(1 for k in METRIC_KEYWORDS if k in text),
+        "comparison": sum(1 for k in COMPARISON_KEYWORDS if k in text_lower),
+        "degree_gap": sum(1 for k in GAP_KEYWORDS if k in text_lower),
+        "flow_process": sum(1 for k in FLOW_KEYWORDS if k in text_lower),
+        "closed_loop": sum(1 for k in LOOP_KEYWORDS if k in text_lower),
+        "category": sum(1 for k in CATEGORY_KEYWORDS if k in text_lower),
+        "big_metric": sum(1 for k in METRIC_KEYWORDS if k in text_lower),
+        "layer_input_output": sum(1 for k in LAYER_KEYWORDS if k in text_lower),
+        "timeline_evolution": sum(1 for k in TIMELINE_KEYWORDS if k in text_lower),
     }
     # Special: if page has both flow and comparison, pick the stronger
     if scores["flow_process"] > 0 and scores["comparison"] > 0:

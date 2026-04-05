@@ -10,11 +10,12 @@
 2. `deck_vibe_brief.md`
 3. `deck_narrative_arc.md`
 4. `deck_hero_pages.md`
-5. `deck_asset_plan.md`
-6. `asset_manifest.json`
-4. `deck_layout_v1.md`
-5. `deck_clean_pages.md`
-6. `deck_visual_system.md`
+5. `deck_layout_v1.md`
+6. `deck_clean_pages.md`
+7. `deck_visual_composition.md`
+8. `deck_asset_plan.md`
+9. `asset_manifest.json`
+10. `deck_visual_system.md`
 7. `deck_component_tokens.md`
 8. `deck_theme_tokens.json`
 9. `deck_geometry_rules.md`
