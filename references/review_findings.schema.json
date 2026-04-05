@@ -45,6 +45,7 @@
           "speaker_notes_missing",
           "asset_missing",
           "visual_flat",
+          "world_incomplete",
           "other"
         ]
       },

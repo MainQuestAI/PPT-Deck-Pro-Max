@@ -367,6 +367,8 @@ Use these files intentionally:
   - density alternation, breathing pages, and transition logic
 - `references/objection_handling_guide.md`
   - common objection categories and placement strategy
+- `references/concept_ui_guide.md`
+  - concept UI skeletons for world-completeness when real screenshots are unavailable
 - `references/asset_pipeline_guide.md`
   - product screenshot capture, device mockups, and placeholder system
 - `references/build_contract.md`
@@ -412,10 +414,12 @@ Use these files intentionally:
 
 This skill succeeds only if the final deck is:
 
-1. commercially clear
-2. visually consistent
-3. proof-led instead of definition-led
-4. not document-like
-5. geometry-stable in the actual built artifact, not only in the skeleton
-6. above the minimum commercial score threshold
-7. ready for delivery in `pptx`, `html`, or both
+1. **world-complete** — a reader flipping through alone should feel "this system already exists," not "this is a proposal"
+2. **self-explanatory** — every page is independently readable without a presenter (document mode density by default)
+3. commercially clear — the business case is obvious
+4. visually consistent — no rogue styles, no competing decorations
+5. proof-led instead of definition-led
+6. **no unfinished signals** — no empty placeholders, no "SCREENSHOT PLACEHOLDER" rectangles; use concept UI skeletons instead
+7. geometry-stable in the actual built artifact, not only in the skeleton
+8. above the minimum commercial score threshold
+9. ready for delivery in `pptx`, `html`, or both

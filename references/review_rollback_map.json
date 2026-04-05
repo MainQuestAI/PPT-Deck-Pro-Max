@@ -185,6 +185,17 @@
     "why": "关键页缺少演讲备注，会让演讲者在最重要的页面失去话术锚点。",
     "suggested_action": "为 hero pages 补写演讲备注，包含核心话术、重点数字和过渡衔接。"
   },
+  "world_incomplete": {
+    "rollback_stage": "visual_composition",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_visual_composition.md",
+      "deck_clean_pages.md",
+      "deck_brief.md"
+    ],
+    "why": "整套 deck 的世界观没有闭合——读者翻完后觉得'这是方案建议'而不是'这个系统已存在'。可能原因：空占位符、内容密度不足、场景页缺产品存在感。",
+    "suggested_action": "检查 Brief 的成交任务设置（默认应为 sponsor 模式）；将空占位符替换为概念化 UI；按文档模式密度补充论据。"
+  },
   "visual_flat": {
     "rollback_stage": "visual_composition",
     "recommended_role": "visual",

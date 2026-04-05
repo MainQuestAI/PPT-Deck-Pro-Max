@@ -66,10 +66,15 @@
 - 如果需要回补 `deck_clean_pages.md`，必须保持 `## 第 N 页` 分页格式
 - 如果处于返工期，只处理 build rework handoff 中列出的页面
 
+- **禁止空占位符** — 如果 visual_composition 声明了 `concept_ui`，必须渲染概念化 UI skeleton（窗口框架 + 面板 + 状态标签），参见 `references/concept_ui_guide.md`
+- 装饰背景元素（渐变球、光效）透明度不得超过 12%，不得和内容区域重叠
+
 **禁止事项：**
 - 禁止输出纯文字面板页面
 - 禁止所有卡片大小一样、颜色一样
 - 禁止忽略 visual_composition 中指定的图表类型
+- **禁止使用空占位矩形（SCREENSHOT PLACEHOLDER）** — 用概念化 UI skeleton 替代
+- 禁止装饰元素和内容竞争视觉注意力
 
 ## Review AI
 

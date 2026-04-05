@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.1.0 — 从"方案 Deck"升级为"世界观闭合的 Category Deck"
+
+### 三个底层假设变更
+
+**压缩哲学**：默认从演讲模式（80 字/页）切换为**文档模式（250-350 字/页）**。80% 的商业 Deck 是被"看"的不是被"讲"的，每页必须独立可读、论据充分，不能只留结论句。
+
+**占位策略**：**禁止空占位符（SCREENSHOT PLACEHOLDER）**。当截图不可用时，必须使用概念化 UI skeleton（仿产品控制台骨架）建立产品存在感。新增 `references/concept_ui_guide.md`。
+
+**成交任务定义**：Brief 模板新增"成交任务"字段——**争取 Sponsor（默认）** vs 争取 Owner。默认 Sponsor 模式产出 Category Deck（构建完整世界观），Owner 模式产出 Solution Deck（逻辑严密可追问）。
+
+### 新增规则
+- **世界观闭合度检查**：QA checklist 新增 6 项，新增 `world_incomplete` finding 类型和回退路由
+- **装饰克制规则**：背景装饰透明度 ≤ 12%，面积 ≤ 15%，不得与内容竞争注意力
+- **标题行数约束**：标题最多 3 行
+- Success Criteria 新增 `world-complete` 和 `self-explanatory` 为前两项
+
+### 核心洞察来源
+基于 Codex vs Manus 同输入对比的深层分析：差距不在视觉设计，在于说服模型——Manus 构建"未来已来"的闭合世界，Codex 构建"可被批准"的方案论证。市场 80% 场景需要前者。
+
 ## 1.0.0 — 从"内容生产系统"升级为"视觉沟通系统"
 
 ### 架构级变更
