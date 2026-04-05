@@ -107,7 +107,9 @@ RELATIONSHIP_TO_VISUAL = {
     },
 }
 
-# Icon suggestions by concept keywords
+# Icon suggestions by concept keywords.
+# Insertion order determines priority: earlier entries are preferred when
+# multiple keywords match on the same page (Python 3.7+ dict ordering).
 ICON_MAP = {
     "认知": "brain", "理解": "brain", "用户": "users", "人群": "users",
     "决策": "settings", "策略": "target", "规则": "git-branch",
@@ -192,17 +194,36 @@ def suggest_illustrative_data(relationship: str, text: str) -> list[dict]:
     elif relationship == "category":
         # Multiple categories — suggest colored scores
         count = 0
-        for k in CATEGORY_KEYWORDS:
-            match = re.search(rf"(\d+)[类种个大]", text)
-            if match:
-                count = int(match.group(1))
-                break
+        # Match "N类/种/个/大" with boundary to avoid false positives like "2026年15大会"
+        cat_match = re.search(r"(?<!\d)([2-9]|1[0-9]?)[类种个大](?:模块|场景|维度|价值|方向)?", text)
+        if cat_match:
+            count = int(cat_match.group(1))
         if count == 0:
             count = 3
         values = [92, 88, 95, 85, 78]
         for i in range(min(count, 5)):
             data.append({"label": f"维度{i+1}", "value": values[i], "type": "bar", "illustrative": True})
     return data
+
+
+# Concept UI title mapping — keyword → English title
+CONCEPT_UI_TITLES: list[tuple[list[str], str]] = [
+    (["转化", "首购"], "Private-domain conversion runtime"),
+    (["内容", "素材"], "Content orchestration workbench"),
+    (["会员", "生命周期", "复购"], "Membership runtime cockpit"),
+    (["预演", "模拟", "策略"], "Strategy simulation lab"),
+    (["监测", "监控", "观察"], "Monitor control panel"),
+    (["诊断", "修复", "工单"], "Repair & diagnosis console"),
+    (["事实", "知识", "底座"], "Knowledge base manager"),
+]
+
+
+def _infer_concept_ui_title(section: str, fallback_title: str) -> str:
+    """Infer concept UI window title from page content keywords."""
+    for keywords, title in CONCEPT_UI_TITLES:
+        if any(k in section for k in keywords):
+            return title
+    return f"{fallback_title} workbench"
 
 
 def generate_composition(clean_pages_text: str, state: dict) -> list[dict]:
@@ -233,19 +254,7 @@ def generate_composition(clean_pages_text: str, state: dict) -> list[dict]:
         )
         concept_ui_title = ""
         if needs_concept_ui:
-            # Generate a concept UI title based on page content
-            if "转化" in section or "首购" in section:
-                concept_ui_title = "Private-domain conversion runtime"
-            elif "内容" in section:
-                concept_ui_title = "Content orchestration workbench"
-            elif "会员" in section:
-                concept_ui_title = "Membership runtime cockpit"
-            elif "预演" in section or "模拟" in section:
-                concept_ui_title = "Strategy simulation lab"
-            elif "监测" in section:
-                concept_ui_title = "Monitor control panel"
-            else:
-                concept_ui_title = f"{title} workbench"
+            concept_ui_title = _infer_concept_ui_title(section, title)
 
         compositions.append({
             "page_no": page_no,

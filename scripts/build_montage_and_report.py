@@ -87,11 +87,13 @@ def detect_component_drift(state: dict, theme: dict | None) -> dict[str, list[st
     return issues
 
 
-def detect_density_issues(state: dict, clean_pages_text: str | None, warn_chars: int, fail_chars: int) -> dict[str, list[str]]:
+def detect_density_issues(state: dict, clean_pages_text: str | None, warn_chars: int, fail_chars: int, min_chars: int = 0) -> dict[str, list[str]]:
     issues: dict[str, list[str]] = {}
     if not clean_pages_text:
         return issues
     sections = extract_page_slices(clean_pages_text)
+    # Roles exempt from min_chars check (cover/CTA pages are intentionally sparse)
+    min_exempt_roles = {"hero_cover", "hero_cta"}
     for page in state.get("pages", []):
         page_id = page.get("page_id", "")
         match = re.search(r"(\d+)", page_id)
@@ -109,6 +111,9 @@ def detect_density_issues(state: dict, clean_pages_text: str | None, warn_chars:
                 issues.setdefault(page_id, []).append(f"hero_page_density:{char_count}")
         elif char_count > role_warn:
             issues.setdefault(page_id, []).append(f"text_dense:{char_count}")
+        # Document-mode minimum density check
+        if min_chars > 0 and char_count < min_chars and role not in min_exempt_roles:
+            issues.setdefault(page_id, []).append(f"text_too_sparse:{char_count}")
     return issues
 
 
@@ -269,6 +274,7 @@ def main() -> None:
     parser.add_argument("--commercial-scorecard")
     parser.add_argument("--warn-chars", type=int, default=700)
     parser.add_argument("--fail-chars", type=int, default=1000)
+    parser.add_argument("--min-chars", type=int, default=150, help="Minimum chars per page (document mode); 0 to disable")
     parser.add_argument("--require-review", action="store_true")
     parser.add_argument("--require-commercial-scorecard", action="store_true")
     parser.add_argument("--min-commercial-score", type=float, default=3.3)
@@ -321,7 +327,7 @@ def main() -> None:
 
     issues = merge_issue_maps(
         detect_component_drift(state, theme if isinstance(theme, dict) else None),
-        detect_density_issues(state, clean_pages_text, args.warn_chars, args.fail_chars),
+        detect_density_issues(state, clean_pages_text, args.warn_chars, args.fail_chars, getattr(args, "min_chars", 0)),
         detect_missing_speaker_notes(state, clean_pages_text),
         detect_missing_assets(state, asset_manifest if isinstance(asset_manifest, dict) else None),
         layout_issues,
