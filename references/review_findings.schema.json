@@ -46,6 +46,7 @@
           "asset_missing",
           "visual_flat",
           "world_incomplete",
+          "internal_language_leak",
           "other"
         ]
       },

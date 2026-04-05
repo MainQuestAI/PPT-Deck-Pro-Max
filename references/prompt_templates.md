@@ -69,12 +69,21 @@
 - **禁止空占位符** — 如果 visual_composition 声明了 `concept_ui`，必须渲染概念化 UI skeleton（窗口框架 + 面板 + 状态标签），参见 `references/concept_ui_guide.md`
 - 装饰背景元素（渐变球、光效）透明度不得超过 12%，不得和内容区域重叠
 
+**内部语言隔离：**
+- **你正在写客户看到的文案，不是在写制作说明。**
+- 标题、正文、insight bar 中不得出现"这一页负责""没有这一页""回答顾虑"等编排语言
+- 不得出现 proof、hero page、CTA 页、tension beat、objection handling 等生产术语
+- 文案主语必须是"业务问题/用户/品牌/结果"，不是"这一页/客户/组织"
+- Runtime/Agent/State 等系统概念可以出现，但必须翻译成客户能理解的业务语言
+- 检查标准：如果客户把这句话截图转发给同事，它读起来应该像在讨论业务，不像我们在自言自语
+
 **禁止事项：**
 - 禁止输出纯文字面板页面
 - 禁止所有卡片大小一样、颜色一样
 - 禁止忽略 visual_composition 中指定的图表类型
 - **禁止使用空占位矩形（SCREENSHOT PLACEHOLDER）** — 用概念化 UI skeleton 替代
 - 禁止装饰元素和内容竞争视觉注意力
+- **禁止在客户可见文案中使用编排语言**（参见 `compression_rules.md` 客户文案净化规则）
 
 ## Review AI
 

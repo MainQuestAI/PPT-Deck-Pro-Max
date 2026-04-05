@@ -185,6 +185,15 @@
     "why": "关键页缺少演讲备注，会让演讲者在最重要的页面失去话术锚点。",
     "suggested_action": "为 hero pages 补写演讲备注，包含核心话术、重点数字和过渡衔接。"
   },
+  "internal_language_leak": {
+    "rollback_stage": "clean_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_clean_pages.md"
+    ],
+    "why": "客户可见文案中混入了编排语言（如'这一页负责''proof 页''回答顾虑'等），暴露了制作视角而非客户视角。这是 4 层语言隔离失败的结果。",
+    "suggested_action": "逐页审查标题、正文和 insight bar，将主语从'页面/制作者'改写为'业务问题/用户/结果'。编排术语只保留在元数据层。"
+  },
   "world_incomplete": {
     "rollback_stage": "visual_composition",
     "recommended_role": "visual",

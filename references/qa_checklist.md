@@ -56,6 +56,16 @@
 
 如果超过 3 页只有纯文字面板且没有视觉主角，报 `visual_flat` finding 并要求回退到 visual_composition。
 
+## 内部语言泄露检查
+
+1. 标题、正文、insight bar 中是否出现"这一页负责""没有这一页""回答顾虑"等制作语言
+2. 是否有生产术语直接外露：proof、hero page、CTA 页、tension beat、objection handling
+3. 文案的主语是否是"业务问题/用户/品牌/结果"而非"这一页/客户/组织"
+4. 每句客户可见文案是否经得起"截图转发给同事"的测试
+5. speaker notes 和编排指令是否严格隔离在元数据层，未混入正文
+
+如果多处出现内部语言泄露，报 `internal_language_leak` finding。这不是文案能力问题，是内容治理问题。
+
 ## 世界观闭合度检查
 
 1. 读者独自翻完整套 deck 后，是否会觉得"这个系统已经存在"而不是"这只是一个方案建议"
