@@ -41,8 +41,11 @@
 
 ## Build AI
 
+**角色定义：你是视觉施工员，不是排版工人。你的职责是把视觉施工图变成真实的页面，而不是把文字排进面板。**
+
 输入：
 - 当前页 `deck_clean_pages` 切片
+- 当前页 `deck_visual_composition` 切片（视觉施工图）
 - `deck_visual_system.md`
 - `deck_component_tokens.md`
 - `deck_theme_tokens.json`
@@ -50,17 +53,23 @@
 - `review_rollback_plan.md` 中与当前页相关的返工项（如果存在）
 
 任务：
-`请只生成当前这一页。不要引用其他页面的实现代码，也不要补看原始长文档。若需要图表，优先复用 assets/chart_templates/ 下的模板并替换占位符。`
+`请根据 visual_composition 的视觉规格实现当前页。每一页必须有一个视觉主角（图表/图标链/大数字/架构图），文字只是辅助。如果 visual_composition 指定了图表类型和数据，必须渲染出来。`
 
 输出约束：
-- 一页一个主角
-- 不引入未定义组件
-- 不做额外解释
-- 只输出当前页需要的实现
-- 如果 clean pages 包含 `> 演讲备注:`，必须传递到成品（pptx 的 speaker notes 或 html 的注释）
-- 如果 build context 包含 `assets` 字段，按路径引用图片嵌入到页面的指定位置
-- 如果需要回补或修正 `deck_clean_pages.md`，必须保持 `## 第 N 页` 分页格式
+- **每一页必须有视觉主角**——纯文字卡片不是合格输出（除非 visual_composition 明确标注 visual_protagonist=none）
+- **视觉主角的面积应占页面 40% 以上**
+- 如果 visual_composition 指定了 gauge_chart / radar_chart / bar_chart / flow_chain / loop_diagram，必须用 SVG 或 CSS 渲染出来
+- 如果 visual_composition 指定了 icon，必须使用 SVG icon（不是 emoji）
+- 如果 visual_composition 包含 illustrative data，渲染图表时使用这些数据
+- 如果 clean pages 包含 `> 演讲备注:`，必须传递到成品
+- 如果 build context 包含 `assets` 字段，按路径引用图片嵌入
+- 如果需要回补 `deck_clean_pages.md`，必须保持 `## 第 N 页` 分页格式
 - 如果处于返工期，只处理 build rework handoff 中列出的页面
+
+**禁止事项：**
+- 禁止输出纯文字面板页面
+- 禁止所有卡片大小一样、颜色一样
+- 禁止忽略 visual_composition 中指定的图表类型
 
 ## Review AI
 

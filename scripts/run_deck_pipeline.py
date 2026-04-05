@@ -368,6 +368,18 @@ def cmd_rework_handoff(args: argparse.Namespace) -> None:
     run_script("generate_rework_handoff.py", *cmd)
 
 
+def cmd_visual_composition(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.clean_pages:
+        cmd.extend(["--clean-pages", str(Path(args.clean_pages).expanduser().resolve())])
+    if args.state:
+        cmd.extend(["--state", str(Path(args.state).expanduser().resolve())])
+    if args.output:
+        cmd.extend(["--output", str(Path(args.output).expanduser().resolve())])
+    run_script("generate_visual_composition.py", *cmd)
+
+
 def cmd_asset_plan(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -552,6 +564,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_rework.add_argument("--page-ids", nargs="*", default=[])
     p_rework.add_argument("--output")
     p_rework.set_defaults(func=cmd_rework_handoff)
+
+    p_vc = sub.add_parser("visual-composition", help="Generate visual composition spec from clean pages")
+    p_vc.add_argument("--project-dir", required=True)
+    p_vc.add_argument("--clean-pages")
+    p_vc.add_argument("--state")
+    p_vc.add_argument("--output")
+    p_vc.set_defaults(func=cmd_visual_composition)
 
     p_asset_plan = sub.add_parser("asset-plan", help="Generate asset plan from clean pages and slide state")
     p_asset_plan.add_argument("--project-dir", required=True)

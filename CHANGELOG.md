@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.0.0 — 从"内容生产系统"升级为"视觉沟通系统"
+
+### 架构级变更
+- Skill 的设计哲学从"文字思维做视觉产物"升级为"视觉思维做视觉产物"
+- Step 5 从"Editorial Compression"重写为"Content Compression + Visual Composition Design"
+- 新增核心产物 `deck_visual_composition.md` — 逐页视觉施工图，坐在 clean_pages 和 build 之间
+- Build AI 角色从"排版工人"重新定义为"视觉施工员"
+
+### 新增 Reference 文件
+- `references/information_design_guide.md`：8 种数据关系 → 视觉形式的完整映射规则
+- `references/visual_composition_guide.md`：如何从文字内容生成逐页视觉施工图
+- `references/illustrative_data_guide.md`：何时/如何生成和标记说明性数据
+
+### 新增脚本
+- `scripts/generate_visual_composition.py`：分析 clean pages 内容的数据关系，自动提议视觉主角、图表类型、icon、说明性数据
+
+### 修改的核心文件
+- `SKILL.md`：Step 5 重写，Resources 列表新增三个 reference
+- `references/compression_rules.md`：目标从"压缩文字"改为"翻译成视觉沟通规格"
+- `references/prompt_templates.md`：Build AI prompt 完全重写为视觉施工员角色
+- `references/qa_checklist.md`：新增"视觉主角检查"专项（7 项）
+- `references/review_findings.schema.json`：新增 `visual_flat` 类型
+- `references/review_rollback_map.json`：新增 `visual_flat` 路由（回退到 visual_composition）
+- `references/workflow.md`：新增视觉组合阶段
+- `scripts/run_deck_pipeline.py`：新增 `visual-composition` 子命令
+- `scripts/generate_role_prompt.py`：Build AI handoff 重写
+- `scripts/init_deck_project.py`：新增 `deck_visual_composition.md` 模板
+
 ## 0.9.1
 
 ### 工程可靠性

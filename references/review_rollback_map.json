@@ -185,6 +185,16 @@
     "why": "关键页缺少演讲备注，会让演讲者在最重要的页面失去话术锚点。",
     "suggested_action": "为 hero pages 补写演讲备注，包含核心话术、重点数字和过渡衔接。"
   },
+  "visual_flat": {
+    "rollback_stage": "visual_composition",
+    "recommended_role": "visual",
+    "target_files": [
+      "deck_visual_composition.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "页面只有文字面板，缺少视觉主角（图表/icon/数据可视化），说服力和记忆点不足。",
+    "suggested_action": "回到 visual_composition 重新选择视觉主角类型、补充说明性数据、指定 icon 和图表。"
+  },
   "asset_missing": {
     "rollback_stage": "asset_plan",
     "recommended_role": "brief",

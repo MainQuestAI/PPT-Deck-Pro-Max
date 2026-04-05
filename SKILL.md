@@ -116,18 +116,31 @@ Each page should include:
 
 Read `references/layout_page_guide.md`.
 
-### Step 5: Editorial Compression
+### Step 5: Content Compression + Visual Composition Design
 
-Create or update `deck_clean_pages.md`.
+This step has two outputs, produced together:
 
-Enforce:
+1. `deck_clean_pages.md` — compressed page copy with visual declarations
+2. `deck_visual_composition.md` — per-page visual construction spec
+
+**The goal of this step is not just "make text shorter." It is "translate business logic into visual communication specs."**
+
+For the content compression, enforce:
 
 1. One conclusion per page
 2. Replace paragraphs with visual structures where possible
 3. Remove internal discussion traces
 4. Preserve evidence
 
-Read `references/compression_rules.md` before compressing.
+For the visual composition, enforce:
+
+1. Every page must have a **visual protagonist** (chart, icon chain, big metric, diagram, or screenshot) — pure text panels are not acceptable
+2. Identify each page's core **data relationship** (comparison, gap, flow, loop, category, metric) and choose the matching visual form
+3. Generate **illustrative data** when concepts can be quantified but the source lacks numbers — mark as `illustrative=true`
+4. Specify **icons** for each conceptual element — not emoji, but named icons (brain, gear, target, shield, etc.)
+5. Define **visual weight distribution** — what the eye sees first (60%), second (30%), last (10%)
+
+Read `references/compression_rules.md`, `references/visual_composition_guide.md`, `references/information_design_guide.md`, and `references/illustrative_data_guide.md`.
 
 ### Step 5.5: Plan Assets
 
@@ -366,6 +379,12 @@ Use these files intentionally:
   - page draft format
 - `references/compression_rules.md`
   - editorial compression and evidence preservation
+- `references/visual_composition_guide.md`
+  - how to generate per-page visual construction specs
+- `references/information_design_guide.md`
+  - data relationship → visual form mapping rules
+- `references/illustrative_data_guide.md`
+  - when and how to generate illustrative data for visualization
 - `references/chart_strategy.md`
   - chart selection and anti-fake-chart rules
 - `references/component_system.md`

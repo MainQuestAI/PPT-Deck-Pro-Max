@@ -10,6 +10,7 @@ TEMPLATES = {
     "deck_vibe_brief.md": "# Vibe Brief\n\n## 视觉气质\n\n## 配色系统\n\n## 字体系统\n\n## 图形语言\n\n## 密度上限\n",
     "deck_narrative_arc.md": "# Narrative Arc\n\n## 弧线模板\n\n（待锁定）\n\n## 逐页 Beat\n\n| 页码 | Beat | 情绪目标 | 过渡逻辑 |\n|------|------|---------|--------|\n\n## 信心拐点\n\n（待锁定）\n\n## 呼吸页\n\n（待锁定）\n",
     "deck_hero_pages.md": "# Hero Pages\n\n## 关键页\n\n1. 封面\n2. 痛点/诊断\n3. 样例/证据\n4. 核心能力/系统\n5. CTA\n",
+    "deck_visual_composition.md": "# Visual Composition\n\n（待生成 — 在 Step 5 中由 AI 根据 clean pages 内容自动产出）\n",
     "deck_layout_v1.md": "# Layout Draft\n",
     "deck_clean_pages.md": "# Clean Pages\n",
     "deck_visual_system.md": "# Visual System\n\n## 页面原型\n\n## 组件系统\n\n## 视觉特征锁定\n",

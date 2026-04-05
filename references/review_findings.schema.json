@@ -44,6 +44,7 @@
           "transition_missing",
           "speaker_notes_missing",
           "asset_missing",
+          "visual_flat",
           "other"
         ]
       },
