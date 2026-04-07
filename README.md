@@ -1,5 +1,7 @@
 # Deck Production Orchestrator
 
+[中文文档](README.zh-CN.md)
+
 > Turn business briefs into product-grade commercial decks — not generic AI slides.
 
 An AI skill that orchestrates the full lifecycle of commercial slide deck creation: from business brief to narrative arc, visual composition design, page build, and structured QA with rollback routing.
