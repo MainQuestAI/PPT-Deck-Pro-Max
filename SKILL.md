@@ -57,6 +57,33 @@ It must lock:
 
 Read `references/deck_brief_template.md` if the brief is missing or weak.
 
+### Step 1.5: Expert Interview (expert mode only)
+
+If `production_mode: expert` (default), run a structured interview with the user to enrich the deck's content with implicit expert knowledge.
+
+The AI role here is **co-creator, not interviewer**. It brings its own understanding of the source material, identifies content gaps, and asks targeted questions with hypotheses attached.
+
+Process:
+1. Run `scripts/generate_interview_questions.py` to extract claims, detect gaps, and prioritize
+2. AI reads the gap analysis and source material, then constructs hypothesis-led questions at runtime
+3. Dialogue is coverage-driven: target hero claims gap fill rate ≥ 80%
+4. Every 3-4 questions, include at least one counter-hypothesis question (anti-bias)
+5. Output: `interview_session.json` (runtime state) + insights collected
+
+Read `references/expert_interview_guide.md`.
+
+### Step 1.6: Redaction Review (expert mode only)
+
+After Expert Interview, review all sensitive information collected. This is an independent gate.
+
+Process:
+1. Present all `needs_redaction` items to the user
+2. User confirms: clear / redact / remove for each item
+3. Generate `deck_expert_context.md` (final artifact, claims + confirmed insights only)
+4. Include `brief_feedback` section if the interview revealed Brief inaccuracies
+
+Only proceed to Step 2 after all redaction decisions are made.
+
 ### Step 2: Lock the Vibe
 
 Create or update `deck_vibe_brief.md`.
@@ -357,6 +384,12 @@ Use these files intentionally:
 
 - `references/workflow.md`
   - full production flow and stage gates
+- `references/expert_interview_guide.md`
+  - claim extraction, gap detection, anti-bias, coverage-driven dialogue
+- `references/title_writing_guide.md`
+  - judgment sentences, length limits, 3-second test
+- `references/cta_design_guide.md`
+  - threshold control, deliverable promises, urgency
 - `references/deck_brief_template.md`
   - brief structure
 - `references/vibe_brief_template.md`

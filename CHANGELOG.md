@@ -1,5 +1,43 @@
 # Changelog
 
+## 2.0.0 — Expert Mode：从翻译者到共创者
+
+### 架构级变更
+- **Skill 角色升级**：从"翻译者"（接收→压缩→输出）到"共创者"（理解→识别缺口→和专家对话→整合→输出）
+- **新增第 5 个 AI 角色**：Expert Interviewer AI — 带假设提问、反偏置、coverage 驱动
+- **Claim-based 知识模型**：专家知识绑定到语义对象（NarrativeClaim），不绑页号。下游 Narrative Arc 才做 claim→page 映射
+- **两种运行模式**：Expert Mode（默认，15-20 分钟对话）和 Quick Mode（跳过对话，和 v1.x 相同）
+
+### 新增核心 Reference
+- `references/expert_interview_guide.md`：5 种缺口识别 + 反偏置机制 + coverage 驱动 + 脱敏规则 + gap/claim 生命周期
+- `references/title_writing_guide.md`：判断句、30 字、2 行、3 秒测试
+- `references/cta_design_guide.md`：门槛控制 + 交付物承诺 + 紧迫感
+
+### 新增脚本
+- `scripts/generate_interview_questions.py`：规则化 claims 提取 + 5 种 gap 识别 + richness_score 计算 + 优先级排序
+
+### 工作流变更
+- 新增 **Step 1.5 Expert Interview**：AI 分析原稿 → 识别 gaps → 带假设对话 → 收集 insights
+- 新增 **Step 1.6 Redaction Review**：独立脱敏审批门，在信息进入下游前拦截
+- Brief 模板新增 `production_mode: expert / quick`
+- Compression 新增 claim 合并规则、6 层丰富度模型、受众语言适配
+- QA 新增 `content_thin` / `expert_data_ignored` / `redaction_incomplete` 三个 finding 类型
+
+### Richness Score
+- 每条 claim 0-5 分：案例(+1) + 因果(+1) + 数据(+1) + 类比(+1) + 异议回应(+1)
+- Hero claim richness < 3 触发 `content_thin` QA finding
+- Compression 时 richness < 2 标记 `needs_enrichment`
+
+### 关键设计决策
+- **脚本做规则化，AI 做理解力**：脚本提取 claims + 识别 gaps；带假设的问题由 AI 运行时构造
+- **Coverage 驱动，不是轮次驱动**：目标是 hero claims gap fill rate ≥ 80%
+- **反偏置内建**：每 3-4 个问题至少 1 个反证问题
+- **运行时状态和最终产物分离**：interview_session.json（半成品）vs deck_expert_context.md（干净产物）
+- **Brief 可被 soft feedback，不被自动修改**
+
+### 测试
+- 46 → 56 测试（新增 10 个覆盖 claims 提取、gap 识别、richness 计算、优先级排序）
+
 ## 1.1.1 — 视觉沟通层的运行时集成收尾
 
 ### 4 个运行时断点修复

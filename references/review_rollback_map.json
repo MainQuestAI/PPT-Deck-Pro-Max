@@ -185,6 +185,34 @@
     "why": "关键页缺少演讲备注，会让演讲者在最重要的页面失去话术锚点。",
     "suggested_action": "为 hero pages 补写演讲备注，包含核心话术、重点数字和过渡衔接。"
   },
+  "content_thin": {
+    "rollback_stage": "expert_interview",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_expert_context.md",
+      "deck_clean_pages.md"
+    ],
+    "why": "Hero claim 的 richness score < 3，缺少案例、因果、数据或类比。需要回到 Expert Interview 补充。",
+    "suggested_action": "重新运行 Expert Interview 针对该 claim 的 gaps，或手动补充 expert_context。"
+  },
+  "expert_data_ignored": {
+    "rollback_stage": "clean_pages",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_clean_pages.md"
+    ],
+    "why": "专家提供的案例或数据存在于 expert_context 中，但在最终 Deck 的对应页面没有被使用。",
+    "suggested_action": "检查 Compression 阶段是否正确合并了 expert_context 的 claims。"
+  },
+  "redaction_incomplete": {
+    "rollback_stage": "redaction_review",
+    "recommended_role": "brief",
+    "target_files": [
+      "deck_expert_context.md"
+    ],
+    "why": "expert_context 中仍有 needs_redaction 状态的内容流入了下游。",
+    "suggested_action": "回到 Step 1.6 完成所有脱敏审批。"
+  },
   "internal_language_leak": {
     "rollback_stage": "clean_pages",
     "recommended_role": "brief",

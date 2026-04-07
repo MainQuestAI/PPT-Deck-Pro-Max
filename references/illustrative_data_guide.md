@@ -47,6 +47,23 @@
 - "稳步提升" → 平缓上升线
 - "两种方案对比" → 一条上升线（AI）+ 一条平缓线（传统）
 
+## 来源级别（5 级）
+
+| 级别 | 含义 | 可信度 | 示例 |
+|------|------|--------|------|
+| `expert_confirmed` | 专家直接提供或确认的数据 | 最高 | "活跃人群包 < 1%" — 来自客户经验 |
+| `factual` | 原稿中有明确来源的真实数据 | 高 | "CNNIC: 6.02 亿" |
+| `industry` | 行业公开数据，有出处但非第一手 | 中高 | "QuestMobile: 3.38 亿" |
+| `inferred` | AI 基于上下文推断的说明性数据 | 中 | "深层意图理解率约 25%" |
+| `decorative` | 纯为视觉效果，无业务含义 | 最低 | 柱状图的相对高度 |
+
+Compression 优先级：expert_confirmed > factual > industry > inferred > decorative
+
+Expert Mode 下的升级路径：
+- 专家提供真实数字 → `expert_confirmed`
+- 专家确认 AI 推断合理 → `expert_confirmed`（原值保留，标注"经专家确认"）
+- 专家未覆盖 → 保持 `inferred`，标记 `ai_inferred`
+
 ## 标记规范
 
 在 `deck_visual_composition.md` 中：

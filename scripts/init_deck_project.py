@@ -11,6 +11,8 @@ TEMPLATES = {
     "deck_narrative_arc.md": "# Narrative Arc\n\n## 弧线模板\n\n（待锁定）\n\n## 逐页 Beat\n\n| 页码 | Beat | 情绪目标 | 过渡逻辑 |\n|------|------|---------|--------|\n\n## 信心拐点\n\n（待锁定）\n\n## 呼吸页\n\n（待锁定）\n",
     "deck_hero_pages.md": "# Hero Pages\n\n## 关键页\n\n1. 封面\n2. 痛点/诊断\n3. 样例/证据\n4. 核心能力/系统\n5. CTA\n",
     "deck_visual_composition.md": "# Visual Composition\n\n（待生成 — 在 Step 5 中由 AI 根据 clean pages 内容自动产出）\n",
+    "deck_expert_context.md": "# Expert Context\n\n（待生成 — Expert Interview 完成 + Redaction Review 通过后产出）\n",
+    "interview_session.json": "{\n  \"session_id\": \"\",\n  \"state\": \"preparing\",\n  \"coverage\": {\"hero_claims_total\": 0, \"hero_claims_enriched\": 0, \"hero_gap_fill_rate\": 0, \"target_fill_rate\": 0.8},\n  \"topics_queue\": [],\n  \"insights_collected\": 0,\n  \"redaction_pending\": 0,\n  \"resumable\": true\n}\n",
     "deck_layout_v1.md": "# Layout Draft\n",
     "deck_clean_pages.md": "# Clean Pages\n",
     "deck_visual_system.md": "# Visual System\n\n## 页面原型\n\n## 组件系统\n\n## 视觉特征锁定\n",

@@ -82,6 +82,14 @@ def main() -> None:
             else:
                 bundle["inputs"]["visual_composition"] = {"full_document": vc_text}
 
+    # Expert context — claim-based, keyed by claim_id (not page number)
+    expert_context_path = Path(args.clean_pages).parent / "deck_expert_context.md" if args.clean_pages else None
+    if expert_context_path and expert_context_path.exists():
+        ec_text = read(expert_context_path)
+        if ec_text and "（待生成" not in ec_text:
+            # For build context, include the full expert context since claims may span pages
+            bundle["inputs"]["expert_context"] = ec_text
+
     if args.visual_system:
         bundle["inputs"]["deck_visual_system"] = read(Path(args.visual_system))
     if args.component_tokens:

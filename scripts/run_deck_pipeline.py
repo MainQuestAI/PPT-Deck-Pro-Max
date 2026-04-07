@@ -381,6 +381,18 @@ def cmd_visual_composition(args: argparse.Namespace) -> None:
     run_script("generate_visual_composition.py", *cmd)
 
 
+def cmd_expert_interview(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.clean_pages:
+        cmd.extend(["--clean-pages", str(Path(args.clean_pages).expanduser().resolve())])
+    if args.state:
+        cmd.extend(["--state", str(Path(args.state).expanduser().resolve())])
+    if args.brief:
+        cmd.extend(["--brief", str(Path(args.brief).expanduser().resolve())])
+    run_script("generate_interview_questions.py", *cmd)
+
+
 def cmd_asset_plan(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -504,6 +516,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_preset.add_argument("--project-dir", required=True)
     p_preset.add_argument("--preset", required=True, choices=PRESET_CHOICES)
     p_preset.set_defaults(func=cmd_preset)
+
+    p_expert = sub.add_parser("expert-interview", help="Prepare claims + gaps analysis for Expert Interview")
+    p_expert.add_argument("--project-dir", required=True)
+    p_expert.add_argument("--clean-pages")
+    p_expert.add_argument("--state")
+    p_expert.add_argument("--brief")
+    p_expert.set_defaults(func=cmd_expert_interview)
 
     p_handoff = sub.add_parser("handoff", help="Generate a ready-to-send AI worker handoff prompt")
     p_handoff.add_argument("--project-dir", required=True)

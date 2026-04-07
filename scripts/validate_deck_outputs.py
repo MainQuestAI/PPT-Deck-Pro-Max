@@ -57,6 +57,7 @@ def main() -> None:
     parser.add_argument("--project-dir", required=True)
     parser.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
     parser.add_argument("--require-review", action="store_true", help="Also check review artifacts")
+    parser.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
     args = parser.parse_args()
 
     project_dir = Path(args.project_dir).expanduser().resolve()
@@ -72,6 +73,10 @@ def main() -> None:
 
     if args.require_review:
         missing.extend(name for name in REVIEW_ARTIFACTS if not (project_dir / name).exists())
+
+    if getattr(args, "expert_mode", False):
+        expert_artifacts = ["deck_expert_context.md", "interview_session.json"]
+        missing.extend(name for name in expert_artifacts if not (project_dir / name).exists())
 
     if missing:
         print("[ERROR] missing outputs:")

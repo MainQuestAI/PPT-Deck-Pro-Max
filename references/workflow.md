@@ -98,6 +98,19 @@ python scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
 - 卖什么
 - 卖给谁
 - 最终 CTA 是什么
+- 生产模式：expert（默认）还是 quick
+
+### Gate 1.5：Expert Interview 完成（expert mode only）
+
+- Hero claims 的 gap fill rate ≥ 80%
+- 所有 insights 已确认或标记 skipped
+- interview_session.json 状态为 completed 或 aborted（带已收集的 insights）
+
+### Gate 1.6：Redaction Review 通过（expert mode only）
+
+- 所有 needs_redaction 项已处理（clear / redacted / removed）
+- deck_expert_context.md 已生成（干净的最终产物）
+- brief_feedback 已呈现给用户（如有）
 
 ### Gate 2：Vibe 锁定
 

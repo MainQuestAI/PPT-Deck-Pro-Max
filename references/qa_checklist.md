@@ -56,6 +56,16 @@
 
 如果超过 3 页只有纯文字面板且没有视觉主角，报 `visual_flat` finding 并要求回退到 visual_composition。
 
+## 内容丰富度检查（expert mode）
+
+1. Hero claims 的平均 richness_score 是否 ≥ 3/5
+2. 专家提供的案例和数据是否在最终 Deck 对应页面被使用
+3. 脱敏是否全部完成（无 needs_redaction 内容进入成品）
+4. 每页是否覆盖 6 层丰富度模型的至少 4 层
+5. 是否存在跨页冗余
+
+content_thin / expert_data_ignored / redaction_incomplete 对应 finding。
+
 ## 内部语言泄露检查
 
 1. 标题、正文、insight bar 中是否出现"这一页负责""没有这一页""回答顾虑"等制作语言

@@ -47,6 +47,9 @@
           "visual_flat",
           "world_incomplete",
           "internal_language_leak",
+          "content_thin",
+          "expert_data_ignored",
+          "redaction_incomplete",
           "other"
         ]
       },
