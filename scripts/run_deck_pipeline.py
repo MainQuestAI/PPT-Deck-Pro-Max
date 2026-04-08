@@ -186,6 +186,8 @@ def cmd_validate(args: argparse.Namespace) -> None:
     cmd = ["--project-dir", str(project_dir), "--output-mode", args.output_mode]
     if args.require_review or getattr(args, "formal", False):
         cmd.append("--require-review")
+    if getattr(args, "expert_mode", False):
+        cmd.append("--expert-mode")
     run_script("validate_deck_outputs.py", *cmd)
 
 
@@ -390,6 +392,10 @@ def cmd_expert_interview(args: argparse.Namespace) -> None:
         cmd.extend(["--state", str(Path(args.state).expanduser().resolve())])
     if args.brief:
         cmd.extend(["--brief", str(Path(args.brief).expanduser().resolve())])
+    if getattr(args, "output_md", None):
+        cmd.extend(["--output-md", str(Path(args.output_md).expanduser().resolve())])
+    if getattr(args, "output_json", None):
+        cmd.extend(["--output-json", str(Path(args.output_json).expanduser().resolve())])
     run_script("generate_interview_questions.py", *cmd)
 
 
@@ -510,6 +516,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
     p_validate.add_argument("--require-review", action="store_true", help="Also check review/QA artifacts including montage and review_package")
     p_validate.add_argument("--formal", action="store_true", help="Alias for --require-review: full formal review validation")
+    p_validate.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
     p_validate.set_defaults(func=cmd_validate)
 
     p_preset = sub.add_parser("preset", help="Apply a common deck preset")
@@ -522,6 +529,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_expert.add_argument("--clean-pages")
     p_expert.add_argument("--state")
     p_expert.add_argument("--brief")
+    p_expert.add_argument("--output-md")
+    p_expert.add_argument("--output-json")
     p_expert.set_defaults(func=cmd_expert_interview)
 
     p_handoff = sub.add_parser("handoff", help="Generate a ready-to-send AI worker handoff prompt")

@@ -132,8 +132,10 @@ def detect_gaps(claim: dict, brief_concerns: list[str] | None = None) -> list[di
             "status": "open",
         })
 
-    # Data gap
-    has_data = any(s in text for s in DATA_SIGNALS) or bool(re.search(r"\d+", text))
+    # Data gap — exclude page numbers and heading digits from detection
+    text_no_headings = re.sub(r"^##?\s*第\s*\d+\s*页.*$", "", text, flags=re.MULTILINE)
+    text_no_headings = re.sub(r"^slide[_\s-]*\d+.*$", "", text_no_headings, flags=re.MULTILINE | re.IGNORECASE)
+    has_data = any(s in text_no_headings for s in DATA_SIGNALS) or bool(re.search(r"\d+[%亿万倍x]|\d+\.\d+", text_no_headings))
     if not has_data:
         gaps.append({
             "gap_type": "data",
@@ -186,16 +188,18 @@ def compute_richness(claim: dict) -> int:
     if any(s in text for s in CAUSAL_SIGNALS):
         score += 1
 
-    # Data: has quantifiable anchors
-    if bool(re.search(r"\d+[%亿万倍]|\d+\.\d+", text)):
+    # Data: has quantifiable anchors (same logic as gap detection, excluding page numbers)
+    text_no_headings = re.sub(r"^##?\s*第\s*\d+\s*页.*$", "", text, flags=re.MULTILINE)
+    text_no_headings = re.sub(r"^slide[_\s-]*\d+.*$", "", text_no_headings, flags=re.MULTILINE | re.IGNORECASE)
+    if bool(re.search(r"\d+[%亿万倍x]|\d+\.\d+", text_no_headings)):
         score += 1
 
     # Analogy: has contrast/metaphor
     if any(s in text for s in CONTRAST_SIGNALS):
         score += 1
 
-    # Objection: has preemptive response
-    if any(k in text for k in ["不是推翻", "不需要大项目", "不是替代", "而是"]):
+    # Objection: has preemptive response (aligned with gap detection signals)
+    if any(k in text for k in ["不是", "而是", "不需要", "只需要"]):
         score += 1
 
     return score
