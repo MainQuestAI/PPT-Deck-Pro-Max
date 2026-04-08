@@ -157,6 +157,89 @@ def detect_missing_speaker_notes(state: dict, clean_pages_text: str | None) -> d
     return issues
 
 
+def detect_expert_mode_issues(
+    interview_session: dict | None,
+    interview_preparation: dict | None,
+    expert_context_path: Path | None,
+    clean_pages_text: str | None,
+) -> dict[str, list[str]]:
+    """Detect expert-mode specific QA issues: content_thin, expert_data_ignored, redaction_incomplete."""
+    issues: dict[str, list[str]] = {}
+    if not interview_preparation:
+        return issues
+
+    # content_thin: hero claims with richness < 3
+    for claim in interview_preparation.get("claims", []):
+        if claim.get("is_hero") and claim.get("richness_score", 0) < 3:
+            claim_id = claim.get("claim_id", "unknown")
+            page_no = claim.get("page_no")
+            page_id = f"slide_{page_no:02d}" if page_no else "__expert__"
+            issues.setdefault(page_id, []).append(
+                f"content_thin:{claim_id}(richness={claim.get('richness_score', 0)}/5)"
+            )
+
+    # redaction_incomplete: session still has pending redactions
+    if isinstance(interview_session, dict):
+        redaction_pending = interview_session.get("redaction_pending", 0)
+        if redaction_pending > 0:
+            issues.setdefault("__expert__", []).append(
+                f"redaction_incomplete:{redaction_pending}_pending"
+            )
+
+    # expert_data_ignored: expert_context exists but clean_pages doesn't reference expert insights
+    if expert_context_path and expert_context_path.exists() and clean_pages_text:
+        enriched_claims = [
+            c for c in interview_preparation.get("claims", [])
+            if any(g.get("status") == "filled" for g in c.get("gaps", []))
+        ]
+        if enriched_claims:
+            ignored_claims = []
+            for claim in enriched_claims:
+                # Build a keyword set from multiple sources for semantic matching
+                keywords: set[str] = set()
+
+                # 1) Claim text keywords (split on punctuation, keep 2+ char segments)
+                claim_text = claim.get("claim_text", "")
+                keywords.update(
+                    w for w in re.split(r"[、，,\s：:——\-]+", claim_text)
+                    if len(w) >= 2
+                )
+
+                # 2) Keywords from filled gap descriptions
+                for gap in claim.get("gaps", []):
+                    if gap.get("status") == "filled":
+                        desc = gap.get("desc", "")
+                        keywords.update(
+                            w for w in re.split(r"[、，,\s：:——\-]+", desc)
+                            if len(w) >= 2
+                        )
+
+                # 3) Subtitle if present
+                subtitle = claim.get("subtitle", "")
+                if subtitle:
+                    keywords.update(
+                        w for w in re.split(r"[、，,\s：:——\-]+", subtitle)
+                        if len(w) >= 2
+                    )
+
+                if not keywords:
+                    continue
+
+                # A claim is "reflected" if at least 30% of its keywords appear in clean_pages
+                matched = sum(1 for kw in keywords if kw in clean_pages_text)
+                match_ratio = matched / len(keywords) if keywords else 0
+                if match_ratio < 0.3:
+                    ignored_claims.append(claim.get("claim_id", "unknown"))
+
+            if ignored_claims and len(ignored_claims) >= 2:
+                ids_str = ",".join(ignored_claims[:5])
+                issues.setdefault("__expert__", []).append(
+                    f"expert_data_ignored:{len(ignored_claims)}_claims({ids_str})"
+                )
+
+    return issues
+
+
 def merge_review_findings(findings: dict | list | None) -> dict[str, list[str]]:
     issues: dict[str, list[str]] = {}
     if not findings:
@@ -279,6 +362,9 @@ def main() -> None:
     parser.add_argument("--require-commercial-scorecard", action="store_true")
     parser.add_argument("--min-commercial-score", type=float, default=3.3)
     parser.add_argument("--require-layout-manifest", action="store_true")
+    parser.add_argument("--interview-session", help="Path to interview_session.json for expert-mode QA")
+    parser.add_argument("--interview-preparation", help="Path to interview_preparation.json for expert-mode QA")
+    parser.add_argument("--expert-context", help="Path to deck_expert_context.md for expert-mode QA")
     parser.add_argument("--write-state", action="store_true")
     args = parser.parse_args()
 
@@ -311,6 +397,11 @@ def main() -> None:
         args.require_layout_manifest,
     )
 
+    # Expert-mode artifacts
+    interview_session = load_json(Path(args.interview_session).expanduser().resolve()) if args.interview_session else load_json(project_dir / "interview_session.json")
+    interview_preparation = load_json(Path(args.interview_preparation).expanduser().resolve()) if args.interview_preparation else load_json(project_dir / "interview_preparation.json")
+    expert_context_path = Path(args.expert_context).expanduser().resolve() if args.expert_context else (project_dir / "deck_expert_context.md")
+
     commercial_issues: dict[str, list[str]] = {}
     if isinstance(commercial_scorecard, dict) and not is_scorecard_scaffold(commercial_scorecard):
         weak_dimensions = [
@@ -330,6 +421,12 @@ def main() -> None:
         detect_density_issues(state, clean_pages_text, args.warn_chars, args.fail_chars, getattr(args, "min_chars", 0)),
         detect_missing_speaker_notes(state, clean_pages_text),
         detect_missing_assets(state, asset_manifest if isinstance(asset_manifest, dict) else None),
+        detect_expert_mode_issues(
+            interview_session if isinstance(interview_session, dict) else None,
+            interview_preparation if isinstance(interview_preparation, dict) else None,
+            expert_context_path,
+            clean_pages_text,
+        ),
         layout_issues,
         merge_review_findings(review_findings),
         commercial_issues,

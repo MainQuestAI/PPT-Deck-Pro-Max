@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -77,6 +78,28 @@ def main() -> None:
     if getattr(args, "expert_mode", False):
         expert_artifacts = ["deck_expert_context.md", "interview_session.json"]
         missing.extend(name for name in expert_artifacts if not (project_dir / name).exists())
+
+        # State-based validation: check session quality, not just file existence
+        session_path = project_dir / "interview_session.json"
+        if session_path.exists():
+            try:
+                session = json.loads(session_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                session = {}
+
+            session_state = session.get("state", "")
+            if session_state != "finalized":
+                missing.append(f"interview_session.state must be 'finalized' (current: '{session_state}')")
+
+            redaction_pending = session.get("redaction_pending", 0)
+            if redaction_pending > 0:
+                missing.append(f"interview_session has {redaction_pending} unresolved redaction(s)")
+
+            coverage = session.get("coverage", {})
+            fill_rate = coverage.get("hero_gap_fill_rate", 0)
+            target = coverage.get("target_fill_rate", 0.8)
+            if fill_rate < target:
+                missing.append(f"hero_gap_fill_rate {fill_rate:.0%} < target {target:.0%}")
 
     if missing:
         print("[ERROR] missing outputs:")

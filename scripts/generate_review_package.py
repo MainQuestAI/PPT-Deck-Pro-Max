@@ -129,6 +129,9 @@ def main() -> None:
             "slide_state": str((project_dir / "slide_state.json").resolve()) if (project_dir / "slide_state.json").exists() else "",
             "visual_system": str((project_dir / "deck_visual_system.md").resolve()) if (project_dir / "deck_visual_system.md").exists() else "",
             "component_tokens": str((project_dir / "deck_component_tokens.md").resolve()) if (project_dir / "deck_component_tokens.md").exists() else "",
+            "expert_context": str((project_dir / "deck_expert_context.md").resolve()) if (project_dir / "deck_expert_context.md").exists() else "",
+            "interview_session": str((project_dir / "interview_session.json").resolve()) if (project_dir / "interview_session.json").exists() else "",
+            "interview_preparation": str((project_dir / "interview_preparation.json").resolve()) if (project_dir / "interview_preparation.json").exists() else "",
         },
         "page_images": list_page_images(rendered_dir),
         "required_output": {

@@ -15,6 +15,7 @@
 
 ### 新增脚本
 - `scripts/generate_interview_questions.py`：规则化 claims 提取 + 5 种 gap 识别 + richness_score 计算 + 优先级排序
+- `scripts/finalize_interview.py`：Step 1.6 执行器 — 校验 session 状态 + 脱敏完成度 + 生成 deck_expert_context.md
 
 ### 工作流变更
 - 新增 **Step 1.5 Expert Interview**：AI 分析原稿 → 识别 gaps → 带假设对话 → 收集 insights
@@ -35,8 +36,14 @@
 - **运行时状态和最终产物分离**：interview_session.json（半成品）vs deck_expert_context.md（干净产物）
 - **Brief 可被 soft feedback，不被自动修改**
 
+### 运行时集成
+- Pipeline 新增 `finalize-interview` 子命令
+- Expert-mode 验收从"文件存在"升级为状态达标（session.state=finalized + redaction_pending=0 + hero_gap_fill_rate≥80%）
+- QA 自动检测接入 `content_thin` / `expert_data_ignored` / `redaction_incomplete`
+- Review Package 自动包含 `deck_expert_context.md` + `interview_session.json` + `interview_preparation.json`
+
 ### 测试
-- 46 → 56 测试（新增 10 个覆盖 claims 提取、gap 识别、richness 计算、优先级排序）
+- 46 → 78 测试（+13 claims/gap/richness/multi-claim + 19 expert-mode 集成：QA 检测、session 校验、state machine、coverage 计算、语义级 expert_data 匹配）
 
 ## 1.1.1 — 视觉沟通层的运行时集成收尾
 

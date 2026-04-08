@@ -37,6 +37,41 @@ class ExtractClaimsTests(unittest.TestCase):
         self.assertFalse(claims[0]["is_hero"])
 
 
+class MultiClaimTests(unittest.TestCase):
+    def test_numbered_list_splits_into_multiple_claims(self) -> None:
+        text = (
+            "## 第 1 页\n标题：`三层断裂`\n"
+            "1. 认知层断裂导致系统无法理解用户意图\n"
+            "2. 决策层断裂导致策略无法精准执行\n"
+            "3. 内容层断裂导致触达千人一面\n"
+        )
+        state = {"pages": [{"page_id": "slide_01", "role": "hero_problem"}]}
+        claims = extract_claims(text, state)
+        self.assertGreaterEqual(len(claims), 2)
+        # All claims should reference the same page
+        for c in claims:
+            self.assertEqual(c["page_no"], 1)
+            self.assertEqual(c["source_pages"], [1])
+            self.assertTrue(c["is_hero"])
+        # claim_ids should be like claim_01a, claim_01b, claim_01c
+        ids = [c["claim_id"] for c in claims]
+        self.assertTrue(ids[0].startswith("claim_01"))
+        self.assertNotEqual(ids[0], ids[1])
+
+    def test_single_argument_page_stays_single_claim(self) -> None:
+        text = "## 第 5 页\n标题：`产品定位`\n这是一个简单的单论点页面"
+        state = {"pages": [{"page_id": "slide_05", "role": "unassigned"}]}
+        claims = extract_claims(text, state)
+        self.assertEqual(len(claims), 1)
+        self.assertEqual(claims[0]["claim_id"], "claim_05")
+
+    def test_source_pages_field_exists(self) -> None:
+        text = "## 第 3 页\n标题：`测试`\n内容"
+        state = {"pages": [{"page_id": "slide_03", "role": "hero_cover"}]}
+        claims = extract_claims(text, state)
+        self.assertEqual(claims[0]["source_pages"], [3])
+
+
 class DetectGapsTests(unittest.TestCase):
     def test_detects_case_gap(self) -> None:
         claim = {

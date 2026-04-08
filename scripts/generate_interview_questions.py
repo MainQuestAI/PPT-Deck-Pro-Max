@@ -32,8 +32,61 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def _split_sub_claims(section: str) -> list[str]:
+    """Split a page section into sub-claim blocks when multiple distinct arguments exist.
+
+    Heuristic: lines starting with numbered lists (1. / 2. / 3.) or bold markers
+    (**keyword**) that each contain a distinct assertion are treated as separate claims.
+    Returns a list of text blocks; single-claim pages return [full_section].
+    """
+    # Detect numbered argument blocks: "1. ...\n2. ...\n3. ..."
+    numbered = re.findall(r"^\d+[.、]\s*.+", section, re.MULTILINE)
+    if len(numbered) >= 2:
+        # Each numbered item is a sub-claim; split around them
+        blocks: list[str] = []
+        pattern = re.compile(r"^(\d+[.、]\s*.+?)(?=^\d+[.、]\s*|\Z)", re.MULTILINE | re.DOTALL)
+        for m in pattern.finditer(section):
+            block = m.group(1).strip()
+            if len(block) >= 10:  # Skip trivially short fragments
+                blocks.append(block)
+        if len(blocks) >= 2:
+            return blocks
+
+    # Detect bold-headed argument blocks: "**层一**...\n**层二**..."
+    bold_heads = re.findall(r"^\*\*(.+?)\*\*", section, re.MULTILINE)
+    if len(bold_heads) >= 2:
+        parts = re.split(r"(?=^\*\*.+?\*\*)", section, flags=re.MULTILINE)
+        blocks = [p.strip() for p in parts if len(p.strip()) >= 10]
+        if len(blocks) >= 2:
+            return blocks
+
+    return [section]
+
+
+def _make_claim_id(page_no: int, sub_idx: int | None = None) -> str:
+    """Generate a claim_id. Single claim per page: claim_03. Multiple: claim_03a, claim_03b."""
+    if sub_idx is None:
+        return f"claim_{page_no:02d}"
+    return f"claim_{page_no:02d}{chr(ord('a') + sub_idx)}"
+
+
+def _extract_claim_text(text: str, page_no: int, sub_idx: int | None = None) -> str:
+    """Extract a concise claim text from a block of content."""
+    # Try structured title
+    title_match = re.search(r"标题：[`「](.+?)[`」]", text)
+    if title_match:
+        return title_match.group(1)
+    # For sub-claims, use the first meaningful line
+    for line in text.splitlines():
+        stripped = line.strip().lstrip("0123456789.、*# ")
+        if len(stripped) >= 4:
+            return stripped[:60]
+    suffix = "" if sub_idx is None else f" 论点 {sub_idx + 1}"
+    return f"第 {page_no} 页{suffix}的论点"
+
+
 def extract_claims(clean_pages_text: str, state: dict) -> list[dict]:
-    """Extract one claim per page section from clean pages."""
+    """Extract claims from clean pages. Supports multiple claims per page."""
     slices = extract_page_slices(clean_pages_text)
     role_lookup = {}
     for page in state.get("pages", []):
@@ -45,37 +98,35 @@ def extract_claims(clean_pages_text: str, state: dict) -> list[dict]:
     for page_no in sorted(slices.keys()):
         section = slices[page_no]
         role = role_lookup.get(page_no, "unassigned")
+        beat_hint = _role_to_beat(role)
+        is_hero = role.startswith("hero_")
 
-        # Extract title as claim text
-        title_match = re.search(r"标题：[`「](.+?)[`」]", section)
-        title = title_match.group(1) if title_match else ""
-
-        # Extract subtitle
+        # Extract subtitle (page-level)
         sub_match = re.search(r"副标题：[`「](.+?)[`」]", section)
         subtitle = sub_match.group(1) if sub_match else ""
 
-        # Full text for gap analysis
-        full_text = section
+        sub_blocks = _split_sub_claims(section)
+        multi = len(sub_blocks) >= 2
 
-        # Determine claim type from content patterns
-        claim_type = _infer_claim_type(full_text)
+        for idx, block in enumerate(sub_blocks):
+            sub_idx = idx if multi else None
+            claim_text = _extract_claim_text(block if multi else section, page_no, sub_idx)
+            claim_type = _infer_claim_type(block)
 
-        # Detect beat hint from role
-        beat_hint = _role_to_beat(role)
-
-        claims.append({
-            "claim_id": f"claim_{page_no:02d}",
-            "page_no": page_no,
-            "claim_text": title or f"第 {page_no} 页的论点",
-            "subtitle": subtitle,
-            "claim_type": claim_type,
-            "role": role,
-            "beat_hint": beat_hint,
-            "full_text": full_text,
-            "gaps": [],
-            "richness_score": 0,
-            "is_hero": role.startswith("hero_"),
-        })
+            claims.append({
+                "claim_id": _make_claim_id(page_no, sub_idx),
+                "page_no": page_no,
+                "source_pages": [page_no],
+                "claim_text": claim_text,
+                "subtitle": subtitle if not multi else "",
+                "claim_type": claim_type,
+                "role": role,
+                "beat_hint": beat_hint,
+                "full_text": block if multi else section,
+                "gaps": [],
+                "richness_score": 0,
+                "is_hero": is_hero,
+            })
 
     return claims
 
@@ -294,6 +345,7 @@ def write_json(claims: list[dict], prioritized_gaps: list[dict], output: Path) -
             {
                 "claim_id": c["claim_id"],
                 "page_no": c["page_no"],
+                "source_pages": c.get("source_pages", [c["page_no"]]),
                 "claim_text": c["claim_text"],
                 "claim_type": c["claim_type"],
                 "role": c["role"],

@@ -163,6 +163,7 @@ def cmd_qa(args: argparse.Namespace) -> None:
         cmd.append("--require-layout-manifest")
     if args.write_state:
         cmd.append("--write-state")
+    # Expert-mode artifacts are auto-discovered from project_dir by build_montage_and_report.py
     run_script("build_montage_and_report.py", *cmd)
     if args.review_findings and not args.skip_route_review:
         rollback_plan = Path(args.rollback_plan).expanduser().resolve() if args.rollback_plan else project_dir / "review_rollback_plan.json"
@@ -399,6 +400,20 @@ def cmd_expert_interview(args: argparse.Namespace) -> None:
     run_script("generate_interview_questions.py", *cmd)
 
 
+def cmd_finalize_interview(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.session:
+        cmd.extend(["--session", str(Path(args.session).expanduser().resolve())])
+    if args.preparation:
+        cmd.extend(["--preparation", str(Path(args.preparation).expanduser().resolve())])
+    if args.output:
+        cmd.extend(["--output", str(Path(args.output).expanduser().resolve())])
+    if args.force:
+        cmd.append("--force")
+    run_script("finalize_interview.py", *cmd)
+
+
 def cmd_asset_plan(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -532,6 +547,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_expert.add_argument("--output-md")
     p_expert.add_argument("--output-json")
     p_expert.set_defaults(func=cmd_expert_interview)
+
+    p_finalize = sub.add_parser("finalize-interview", help="Finalize Expert Interview: validate redaction and produce deck_expert_context.md")
+    p_finalize.add_argument("--project-dir", required=True)
+    p_finalize.add_argument("--session", help="Path to interview_session.json")
+    p_finalize.add_argument("--preparation", help="Path to interview_preparation.json")
+    p_finalize.add_argument("--output", help="Path to deck_expert_context.md")
+    p_finalize.add_argument("--force", action="store_true", help="Proceed even if validation fails")
+    p_finalize.set_defaults(func=cmd_finalize_interview)
 
     p_handoff = sub.add_parser("handoff", help="Generate a ready-to-send AI worker handoff prompt")
     p_handoff.add_argument("--project-dir", required=True)
