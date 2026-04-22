@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 TEMPLATES = {
-    "deck_brief.md": "# Deck Brief\n\n## 产品主语\n\n## 产品定位\n\n## 第一受众\n\n## 第一购买理由\n\n## 最强差异化\n\n## 最强证据\n\n## 首单入口\n\n## 最终 CTA\n",
+    "deck_brief.md": "# Deck Brief\n\nproduction_mode: expert\n\n## 产品主语\n\n## 产品定位\n\n## 第一受众\n\n## 第一购买理由\n\n## 最强差异化\n\n## 最强证据\n\n## 首单入口\n\n## 最终 CTA\n",
     "deck_vibe_brief.md": "# Vibe Brief\n\n## 视觉气质\n\n## 配色系统\n\n## 字体系统\n\n## 图形语言\n\n## 密度上限\n",
     "deck_narrative_arc.md": "# Narrative Arc\n\n## 弧线模板\n\n（待锁定）\n\n## 逐页 Beat\n\n| 页码 | Beat | 情绪目标 | 过渡逻辑 |\n|------|------|---------|--------|\n\n## 信心拐点\n\n（待锁定）\n\n## 呼吸页\n\n（待锁定）\n",
     "deck_hero_pages.md": "# Hero Pages\n\n## 关键页\n\n1. 封面\n2. 痛点/诊断\n3. 样例/证据\n4. 核心能力/系统\n5. CTA\n",
@@ -17,17 +17,19 @@ TEMPLATES = {
     "deck_clean_pages.md": "# Clean Pages\n",
     "deck_visual_system.md": "# Visual System\n\n## 页面原型\n\n## 组件系统\n\n## 视觉特征锁定\n",
     "deck_component_tokens.md": "# Component Tokens\n\n## 组件清单\n",
+    "style_lock.json": "{\n  \"version\": 1,\n  \"style_id\": \"pending-style-lock\",\n  \"visual_mood\": \"\",\n  \"color_system\": \"\",\n  \"typography\": \"\",\n  \"graphic_language\": \"\",\n  \"density_ceiling\": \"\",\n  \"palette\": {},\n  \"visual_rules\": {\n    \"material_finish\": \"editorial product-grade\",\n    \"lighting\": \"soft studio\",\n    \"perspective\": \"three-quarter editorial\",\n    \"text_in_image\": \"avoid\",\n    \"negative_prompts\": []\n  },\n  \"source_files\": {\n    \"deck_vibe_brief\": \"\",\n    \"deck_theme_tokens\": \"\",\n    \"deck_visual_system\": \"\"\n  }\n}\n",
     "deck_geometry_rules.md": "# Deck Geometry Rules\n\n## 页面安全区\n\n- 左右边距：\n- 上下边距：\n\n## archetype 几何规则\n\n### hero_cover\n- 左文区占比：\n- 右视觉区占比：\n- 标签区关系：\n\n### diagnostic_board\n- 主体区占比：\n- 三卡总宽度：\n- 卡片高度上限：\n\n### process_or_timeline\n- 中轴 x：\n- 节点间距：\n- 卡片离轴距离：\n\n## 连线规则\n\n- 连线来源：节点中心 / 卡片锚点 / 中轴交点\n- 禁止自由手写孤立线坐标\n",
     "deck_page_skeletons.md": "# Deck Page Skeletons\n\n## 第 1 页\n- archetype:\n- 主体区边界:\n- 主视觉边界:\n- 对齐轴:\n- 组件组关系:\n- 预期占比:\n\n## 第 2 页\n- archetype:\n- 主体区边界:\n- 主视觉边界:\n- 对齐轴:\n- 组件组关系:\n- 预期占比:\n",
     "deck_theme_tokens.json": "{\n  \"theme\": \"default\",\n  \"colors\": {},\n  \"typography\": {},\n  \"spacing\": {},\n  \"components\": {}\n}\n",
     "layout_manifest.json": "{\n  \"pages\": []\n}\n",
     "deck_asset_plan.md": "# Asset Plan\n\n## 配图需求总览\n\n| 页码 | 角色 | 需要什么 | 优先级 | 来源 |\n|------|------|---------|--------|------|\n\n## 逐页配图说明\n\n（待生成）\n",
     "asset_manifest.json": "{\n  \"assets\": []\n}\n",
+    "image_build_jobs.json": "{\n  \"batch_size\": 3,\n  \"initial_review_batch\": \"batch_01\",\n  \"batches\": [],\n  \"jobs\": []\n}\n",
     "deck_review_report.md": "# Deck Review Report\n",
     "deck_review_findings.json": "[]\n",
     "review_rollback_plan.json": "{\n  \"project_dir\": \"\",\n  \"summary\": {},\n  \"page_actions\": [],\n  \"stage_actions\": []\n}\n",
     "review_rollback_plan.md": "# Review Rollback Plan\n",
-    "review_package.json": "{\n  \"project_dir\": \"\",\n  \"artifacts\": {},\n  \"page_images\": [],\n  \"required_output\": {}\n}\n",
+    "review_package.json": "{\n  \"project_dir\": \"\",\n  \"artifacts\": {},\n  \"expert_mode_summary\": {\n    \"production_mode\": \"expert\",\n    \"enabled\": true,\n    \"review_ready\": false,\n    \"gating_status\": {\n      \"session_state\": \"preparing\",\n      \"finalized\": false,\n      \"redaction_pending\": 0,\n      \"expert_context_ready\": false,\n      \"coverage_target_met\": false\n    },\n    \"coverage\": {\n      \"hero_claims_total\": 0,\n      \"hero_claims_enriched\": 0,\n      \"hero_gap_fill_rate\": 0,\n      \"target_fill_rate\": 0.8\n    },\n    \"claim_summary\": {\n      \"total_claims\": 0,\n      \"hero_claims\": 0,\n      \"enriched_claims\": 0,\n      \"thin_hero_claim_ids\": []\n    },\n    \"review_focus\": [],\n    \"issues\": []\n  },\n  \"asset_build_summary\": {\n    \"total_assets\": 0,\n    \"approved_assets\": 0,\n    \"generated_assets\": 0,\n    \"queued_assets\": 0,\n    \"stale_assets\": 0,\n    \"placeholder_assets\": 0,\n    \"initial_review_batch\": \"batch_01\",\n    \"incomplete_batches\": []\n  },\n  \"page_images\": [],\n  \"required_output\": {}\n}\n",
     "commercial_scorecard.json": "{\n  \"overall_score\": null,\n  \"dimensions\": {\n    \"audience_fit\": null,\n    \"buying_reason_clarity\": null,\n    \"proof_strength\": null,\n    \"objection_coverage\": null,\n    \"narrative_flow\": null,\n    \"commercial_ask\": null\n  },\n  \"summary\": null,\n  \"recommended_action\": null,\n  \"weak_dimensions\": []\n}\n",
 }
 

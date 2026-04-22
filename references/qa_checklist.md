@@ -66,6 +66,12 @@
 
 content_thin / expert_data_ignored / redaction_incomplete 对应 finding。
 
+自动 QA / 报告要求：
+
+- `deck_review_report.md` 必须显式输出 `Expert Mode Gate` 区块
+- 至少写出 `session_state / finalized / redaction_pending / expert_context_ready / coverage_target_met`
+- 如果 gate 未闭环，summary blockers 必须进入自动 issues，而不是只停留在说明文字
+
 ## 内部语言泄露检查
 
 1. 标题、正文、insight bar 中是否出现"这一页负责""没有这一页""回答顾虑"等制作语言

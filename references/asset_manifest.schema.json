@@ -17,10 +17,36 @@
             "type": "string",
             "enum": ["url", "file", "pending", "declared", "inferred"]
           },
+          "source_mode": {
+            "type": "string",
+            "enum": ["capture", "provided", "generate", "placeholder"]
+          },
+          "asset_type": {
+            "type": "string",
+            "enum": ["product_screenshot", "generated_visual", "concept_ui", "texture", "icon_set"]
+          },
+          "generation_mode": {
+            "type": "string",
+            "enum": ["gptimage2", "capture", "provided", "placeholder", "none"]
+          },
           "url": { "type": "string" },
           "status": {
             "type": "string",
-            "enum": ["pending", "captured", "provided", "placeholder", "mockup_applied", "missing"]
+            "enum": ["pending", "queued", "captured", "provided", "generated", "approved", "rejected", "embedded", "placeholder", "mockup_applied", "missing"]
+          },
+          "style_group": { "type": "string" },
+          "reuse_key": { "type": "string" },
+          "prompt_intent": { "type": "string" },
+          "aspect_ratio": { "type": "string" },
+          "variant_count": { "type": "integer", "minimum": 1 },
+          "batch_id": { "type": "string" },
+          "content_hash": { "type": "string" },
+          "stale": { "type": "boolean" },
+          "selected_variant": { "type": "string" },
+          "generated_at": { "type": "string" },
+          "prompt_payload": {
+            "type": "object",
+            "additionalProperties": true
           },
           "raw_path": { "type": "string" },
           "final_path": { "type": "string" },

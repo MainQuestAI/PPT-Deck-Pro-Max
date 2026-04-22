@@ -14,4 +14,11 @@
 - `layout_manifest.json`
 - `slide_state.json`
 
+如果使用默认的 Expert Mode，还应关注：
+
+- `interview_session.json`
+- `interview_preparation.json`
+- `deck_expert_context.md`
+- `review_package.json` 中的 `expert_mode_summary`
+
 新项目可以直接从这里理解输出物结构，而不是只看主文档。

@@ -60,6 +60,35 @@ python scripts/run_deck_pipeline.py visual-composition \
 python scripts/run_deck_pipeline.py handoff \
   --project-dir ./my-deck --role build --page-ids slide_05
 
+# Generate a batch handoff for key pages (auto-resolve pages from image_build_jobs.json)
+python scripts/run_deck_pipeline.py handoff \
+  --project-dir ./my-deck --role build --batch-id batch_01
+
+# Generate a per-page subagent dispatch package for a batch
+python scripts/run_deck_pipeline.py dispatch-build \
+  --project-dir ./my-deck --batch-id batch_01
+
+# Sync asset / job / batch status after human approval
+python scripts/run_deck_pipeline.py asset-status \
+  --project-dir ./my-deck --asset-id slide_03_screenshot --status approved \
+  --final-path generated/slide_03_selected.png --clear-stale
+
+# Once a batch is approved, prepare the HTML assemble package
+python scripts/run_deck_pipeline.py prepare-assemble \
+  --project-dir ./my-deck --batch-id batch_01
+
+# Assemble the approved batch into starter/index.html
+python scripts/run_deck_pipeline.py assemble-html \
+  --project-dir ./my-deck --batch-id batch_01
+
+# After HTML assemble is done, mark the batch embedded / awaiting_review
+python scripts/run_deck_pipeline.py finalize-assemble \
+  --project-dir ./my-deck --batch-id batch_01
+
+# Or close the batch in one shot: finalize -> screenshot -> review package -> QA
+python scripts/run_deck_pipeline.py post-assemble-qa \
+  --project-dir ./my-deck --batch-id batch_01
+
 # Plan assets (identify which pages need screenshots)
 python scripts/run_deck_pipeline.py asset-plan \
   --project-dir ./my-deck

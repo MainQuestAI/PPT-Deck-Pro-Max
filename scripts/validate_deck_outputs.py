@@ -43,13 +43,22 @@ def find_artifact(project_dir: Path, patterns: list[str]) -> Path | None:
     for child in sorted(project_dir.iterdir()):
         if not child.is_dir():
             continue
-        if not (child.name.startswith("build_") or child.name.startswith("dist") or child.name.startswith("output")):
+        search_dirs: list[Path] = []
+        if child.name.startswith("build_") or child.name.startswith("dist") or child.name.startswith("output"):
+            search_dirs.append(child)
+        elif child.name == "assemble":
+            for batch_dir in sorted(child.iterdir()):
+                starter = batch_dir / "starter"
+                if starter.is_dir():
+                    search_dirs.append(starter)
+        if not search_dirs:
             continue
-        for pattern in patterns:
-            matches = sorted(child.glob(pattern))
-            for match in matches:
-                if match.is_file() and not match.name.startswith(".") and not match.name.startswith("~$"):
-                    return match
+        for search_dir in search_dirs:
+            for pattern in patterns:
+                matches = sorted(search_dir.glob(pattern))
+                for match in matches:
+                    if match.is_file() and not match.name.startswith(".") and not match.name.startswith("~$"):
+                        return match
     return None
 
 

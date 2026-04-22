@@ -101,13 +101,37 @@ def write_asset_plan(needs: list[dict], output: Path) -> None:
 def write_asset_manifest(needs: list[dict], output: Path) -> None:
     assets = []
     for item in needs:
+        has_url = bool(item.get("url"))
+        source_mode = "capture" if has_url else "generate"
+        asset_type = "product_screenshot" if has_url else "generated_visual"
         assets.append({
             "id": item.get("id", f"{item['page_id']}_screenshot"),
             "page_id": item["page_id"],
             "desc": item.get("desc", ""),
-            "source": "url" if item.get("url") else "pending",
+            "source": "url" if has_url else item.get("source", "pending"),
+            "source_mode": source_mode,
+            "asset_type": asset_type,
+            "generation_mode": "capture" if has_url else "gptimage2",
             "url": item.get("url", ""),
             "status": "pending",
+            "style_group": "deck_primary",
+            "reuse_key": item.get("id", f"{item['page_id']}_screenshot"),
+            "prompt_intent": item.get("desc", ""),
+            "aspect_ratio": "16:9",
+            "variant_count": 2 if not has_url else 1,
+            "batch_id": "",
+            "content_hash": "",
+            "stale": False,
+            "selected_variant": "",
+            "generated_at": "",
+            "prompt_payload": {
+                "page_id": item["page_id"],
+                "page_no": item.get("page_no"),
+                "role": item.get("role", ""),
+                "brief": item.get("desc", ""),
+                "frame": item.get("frame", "macbook"),
+                "position": item.get("position", "right"),
+            },
             "raw_path": "",
             "final_path": "",
             "frame": item.get("frame", "macbook"),
