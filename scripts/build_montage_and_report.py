@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 from check_layout_stability import detect_layout_stability_issues
+from generate_review_package import summarize_expert_mode
 from page_parser import extract_page_slices, extract_speaker_notes
 
 try:
@@ -240,6 +241,17 @@ def detect_expert_mode_issues(
     return issues
 
 
+def summarize_expert_mode_issues(expert_mode_summary: dict | None) -> dict[str, list[str]]:
+    if not isinstance(expert_mode_summary, dict):
+        return {}
+    if not expert_mode_summary.get("enabled"):
+        return {}
+    issues = [str(issue) for issue in expert_mode_summary.get("issues", []) if issue]
+    if not issues:
+        return {}
+    return {"__expert__": issues}
+
+
 def merge_review_findings(findings: dict | list | None) -> dict[str, list[str]]:
     issues: dict[str, list[str]] = {}
     if not findings:
@@ -401,6 +413,11 @@ def main() -> None:
     interview_session = load_json(Path(args.interview_session).expanduser().resolve()) if args.interview_session else load_json(project_dir / "interview_session.json")
     interview_preparation = load_json(Path(args.interview_preparation).expanduser().resolve()) if args.interview_preparation else load_json(project_dir / "interview_preparation.json")
     expert_context_path = Path(args.expert_context).expanduser().resolve() if args.expert_context else (project_dir / "deck_expert_context.md")
+    expert_mode_summary = summarize_expert_mode(
+        project_dir,
+        interview_session if isinstance(interview_session, dict) else {},
+        interview_preparation if isinstance(interview_preparation, dict) else {},
+    )
 
     commercial_issues: dict[str, list[str]] = {}
     if isinstance(commercial_scorecard, dict) and not is_scorecard_scaffold(commercial_scorecard):
@@ -427,6 +444,7 @@ def main() -> None:
             expert_context_path,
             clean_pages_text,
         ),
+        summarize_expert_mode_issues(expert_mode_summary),
         layout_issues,
         merge_review_findings(review_findings),
         commercial_issues,
@@ -464,6 +482,36 @@ def main() -> None:
                 "",
             ]
         )
+
+    if expert_mode_summary.get("enabled"):
+        gating_status = expert_mode_summary.get("gating_status", {})
+        coverage = expert_mode_summary.get("coverage", {})
+        claim_summary = expert_mode_summary.get("claim_summary", {})
+        report_lines.extend(
+            [
+                "## Expert Mode Gate",
+                "",
+                f"- review_ready：`{expert_mode_summary.get('review_ready', False)}`",
+                f"- session_state：`{gating_status.get('session_state', 'missing')}`",
+                f"- finalized：`{gating_status.get('finalized', False)}`",
+                f"- redaction_pending：`{gating_status.get('redaction_pending', 0)}`",
+                f"- expert_context_ready：`{gating_status.get('expert_context_ready', False)}`",
+                f"- coverage_target_met：`{gating_status.get('coverage_target_met', False)}`",
+                f"- hero_gap_fill_rate：`{coverage.get('hero_gap_fill_rate', 0):.0%}` / `{coverage.get('target_fill_rate', 0.8):.0%}`",
+                f"- claims：`{claim_summary.get('total_claims', 0)}` | hero=`{claim_summary.get('hero_claims', 0)}` | enriched=`{claim_summary.get('enriched_claims', 0)}`",
+                "",
+            ]
+        )
+        review_focus = expert_mode_summary.get("review_focus", [])
+        if review_focus:
+            report_lines.extend(["### Expert Review Focus", ""])
+            report_lines.extend([f"- {item}" for item in review_focus])
+            report_lines.append("")
+        summary_issues = expert_mode_summary.get("issues", [])
+        if summary_issues:
+            report_lines.extend(["### Expert Gate Blockers", ""])
+            report_lines.extend([f"- `{item}`" for item in summary_issues])
+            report_lines.append("")
 
     report_lines.extend([
         "## 页级状态",

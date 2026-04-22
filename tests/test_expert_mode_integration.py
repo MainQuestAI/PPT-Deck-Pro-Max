@@ -9,7 +9,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from build_montage_and_report import detect_expert_mode_issues  # noqa: E402
+from build_montage_and_report import detect_expert_mode_issues, summarize_expert_mode_issues  # noqa: E402
 from finalize_interview import (  # noqa: E402
     validate_session,
     validate_state_transition,
@@ -122,6 +122,22 @@ class DetectExpertModeIssuesTests(unittest.TestCase):
 
     def test_returns_empty_without_preparation(self) -> None:
         issues = detect_expert_mode_issues(None, None, None, None)
+        self.assertEqual(issues, {})
+
+    def test_summary_blockers_promote_to_expert_issue_bucket(self) -> None:
+        summary = {
+            "enabled": True,
+            "issues": [
+                "interview_preparation_missing_or_empty",
+                "deck_expert_context_missing",
+            ],
+        }
+        issues = summarize_expert_mode_issues(summary)
+        self.assertIn("__expert__", issues)
+        self.assertIn("interview_preparation_missing_or_empty", issues["__expert__"])
+
+    def test_summary_issues_ignored_when_expert_mode_disabled(self) -> None:
+        issues = summarize_expert_mode_issues({"enabled": False, "issues": ["deck_expert_context_missing"]})
         self.assertEqual(issues, {})
 
 
