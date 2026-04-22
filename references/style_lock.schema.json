@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Style Lock",
+  "type": "object",
+  "required": ["version", "style_id", "visual_rules", "source_files"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "style_id": { "type": "string", "minLength": 1 },
+    "visual_mood": { "type": "string" },
+    "color_system": { "type": "string" },
+    "typography": { "type": "string" },
+    "graphic_language": { "type": "string" },
+    "density_ceiling": { "type": "string" },
+    "palette": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "visual_rules": {
+      "type": "object",
+      "required": ["material_finish", "lighting", "perspective", "text_in_image", "negative_prompts"],
+      "properties": {
+        "material_finish": { "type": "string" },
+        "lighting": { "type": "string" },
+        "perspective": { "type": "string" },
+        "text_in_image": { "type": "string", "enum": ["avoid", "allow"] },
+        "negative_prompts": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_files": {
+      "type": "object",
+      "required": ["deck_vibe_brief", "deck_theme_tokens", "deck_visual_system"],
+      "properties": {
+        "deck_vibe_brief": { "type": "string" },
+        "deck_theme_tokens": { "type": "string" },
+        "deck_visual_system": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

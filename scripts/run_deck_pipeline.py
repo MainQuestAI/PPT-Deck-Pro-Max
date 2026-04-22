@@ -25,6 +25,24 @@ def run_script(script_name: str, *args: str) -> None:
         raise SystemExit(f"[ERROR] {script_name} failed with exit code {exc.returncode}")
 
 
+def load_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def resolve_batch_page_ids(project_dir: Path, batch_id: str) -> list[str]:
+    jobs_path = project_dir / "image_build_jobs.json"
+    jobs_payload = load_json(jobs_path)
+    for batch in jobs_payload.get("batches", []):
+        if batch.get("batch_id") == batch_id:
+            page_ids = [str(page_id) for page_id in batch.get("page_ids", []) if str(page_id)]
+            if page_ids:
+                return page_ids
+            raise SystemExit(f"[ERROR] batch `{batch_id}` exists but has no page_ids.")
+    raise SystemExit(f"[ERROR] batch `{batch_id}` not found in {jobs_path}.")
+
+
 def find_latest_pptx(project_dir: Path) -> Path | None:
     candidates = [project_dir]
     for child in sorted(project_dir.iterdir()) if project_dir.exists() else []:
@@ -203,20 +221,33 @@ def cmd_preset(args: argparse.Namespace) -> None:
 
 def cmd_handoff(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
-    output = Path(args.output).expanduser().resolve() if args.output else project_dir / f"{args.role}_handoff.md"
+    resolved_page_ids = list(args.page_ids or [])
+    if args.role == "build" and args.batch_id and not resolved_page_ids:
+        resolved_page_ids = resolve_batch_page_ids(project_dir, args.batch_id)
+
+    if args.output:
+        output = Path(args.output).expanduser().resolve()
+    elif args.role == "build" and args.batch_id:
+        output = project_dir / f"build_{args.batch_id}_handoff.md"
+    else:
+        output = project_dir / f"{args.role}_handoff.md"
     cmd = ["--project-dir", str(project_dir), "--role", args.role, "--output", str(output)]
-    if args.page_ids:
-        cmd.extend(["--page-ids", *args.page_ids])
-    if args.role == "build" and args.page_ids:
-        if len(args.page_ids) == 1:
-            ctx_output = project_dir / "contexts" / f"{args.page_ids[0]}.json"
+    if resolved_page_ids:
+        cmd.extend(["--page-ids", *resolved_page_ids])
+    if args.batch_id:
+        cmd.extend(["--batch-id", args.batch_id])
+    if args.role == "build" and resolved_page_ids:
+        if args.batch_id:
+            ctx_output = project_dir / "contexts" / f"{args.batch_id}.json"
+        elif len(resolved_page_ids) == 1:
+            ctx_output = project_dir / "contexts" / f"{resolved_page_ids[0]}.json"
         else:
             ctx_output = project_dir / "build_context.json"
         build_cmd = [
             "build-context",
             "--project-dir", str(project_dir),
             "--output", str(ctx_output),
-            "--page-ids", *args.page_ids,
+            "--page-ids", *resolved_page_ids,
         ]
         main_parser = build_parser()
         parsed = main_parser.parse_args(build_cmd)
@@ -428,6 +459,143 @@ def cmd_asset_plan(args: argparse.Namespace) -> None:
     run_script("generate_asset_plan.py", *cmd)
 
 
+def cmd_style_lock(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.vibe:
+        cmd.extend(["--vibe", str(Path(args.vibe).expanduser().resolve())])
+    if args.theme_tokens:
+        cmd.extend(["--theme-tokens", str(Path(args.theme_tokens).expanduser().resolve())])
+    if args.visual_system:
+        cmd.extend(["--visual-system", str(Path(args.visual_system).expanduser().resolve())])
+    if args.output:
+        cmd.extend(["--output", str(Path(args.output).expanduser().resolve())])
+    run_script("generate_style_lock.py", *cmd)
+
+
+def cmd_generate_assets(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--batch-size", str(args.batch_size)]
+    if args.manifest:
+        cmd.extend(["--manifest", str(Path(args.manifest).expanduser().resolve())])
+    if args.state:
+        cmd.extend(["--state", str(Path(args.state).expanduser().resolve())])
+    if args.clean_pages:
+        cmd.extend(["--clean-pages", str(Path(args.clean_pages).expanduser().resolve())])
+    if args.visual_composition:
+        cmd.extend(["--visual-composition", str(Path(args.visual_composition).expanduser().resolve())])
+    if args.style_lock:
+        cmd.extend(["--style-lock", str(Path(args.style_lock).expanduser().resolve())])
+    if args.output:
+        cmd.extend(["--output", str(Path(args.output).expanduser().resolve())])
+    run_script("generate_visual_assets.py", *cmd)
+
+
+def cmd_dispatch_build(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--batch-id", args.batch_id]
+    if args.output_json:
+        cmd.extend(["--output-json", str(Path(args.output_json).expanduser().resolve())])
+    if args.output_md:
+        cmd.extend(["--output-md", str(Path(args.output_md).expanduser().resolve())])
+    run_script("generate_build_dispatch.py", *cmd)
+
+
+def cmd_asset_status(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--asset-id", args.asset_id, "--status", args.status]
+    if args.final_path is not None:
+        cmd.extend(["--final-path", args.final_path])
+    if args.selected_variant is not None:
+        cmd.extend(["--selected-variant", args.selected_variant])
+    if args.clear_stale:
+        cmd.append("--clear-stale")
+    run_script("update_asset_runtime.py", *cmd)
+
+
+def cmd_prepare_assemble(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--batch-id", args.batch_id]
+    if args.output_json:
+        cmd.extend(["--output-json", str(Path(args.output_json).expanduser().resolve())])
+    if args.output_md:
+        cmd.extend(["--output-md", str(Path(args.output_md).expanduser().resolve())])
+    run_script("prepare_html_assemble.py", *cmd)
+
+
+def cmd_finalize_assemble(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--batch-id", args.batch_id]
+    if args.html_path:
+        cmd.extend(["--html-path", str(Path(args.html_path).expanduser().resolve())])
+    run_script("finalize_html_assemble.py", *cmd)
+
+
+def cmd_assemble_html(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--batch-id", args.batch_id]
+    if args.context:
+        cmd.extend(["--context", str(Path(args.context).expanduser().resolve())])
+    run_script("assemble_html_batch.py", *cmd)
+
+
+def cmd_screenshot_pages(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--viewport", args.viewport]
+    if args.html_path:
+        cmd.extend(["--html-path", str(Path(args.html_path).expanduser().resolve())])
+    if args.output_dir:
+        cmd.extend(["--output-dir", str(Path(args.output_dir).expanduser().resolve())])
+    run_script("screenshot_pages.py", *cmd)
+
+
+def cmd_post_assemble_qa(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    assemble_manifest_path = project_dir / "assemble" / args.batch_id / "assemble_manifest.json"
+    assemble_manifest = load_json(assemble_manifest_path)
+    if not assemble_manifest:
+        raise SystemExit(f"[ERROR] assemble manifest not found: {assemble_manifest_path}")
+
+    html_path = Path(args.html_path).expanduser().resolve() if args.html_path else Path(assemble_manifest.get("output_html", ""))
+    if not html_path:
+        raise SystemExit(f"[ERROR] html output not found in assemble manifest: {assemble_manifest_path}")
+    rendered_dir = Path(args.rendered_dir).expanduser().resolve() if args.rendered_dir else project_dir / "rendered"
+    review_package = Path(args.review_package).expanduser().resolve() if args.review_package else project_dir / "review_package.json"
+    report = Path(args.report).expanduser().resolve() if args.report else project_dir / "deck_review_report.md"
+    montage = Path(args.montage).expanduser().resolve() if args.montage else project_dir / "montage.png"
+    theme = Path(args.theme_tokens).expanduser().resolve() if args.theme_tokens else SKILL_ROOT / "assets" / "theme_tokens" / "default_dark_glass.json"
+    layout_manifest = Path(args.layout_manifest).expanduser().resolve() if args.layout_manifest else project_dir / "layout_manifest.json"
+
+    run_script("finalize_html_assemble.py", "--project-dir", str(project_dir), "--batch-id", args.batch_id, "--html-path", str(html_path))
+    run_script(
+        "screenshot_pages.py",
+        "--project-dir", str(project_dir),
+        "--html-path", str(html_path),
+        "--output-dir", str(rendered_dir),
+        "--viewport", args.viewport,
+    )
+    run_script(
+        "generate_review_package.py",
+        "--project-dir", str(project_dir),
+        "--output", str(review_package),
+        "--rendered-dir", str(rendered_dir),
+        "--deck-path", str(html_path),
+    )
+    qa_cmd = [
+        "--project-dir", str(project_dir),
+        "--state", str(project_dir / "slide_state.json"),
+        "--clean-pages", str(project_dir / "deck_clean_pages.md"),
+        "--layout-manifest", str(layout_manifest),
+        "--theme-tokens", str(theme),
+        "--report", str(report),
+        "--montage", str(montage),
+        "--warn-chars", str(args.warn_chars),
+        "--fail-chars", str(args.fail_chars),
+        "--write-state",
+    ]
+    run_script("build_montage_and_report.py", *qa_cmd)
+
+
 def cmd_capture_assets(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -560,6 +728,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_handoff.add_argument("--project-dir", required=True)
     p_handoff.add_argument("--role", required=True, choices=["brief", "visual", "build", "review"])
     p_handoff.add_argument("--page-ids", nargs="*", default=[])
+    p_handoff.add_argument("--batch-id")
     p_handoff.add_argument("--output")
     p_handoff.set_defaults(func=cmd_handoff)
 
@@ -632,6 +801,82 @@ def build_parser() -> argparse.ArgumentParser:
     p_asset_plan.add_argument("--output")
     p_asset_plan.add_argument("--manifest")
     p_asset_plan.set_defaults(func=cmd_asset_plan)
+
+    p_style_lock = sub.add_parser("style-lock", help="Generate a deck-level style lock for image-led build")
+    p_style_lock.add_argument("--project-dir", required=True)
+    p_style_lock.add_argument("--vibe")
+    p_style_lock.add_argument("--theme-tokens")
+    p_style_lock.add_argument("--visual-system")
+    p_style_lock.add_argument("--output")
+    p_style_lock.set_defaults(func=cmd_style_lock)
+
+    p_generate_assets = sub.add_parser("generate-assets", help="Generate batched image build jobs for Codex/subagent execution")
+    p_generate_assets.add_argument("--project-dir", required=True)
+    p_generate_assets.add_argument("--manifest")
+    p_generate_assets.add_argument("--state")
+    p_generate_assets.add_argument("--clean-pages")
+    p_generate_assets.add_argument("--visual-composition")
+    p_generate_assets.add_argument("--style-lock")
+    p_generate_assets.add_argument("--output")
+    p_generate_assets.add_argument("--batch-size", type=int, default=3)
+    p_generate_assets.set_defaults(func=cmd_generate_assets)
+
+    p_dispatch_build = sub.add_parser("dispatch-build", help="Generate per-page subagent dispatch package for a build batch")
+    p_dispatch_build.add_argument("--project-dir", required=True)
+    p_dispatch_build.add_argument("--batch-id", required=True)
+    p_dispatch_build.add_argument("--output-json")
+    p_dispatch_build.add_argument("--output-md")
+    p_dispatch_build.set_defaults(func=cmd_dispatch_build)
+
+    p_asset_status = sub.add_parser("asset-status", help="Update asset/job/batch runtime status together")
+    p_asset_status.add_argument("--project-dir", required=True)
+    p_asset_status.add_argument("--asset-id", required=True)
+    p_asset_status.add_argument("--status", required=True)
+    p_asset_status.add_argument("--final-path")
+    p_asset_status.add_argument("--selected-variant")
+    p_asset_status.add_argument("--clear-stale", action="store_true")
+    p_asset_status.set_defaults(func=cmd_asset_status)
+
+    p_prepare_assemble = sub.add_parser("prepare-assemble", help="Prepare an approved batch for HTML assemble")
+    p_prepare_assemble.add_argument("--project-dir", required=True)
+    p_prepare_assemble.add_argument("--batch-id", required=True)
+    p_prepare_assemble.add_argument("--output-json")
+    p_prepare_assemble.add_argument("--output-md")
+    p_prepare_assemble.set_defaults(func=cmd_prepare_assemble)
+
+    p_finalize_assemble = sub.add_parser("finalize-assemble", help="Finalize an HTML assemble batch and mark it embedded")
+    p_finalize_assemble.add_argument("--project-dir", required=True)
+    p_finalize_assemble.add_argument("--batch-id", required=True)
+    p_finalize_assemble.add_argument("--html-path")
+    p_finalize_assemble.set_defaults(func=cmd_finalize_assemble)
+
+    p_assemble_html = sub.add_parser("assemble-html", help="Assemble approved batch context into starter HTML")
+    p_assemble_html.add_argument("--project-dir", required=True)
+    p_assemble_html.add_argument("--batch-id", required=True)
+    p_assemble_html.add_argument("--context")
+    p_assemble_html.set_defaults(func=cmd_assemble_html)
+
+    p_screenshot = sub.add_parser("screenshot-pages", help="Take per-slide screenshots from an HTML deck")
+    p_screenshot.add_argument("--project-dir", required=True)
+    p_screenshot.add_argument("--html-path")
+    p_screenshot.add_argument("--output-dir")
+    p_screenshot.add_argument("--viewport", default="1280x720")
+    p_screenshot.set_defaults(func=cmd_screenshot_pages)
+
+    p_post_assemble_qa = sub.add_parser("post-assemble-qa", help="Finalize a batch, screenshot it, refresh review package, and run QA")
+    p_post_assemble_qa.add_argument("--project-dir", required=True)
+    p_post_assemble_qa.add_argument("--batch-id", required=True)
+    p_post_assemble_qa.add_argument("--html-path")
+    p_post_assemble_qa.add_argument("--rendered-dir")
+    p_post_assemble_qa.add_argument("--review-package")
+    p_post_assemble_qa.add_argument("--report")
+    p_post_assemble_qa.add_argument("--montage")
+    p_post_assemble_qa.add_argument("--layout-manifest")
+    p_post_assemble_qa.add_argument("--theme-tokens")
+    p_post_assemble_qa.add_argument("--viewport", default="1280x720")
+    p_post_assemble_qa.add_argument("--warn-chars", type=int, default=700)
+    p_post_assemble_qa.add_argument("--fail-chars", type=int, default=1000)
+    p_post_assemble_qa.set_defaults(func=cmd_post_assemble_qa)
 
     p_capture = sub.add_parser("capture-assets", help="Capture product screenshots from URLs")
     p_capture.add_argument("--project-dir", required=True)

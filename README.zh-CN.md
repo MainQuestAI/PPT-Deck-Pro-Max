@@ -60,6 +60,35 @@ python scripts/run_deck_pipeline.py visual-composition \
 python scripts/run_deck_pipeline.py handoff \
   --project-dir ./my-deck --role build --page-ids slide_05
 
+# 为首批关键页生成 batch handoff（自动从 image_build_jobs.json 取页）
+python scripts/run_deck_pipeline.py handoff \
+  --project-dir ./my-deck --role build --batch-id batch_01
+
+# 为 batch 生成可直接分发给 subagent 的任务包
+python scripts/run_deck_pipeline.py dispatch-build \
+  --project-dir ./my-deck --batch-id batch_01
+
+# 人审确认某张图通过后，统一回写 asset / job / batch 状态
+python scripts/run_deck_pipeline.py asset-status \
+  --project-dir ./my-deck --asset-id slide_03_screenshot --status approved \
+  --final-path generated/slide_03_selected.png --clear-stale
+
+# 当整批关键页都批准后，生成 HTML 装配包
+python scripts/run_deck_pipeline.py prepare-assemble \
+  --project-dir ./my-deck --batch-id batch_01
+
+# 把 assemble_context 真实装配进 starter/index.html
+python scripts/run_deck_pipeline.py assemble-html \
+  --project-dir ./my-deck --batch-id batch_01
+
+# HTML 装配完成后，统一把本批切到 embedded / awaiting_review
+python scripts/run_deck_pipeline.py finalize-assemble \
+  --project-dir ./my-deck --batch-id batch_01
+
+# 或者一条命令直接收口：finalize -> screenshot -> review package -> QA
+python scripts/run_deck_pipeline.py post-assemble-qa \
+  --project-dir ./my-deck --batch-id batch_01
+
 # 规划配图（识别哪些页需要截图）
 python scripts/run_deck_pipeline.py asset-plan \
   --project-dir ./my-deck

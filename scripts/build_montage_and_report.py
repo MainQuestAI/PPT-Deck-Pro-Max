@@ -69,6 +69,15 @@ def maybe_build_montage(images: list[Path], output: Path) -> bool:
     return True
 
 
+def find_page_images(project_dir: Path) -> list[Path]:
+    rendered_dir = project_dir / "rendered"
+    if rendered_dir.exists():
+        rendered_images = sorted(rendered_dir.glob("slide_*.png"))
+        if rendered_images:
+            return rendered_images
+    return sorted(project_dir.glob("slide_*.png"))
+
+
 def load_json(path: Path | None) -> dict | list | None:
     if not path or not path.exists():
         return None
@@ -133,9 +142,26 @@ def detect_missing_assets(state: dict, asset_manifest: dict | None) -> dict[str,
             continue
         page_id = page.get("page_id", "")
         page_assets = asset_lookup.get(page_id, [])
-        has_real = any(a.get("status") in ("captured", "provided", "mockup_applied") for a in page_assets)
+        has_real = any(a.get("status") in ("captured", "provided", "mockup_applied", "approved", "embedded") for a in page_assets)
         if not has_real:
             issues.setdefault(page_id, []).append("asset_missing")
+    return issues
+
+
+def detect_asset_runtime_issues(asset_manifest: dict | None, image_build_jobs: dict | None) -> dict[str, list[str]]:
+    issues: dict[str, list[str]] = {}
+    if isinstance(asset_manifest, dict):
+        for asset in asset_manifest.get("assets", []):
+            page_id = asset.get("page_id", "")
+            asset_id = asset.get("id", "unknown")
+            if asset.get("stale"):
+                issues.setdefault(page_id or "__build__", []).append(f"asset_stale:{asset_id}")
+            if asset.get("source_mode") == "generate" and asset.get("status") in {"queued", "generated", "rejected"}:
+                issues.setdefault(page_id or "__build__", []).append(f"asset_not_approved:{asset_id}")
+    if isinstance(image_build_jobs, dict):
+        for batch in image_build_jobs.get("batches", []):
+            if batch.get("status") not in {"approved", "completed"}:
+                issues.setdefault("__build__", []).append(f"batch_incomplete:{batch.get('batch_id', 'unknown')}")
     return issues
 
 
@@ -383,7 +409,7 @@ def main() -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     state_path = Path(args.state).expanduser().resolve()
     state = json.loads(state_path.read_text(encoding="utf-8"))
-    images = sorted(project_dir.glob("slide_*.png"))
+    images = find_page_images(project_dir)
     montage_ok = maybe_build_montage(images, Path(args.montage).expanduser().resolve())
     clean_pages_text = Path(args.clean_pages).read_text(encoding="utf-8") if args.clean_pages and Path(args.clean_pages).exists() else None
     layout_manifest_path = (
@@ -394,6 +420,8 @@ def main() -> None:
     layout_manifest = load_json(layout_manifest_path) if layout_manifest_path.exists() else None
     asset_manifest_path = project_dir / "asset_manifest.json"
     asset_manifest = load_json(asset_manifest_path) if asset_manifest_path.exists() else None
+    image_jobs_path = project_dir / "image_build_jobs.json"
+    image_build_jobs = load_json(image_jobs_path) if image_jobs_path.exists() else None
     theme = load_json(Path(args.theme_tokens).expanduser().resolve()) if args.theme_tokens else None
     review_findings = load_json(Path(args.review_findings).expanduser().resolve()) if args.review_findings else None
     commercial_scorecard = load_json(Path(args.commercial_scorecard).expanduser().resolve()) if args.commercial_scorecard else None
@@ -438,6 +466,10 @@ def main() -> None:
         detect_density_issues(state, clean_pages_text, args.warn_chars, args.fail_chars, getattr(args, "min_chars", 0)),
         detect_missing_speaker_notes(state, clean_pages_text),
         detect_missing_assets(state, asset_manifest if isinstance(asset_manifest, dict) else None),
+        detect_asset_runtime_issues(
+            asset_manifest if isinstance(asset_manifest, dict) else None,
+            image_build_jobs if isinstance(image_build_jobs, dict) else None,
+        ),
         detect_expert_mode_issues(
             interview_session if isinstance(interview_session, dict) else None,
             interview_preparation if isinstance(interview_preparation, dict) else None,
@@ -510,8 +542,23 @@ def main() -> None:
         summary_issues = expert_mode_summary.get("issues", [])
         if summary_issues:
             report_lines.extend(["### Expert Gate Blockers", ""])
-            report_lines.extend([f"- `{item}`" for item in summary_issues])
-            report_lines.append("")
+        report_lines.extend([f"- `{item}`" for item in summary_issues])
+        report_lines.append("")
+
+    if isinstance(image_build_jobs, dict) or isinstance(asset_manifest, dict):
+        assets = asset_manifest.get("assets", []) if isinstance(asset_manifest, dict) else []
+        report_lines.extend(
+            [
+                "## Asset Build Runtime",
+                "",
+                f"- total_assets：`{len(assets)}`",
+                f"- approved_assets：`{sum(1 for asset in assets if asset.get('status') in {'approved', 'embedded'})}`",
+                f"- queued_assets：`{sum(1 for asset in assets if asset.get('status') == 'queued')}`",
+                f"- stale_assets：`{sum(1 for asset in assets if asset.get('stale'))}`",
+                f"- initial_review_batch：`{image_build_jobs.get('initial_review_batch', 'batch_01') if isinstance(image_build_jobs, dict) else 'batch_01'}`",
+                "",
+            ]
+        )
 
     report_lines.extend([
         "## 页级状态",

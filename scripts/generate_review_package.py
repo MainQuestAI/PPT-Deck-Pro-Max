@@ -29,6 +29,11 @@ def find_candidate_dirs(project_dir: Path) -> list[Path]:
             or child.name.endswith("_build")
         ):
             candidates.append(child)
+        if child.is_dir() and child.name == "assemble":
+            for batch_dir in sorted(child.iterdir()):
+                starter = batch_dir / "starter"
+                if starter.is_dir():
+                    candidates.append(starter)
     return candidates
 
 
@@ -165,6 +170,28 @@ def summarize_expert_mode(project_dir: Path, interview_session: dict, interview_
     }
 
 
+def summarize_asset_build(project_dir: Path, asset_manifest: dict, image_jobs: dict) -> dict:
+    assets = asset_manifest.get("assets", []) if isinstance(asset_manifest, dict) else []
+    jobs = image_jobs.get("jobs", []) if isinstance(image_jobs, dict) else []
+    batches = image_jobs.get("batches", []) if isinstance(image_jobs, dict) else []
+    incomplete_batches = [
+        batch.get("batch_id", "")
+        for batch in batches
+        if batch.get("status") not in {"approved", "completed"}
+    ]
+    return {
+        "total_assets": len(assets),
+        "approved_assets": sum(1 for asset in assets if asset.get("status") in {"approved", "embedded"}),
+        "generated_assets": sum(1 for asset in assets if asset.get("status") in {"generated", "approved", "embedded"}),
+        "queued_assets": sum(1 for asset in assets if asset.get("status") == "queued"),
+        "stale_assets": sum(1 for asset in assets if asset.get("stale")),
+        "placeholder_assets": sum(1 for asset in assets if asset.get("status") == "placeholder"),
+        "initial_review_batch": image_jobs.get("initial_review_batch", "batch_01") if isinstance(image_jobs, dict) else "batch_01",
+        "incomplete_batches": incomplete_batches,
+        "total_jobs": len(jobs),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a structured review package for multimodal deck review.")
     parser.add_argument("--project-dir", required=True)
@@ -200,6 +227,8 @@ def main() -> None:
     scorecard_schema_path = skill_root / "references" / "commercial_scorecard.schema.json"
     interview_session = load_json(project_dir / "interview_session.json")
     interview_preparation = load_json(project_dir / "interview_preparation.json")
+    asset_manifest = load_json(project_dir / "asset_manifest.json")
+    image_jobs = load_json(project_dir / "image_build_jobs.json")
 
     payload = {
         "project_dir": str(project_dir),
@@ -218,11 +247,15 @@ def main() -> None:
             "slide_state": str((project_dir / "slide_state.json").resolve()) if (project_dir / "slide_state.json").exists() else "",
             "visual_system": str((project_dir / "deck_visual_system.md").resolve()) if (project_dir / "deck_visual_system.md").exists() else "",
             "component_tokens": str((project_dir / "deck_component_tokens.md").resolve()) if (project_dir / "deck_component_tokens.md").exists() else "",
+            "style_lock": str((project_dir / "style_lock.json").resolve()) if (project_dir / "style_lock.json").exists() else "",
+            "asset_manifest": str((project_dir / "asset_manifest.json").resolve()) if (project_dir / "asset_manifest.json").exists() else "",
+            "image_build_jobs": str((project_dir / "image_build_jobs.json").resolve()) if (project_dir / "image_build_jobs.json").exists() else "",
             "expert_context": str((project_dir / "deck_expert_context.md").resolve()) if (project_dir / "deck_expert_context.md").exists() else "",
             "interview_session": str((project_dir / "interview_session.json").resolve()) if (project_dir / "interview_session.json").exists() else "",
             "interview_preparation": str((project_dir / "interview_preparation.json").resolve()) if (project_dir / "interview_preparation.json").exists() else "",
         },
         "expert_mode_summary": summarize_expert_mode(project_dir, interview_session, interview_preparation),
+        "asset_build_summary": summarize_asset_build(project_dir, asset_manifest, image_jobs),
         "page_images": list_page_images(rendered_dir),
         "required_output": {
             "schema": str(schema_path.resolve()),

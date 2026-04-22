@@ -28,6 +28,8 @@ KNOWN_SCHEMAS: dict[str, str] = {
     "review_rollback_plan.json": "review_rollback_plan.schema.json",
     "commercial_scorecard.json": "commercial_scorecard.schema.json",
     "asset_manifest.json": "asset_manifest.schema.json",
+    "style_lock.json": "style_lock.schema.json",
+    "image_build_jobs.json": "image_build_jobs.schema.json",
 }
 
 

@@ -41,6 +41,8 @@ class PipelineIntegrationTest(unittest.TestCase):
         self.assertIn("deck_narrative_arc.md", created)
         self.assertIn("deck_asset_plan.md", created)
         self.assertIn("asset_manifest.json", created)
+        self.assertIn("style_lock.json", created)
+        self.assertIn("image_build_jobs.json", created)
         self.assertIn("commercial_scorecard.json", created)
         self.assertTrue((self.project_dir / "assets").is_dir())
 

@@ -9,8 +9,8 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from generate_review_package import find_latest_matching, summarize_expert_mode  # noqa: E402
-from generate_role_prompt import build_review_prompt  # noqa: E402
+from generate_review_package import find_candidate_dirs, find_latest_matching, summarize_asset_build, summarize_expert_mode  # noqa: E402
+from generate_role_prompt import build_build_prompt, build_review_prompt  # noqa: E402
 
 
 class GenerateReviewPackageTests(unittest.TestCase):
@@ -25,6 +25,14 @@ class GenerateReviewPackageTests(unittest.TestCase):
             hidden.write_text("hidden", encoding="utf-8")
             found = find_latest_matching([root], ["*.pptx"])
             self.assertEqual(found, good)
+
+    def test_find_candidate_dirs_includes_assemble_starter(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            starter = root / "assemble" / "batch_01" / "starter"
+            starter.mkdir(parents=True, exist_ok=True)
+            candidates = find_candidate_dirs(root)
+            self.assertIn(starter, candidates)
 
     def test_summarize_expert_mode_reports_ready_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -93,8 +101,65 @@ class GenerateReviewPackageTests(unittest.TestCase):
             root = Path(tmp)
             prompt = build_review_prompt(root)
             self.assertIn("expert_mode_summary", prompt)
+            self.assertIn("asset_build_summary", prompt)
             self.assertIn("deck_expert_context.md", prompt)
             self.assertIn("expert_data_ignored", prompt)
+
+    def test_summarize_asset_build_reports_runtime_progress(self) -> None:
+        summary = summarize_asset_build(
+            Path("/tmp"),
+            {
+                "assets": [
+                    {"status": "approved", "stale": False},
+                    {"status": "queued", "stale": True},
+                    {"status": "placeholder", "stale": False},
+                ]
+            },
+            {
+                "initial_review_batch": "batch_01",
+                "batches": [
+                    {"batch_id": "batch_01", "status": "queued"},
+                    {"batch_id": "batch_02", "status": "completed"},
+                ],
+                "jobs": [{"job_id": "a"}, {"job_id": "b"}],
+            },
+        )
+        self.assertEqual(summary["approved_assets"], 1)
+        self.assertEqual(summary["queued_assets"], 1)
+        self.assertEqual(summary["stale_assets"], 1)
+        self.assertEqual(summary["incomplete_batches"], ["batch_01"])
+
+    def test_build_build_prompt_includes_batch_handoff_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "slide_state.json").write_text('{"output_mode":"html"}', encoding="utf-8")
+            ctx = root / "batch_01.json"
+            ctx.write_text(
+                """
+                {
+                  "inputs": {
+                    "generation_jobs": {
+                      "slide_01": [
+                        {"batch_id": "batch_01", "asset_id": "cover_visual", "prompt_intent": "封面主视觉"}
+                      ],
+                      "slide_03": [
+                        {"batch_id": "batch_01", "asset_id": "proof_visual", "prompt_intent": "样例 proof 主视觉"}
+                      ]
+                    },
+                    "generation_batch_summary": {
+                      "initial_review_batch": "batch_01",
+                      "batches": [{"batch_id": "batch_01", "status": "queued"}]
+                    }
+                  }
+                }
+                """,
+                encoding="utf-8",
+            )
+            prompt = build_build_prompt(root, ["slide_01", "slide_03"], ctx, "batch_01")
+            self.assertIn("当前批次", prompt)
+            self.assertIn("Subagent 拆分建议", prompt)
+            self.assertIn("cover_visual", prompt)
+            self.assertIn("proof_visual", prompt)
 
 
 if __name__ == "__main__":
