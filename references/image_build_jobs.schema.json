@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Image Build Jobs",
+  "type": "object",
+  "required": ["batch_size", "initial_review_batch", "batches", "jobs"],
+  "properties": {
+    "batch_size": { "type": "integer", "minimum": 1 },
+    "initial_review_batch": { "type": "string" },
+    "batches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["batch_id", "page_ids", "status"],
+        "properties": {
+          "batch_id": { "type": "string" },
+          "page_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "in_review", "approved", "rejected", "completed"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["job_id", "batch_id", "page_id", "asset_id", "status"],
+        "properties": {
+          "job_id": { "type": "string" },
+          "batch_id": { "type": "string" },
+          "page_id": { "type": "string" },
+          "asset_id": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "generating", "generated", "approved", "rejected", "embedded"]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

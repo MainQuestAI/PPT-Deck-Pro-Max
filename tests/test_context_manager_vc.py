@@ -41,6 +41,22 @@ class VisualCompositionSliceTests(unittest.TestCase):
         self.assertIn("icon_flow_chain", selected["slide_02"])
         self.assertNotIn("slide_01", selected)
 
+    def test_context_files_expected_by_build_runtime_can_be_loaded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "style_lock.json").write_text('{"style_id":"demo","visual_rules":{"text_in_image":"avoid"}}', encoding="utf-8")
+            (root / "asset_manifest.json").write_text(
+                '{"assets":[{"id":"a1","page_id":"slide_02","status":"approved","final_path":"assets/a1.png","source_mode":"generate"}]}',
+                encoding="utf-8",
+            )
+            (root / "image_build_jobs.json").write_text(
+                '{"initial_review_batch":"batch_01","batches":[{"batch_id":"batch_01","page_ids":["slide_02"],"status":"queued"}],"jobs":[{"job_id":"j1","page_id":"slide_02","batch_id":"batch_01","asset_id":"a1","status":"queued"}]}',
+                encoding="utf-8",
+            )
+            self.assertTrue((root / "style_lock.json").exists())
+            self.assertTrue((root / "asset_manifest.json").exists())
+            self.assertTrue((root / "image_build_jobs.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

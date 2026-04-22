@@ -23,12 +23,25 @@ def find_html_deck(project_dir: Path) -> Path | None:
     for child in sorted(project_dir.iterdir()):
         if child.is_dir() and (child.name.startswith("build_") or child.name.startswith("dist")):
             candidates.append(child)
+        if child.is_dir() and child.name == "assemble":
+            for batch_dir in sorted(child.iterdir()):
+                starter = batch_dir / "starter"
+                if starter.is_dir():
+                    candidates.append(starter)
     for base in candidates:
         for pattern in ("index.html", "deck*.html", "*.html"):
             for match in sorted(base.glob(pattern)):
                 if match.is_file() and not match.name.startswith("."):
                     return match
     return None
+
+
+def build_slide_filename(raw_slide_id: str | None, fallback_index: int) -> str:
+    if raw_slide_id:
+        normalized = raw_slide_id.strip().lower().replace("-", "_")
+        if re.fullmatch(r"slide_\d+", normalized):
+            return f"{normalized}.png"
+    return f"slide_{fallback_index:02d}.png"
 
 
 def screenshot_html_pages(
@@ -56,7 +69,7 @@ def screenshot_html_pages(
             for idx, section in enumerate(sections, start=1):
                 section.scroll_into_view_if_needed()
                 page.wait_for_timeout(200)
-                out = output_dir / f"slide_{idx:02d}.png"
+                out = output_dir / build_slide_filename(section.get_attribute("data-slide"), idx)
                 section.screenshot(path=str(out))
                 outputs.append(out)
                 print(f"[OK] screenshot -> {out}")

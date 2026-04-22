@@ -2,7 +2,13 @@
 
 ## 目标
 
-定义构建层（`$slides` / `$frontend-design` 等外部 Skill）与编排层之间的接口合同。
+定义构建层（Codex/subagent + HTML 装配）与编排层之间的接口合同。
+
+本版本默认采用 image-led build：
+
+1. 先执行 `image_build_jobs.json` 中的当前批次生图任务
+2. 生图结果批准后，再进入 HTML 装配
+3. proof 页没有 approved/embedded 资产时，不视为构建完成
 
 ## HTML Deck 组装规范
 
@@ -35,13 +41,20 @@
 
 ### 配图资产
 
-如果 `build_context.json` 的 `inputs.assets` 包含当前页的图片引用：
+如果 `build_context.json` 的 `inputs.assets` 包含当前页的已批准图片引用：
 
 ```html
 <img src="assets/dashboard_main.png" alt="产品仪表盘" class="product-screenshot" />
 ```
 
 使用 `position` 字段控制布局位置。
+
+如果 `build_context.json` 的 `inputs.generation_jobs` 包含当前页待生成任务：
+
+- 先按 job 的 `prompt_payload` 生成图片
+- 同一批次默认最多 3 页，先确认关键页效果，再继续后续批次
+- 生成完成后，将对应资产状态更新为 `generated` / `approved`，并回写 `asset_manifest.json`
+- HTML 装配层只消费 `approved` 或 `embedded` 资产；`queued/generated/rejected` 不应当被假装当成完成资产
 
 ### 翻页
 
@@ -72,6 +85,8 @@ slide.shapes.add_picture("assets/dashboard_main.png", left, top, width, height)
 ```
 
 位置和尺寸参考 `deck_page_skeletons.md` 中的视觉区域边界。
+
+PPTX 在本轮不是 image-led 首要路径，不要求消费 `image_build_jobs.json`；优先保障 HTML 路径先跑通。
 
 ## 输出文件命名
 

@@ -96,26 +96,62 @@ def main() -> None:
         bundle["inputs"]["deck_component_tokens"] = read(Path(args.component_tokens))
     if args.theme_tokens:
         bundle["inputs"]["deck_theme_tokens"] = read(Path(args.theme_tokens))
+    style_lock_path = Path(args.clean_pages).parent / "style_lock.json" if args.clean_pages else None
+    if style_lock_path and style_lock_path.exists():
+        try:
+            bundle["inputs"]["style_lock"] = json.loads(style_lock_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            bundle["warnings"].append("invalid_style_lock")
     # Include asset references for build context
     asset_manifest_path = Path(args.clean_pages).parent / "asset_manifest.json" if args.clean_pages else None
     if asset_manifest_path and asset_manifest_path.exists():
         try:
             manifest = json.loads(asset_manifest_path.read_text(encoding="utf-8"))
             page_assets: dict[str, list[dict]] = {}
+            asset_runtime: dict[str, list[dict]] = {}
             for asset in manifest.get("assets", []):
                 pid = asset.get("page_id", "")
                 if not args.page_ids or pid in args.page_ids:
-                    page_assets.setdefault(pid, []).append({
+                    asset_runtime.setdefault(pid, []).append({
                         "id": asset.get("id"),
+                        "status": asset.get("status", ""),
+                        "source_mode": asset.get("source_mode", ""),
+                        "batch_id": asset.get("batch_id", ""),
+                        "stale": asset.get("stale", False),
                         "final_path": asset.get("final_path", ""),
-                        "frame": asset.get("frame", ""),
-                        "position": asset.get("position", ""),
                         "desc": asset.get("desc", ""),
                     })
+                    if asset.get("status") in {"approved", "embedded", "captured", "provided", "mockup_applied"}:
+                        page_assets.setdefault(pid, []).append({
+                            "id": asset.get("id"),
+                            "final_path": asset.get("final_path", ""),
+                            "frame": asset.get("frame", ""),
+                            "position": asset.get("position", ""),
+                            "desc": asset.get("desc", ""),
+                        })
             if page_assets:
                 bundle["inputs"]["assets"] = page_assets
+            if asset_runtime:
+                bundle["inputs"]["asset_runtime"] = asset_runtime
         except (json.JSONDecodeError, OSError):
             pass
+    image_jobs_path = Path(args.clean_pages).parent / "image_build_jobs.json" if args.clean_pages else None
+    if image_jobs_path and image_jobs_path.exists():
+        try:
+            jobs_payload = json.loads(image_jobs_path.read_text(encoding="utf-8"))
+            page_jobs: dict[str, list[dict]] = {}
+            for job in jobs_payload.get("jobs", []):
+                pid = job.get("page_id", "")
+                if not args.page_ids or pid in args.page_ids:
+                    page_jobs.setdefault(pid, []).append(job)
+            if page_jobs:
+                bundle["inputs"]["generation_jobs"] = page_jobs
+                bundle["inputs"]["generation_batch_summary"] = {
+                    "initial_review_batch": jobs_payload.get("initial_review_batch", "batch_01"),
+                    "batches": jobs_payload.get("batches", []),
+                }
+        except (json.JSONDecodeError, OSError):
+            bundle["warnings"].append("invalid_image_build_jobs")
 
     if args.slide_state:
         slide_state_text = read(Path(args.slide_state))

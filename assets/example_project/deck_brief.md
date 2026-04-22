@@ -1,5 +1,7 @@
 # Deck Brief
 
+production_mode: expert
+
 ## 产品主语
 
 MirrorWorld
