@@ -30,6 +30,16 @@ For those cases, prefer:
 
 Do not skip steps unless the required artifact already exists and is still valid.
 
+Artifact validity means:
+
+1. Freshness: it reflects the current brief, audience, output mode, and page count
+2. Schema: required JSON files validate against the matching schema when a schema exists
+3. Coverage: every required page or beat has a non-empty entry
+4. Review state: any human approval, redaction decision, or QA status is recorded in the artifact or `slide_state.json`
+5. Traceability: the artifact names its source inputs or can be regenerated from the current project files
+
+If any item fails, refresh the artifact before moving forward.
+
 ### Step 0: Classify the Task
 
 Identify:
@@ -246,8 +256,8 @@ Minimum QA outputs:
 - `montage.png`
 - `deck_review_report.md`
 - `review_package.json`
-- `deck_review_findings.json`（正式评审版建议强制）
-- `commercial_scorecard.json`（正式评审版建议强制）
+- `deck_review_findings.json` (required for formal review)
+- `commercial_scorecard.json` (required for formal review)
 - `review_rollback_plan.json`
 - `review_rollback_plan.md`
 
@@ -340,43 +350,13 @@ If the page becomes too dense, split it or convert it into a chart. Do not remov
 
 ## Project Initialization
 
-When starting a new deck project, use:
+When starting a new deck project, use the orchestration script first:
 
 ```bash
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n> --output-mode pptx+html
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n> --output-mode pptx+html
 ```
 
-For stage operations, prefer:
-
-```bash
-python scripts/run_deck_pipeline.py build-context --project-dir <project-dir> --page-ids slide_05
-python scripts/run_deck_pipeline.py stage --project-dir <project-dir> --global-status building
-python scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge-existing
-python scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
-python scripts/run_deck_pipeline.py review-package --project-dir <project-dir>
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role review
-python scripts/run_deck_pipeline.py qa --project-dir <project-dir> --extract-layout-from-pptx --require-review --require-commercial-scorecard --review-findings <deck_review_findings.json> --commercial-scorecard <commercial_scorecard.json> --write-state
-python scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html
-```
-
-For common business scenarios, use presets:
-
-```bash
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset solution_deck
-python scripts/run_deck_pipeline.py preset --project-dir <project-dir> --preset internal_strategy
-python scripts/run_deck_pipeline.py preset --project-dir <project-dir> --preset industry_pov
-python scripts/run_deck_pipeline.py preset --project-dir <project-dir> --preset business_partnership
-python scripts/run_deck_pipeline.py preset --project-dir <project-dir> --preset product_intro
-```
-
-For AI worker delegation, generate handoff prompts:
-
-```bash
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role brief
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role visual
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role build --page-ids slide_05
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role review
-```
+For stage commands, presets, batch build, review, and rework handoff, read `references/workflow.md`.
 
 ## Resources
 
@@ -456,3 +436,24 @@ This skill succeeds only if the final deck is:
 7. geometry-stable in the actual built artifact, not only in the skeleton
 8. above the minimum commercial score threshold
 9. ready for delivery in `pptx`, `html`, or both
+
+### Quantitative Gates
+
+Use these thresholds unless the project brief sets stricter ones:
+
+1. `commercial_scorecard.json` overall score >= 3.3/5, with no core dimension below 3.0/5
+2. Expert mode hero claims gap fill rate >= 80%, and average `richness_score` >= 3/5
+3. Page copy density: warn at >700 characters per page, fail at >1000 characters per page unless the page is explicitly marked as appendix/reference
+4. Visual protagonist coverage: every non-appendix page has one visual protagonist, occupying >= 40% of the intended main visual area
+5. Geometry tolerance: actual center alignment deviation <= 3% of slide width for centered archetypes; occupancy ratio stays within the page skeleton's min/max range
+6. Review blockers: zero unresolved `redaction_incomplete`, `world_incomplete`, `geometry_broken`, or `internal_language_leak` findings before delivery
+
+### Definition of Done
+
+A deck is deliverable only when:
+
+1. Required planning artifacts are current: brief, vibe, narrative arc, hero pages, layout, clean pages, visual composition, asset plan, visual system, component tokens, theme tokens, geometry rules, page skeletons, and `slide_state.json`
+2. The requested final artifact exists: `.pptx`, HTML deck, or both
+3. Formal QA artifacts exist: `montage.png`, `deck_review_report.md`, `review_package.json`, `deck_review_findings.json`, `commercial_scorecard.json`, `review_rollback_plan.json`, and `review_rollback_plan.md`
+4. `validate_deck_outputs.py` passes for the requested output mode
+5. Formal review blockers are either resolved or explicitly accepted by the user with the remaining risk recorded
