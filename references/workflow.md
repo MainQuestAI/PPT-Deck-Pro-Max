@@ -16,67 +16,74 @@
 8. `deck_asset_plan.md`
 9. `asset_manifest.json`
 10. `deck_visual_system.md`
-7. `deck_component_tokens.md`
-8. `deck_theme_tokens.json`
-9. `deck_geometry_rules.md`
-10. `deck_page_skeletons.md`
-11. `slide_state.json`
-12. 成品 deck
-13. `deck_review_report.md`
-14. `layout_manifest.json`（如构建路径支持）
-15. `review_package.json`
-16. `deck_review_findings.json`
-17. `commercial_scorecard.json`
-18. `review_rollback_plan.json`
-19. `review_rollback_plan.md`
+11. `deck_component_tokens.md`
+12. `deck_theme_tokens.json`
+13. `deck_geometry_rules.md`
+14. `deck_page_skeletons.md`
+15. `slide_state.json`
+16. 成品 deck
+17. `deck_review_report.md`
+18. `layout_manifest.json`（如构建路径支持）
+19. `review_package.json`
+20. `deck_review_findings.json`
+21. `commercial_scorecard.json`
+22. `review_rollback_plan.json`
+23. `review_rollback_plan.md`
 
 ## 推荐命令入口
 
 优先使用总控脚本：
 
 ```bash
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n> --output-mode pptx+html
-python scripts/run_deck_pipeline.py build-context --project-dir <project-dir> --page-ids slide_01
-python scripts/run_deck_pipeline.py stage --project-dir <project-dir> --global-status building
-python scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge-existing
-python scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
-python scripts/run_deck_pipeline.py review-package --project-dir <project-dir>
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role review
-python scripts/run_deck_pipeline.py qa --project-dir <project-dir> --write-state --require-review --require-commercial-scorecard --require-layout-manifest --review-findings <project-dir>/deck_review_findings.json --commercial-scorecard <project-dir>/commercial_scorecard.json
-python scripts/run_deck_pipeline.py route-review --project-dir <project-dir> --write-state
-python scripts/run_deck_pipeline.py rework-handoff --project-dir <project-dir> --role visual
-python scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n> --output-mode pptx+html
+python3 scripts/run_deck_pipeline.py build-context --project-dir <project-dir> --page-ids slide_01
+python3 scripts/run_deck_pipeline.py stage --project-dir <project-dir> --global-status building
+python3 scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge-existing
+python3 scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
+python3 scripts/run_deck_pipeline.py review-package --project-dir <project-dir>
+python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role review
+python3 scripts/run_deck_pipeline.py qa --project-dir <project-dir> --write-state --require-review --require-commercial-scorecard --require-layout-manifest --review-findings <project-dir>/deck_review_findings.json --commercial-scorecard <project-dir>/commercial_scorecard.json
+python3 scripts/run_deck_pipeline.py route-review --project-dir <project-dir> --write-state
+python3 scripts/run_deck_pipeline.py rework-handoff --project-dir <project-dir> --role visual
+python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html
 ```
 
 这样可以减少手工拼接多个脚本调用时的错误率。
+
+正式评审版建议在 QA 与 validate 阶段同时打开 review、commercial scorecard、layout manifest 相关门禁。
 
 ## 常用快捷入口
 
 ### 方案型 Deck
 
 ```bash
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset solution_deck
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset internal_strategy
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset industry_pov
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset business_partnership
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset solution_deck
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset internal_strategy
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset industry_pov
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 12 --preset business_partnership
+python3 scripts/run_deck_pipeline.py preset --project-dir <project-dir> --preset solution_deck
 ```
 
 ### 产品介绍型 Deck
 
 ```bash
-python scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 10 --preset product_intro
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages 10 --preset product_intro
+python3 scripts/run_deck_pipeline.py preset --project-dir <project-dir> --preset product_intro
 ```
 
 ### 给 AI 员工发任务
 
 ```bash
-python scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role build --page-ids slide_05
+python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role brief
+python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role visual
+python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role build --page-ids slide_05
+python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role review
 ```
 
 ### 生成几何 manifest
 
 ```bash
-python scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge-existing
+python3 scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge-existing
 ```
 
 当构建链路还不能原生吐出几何元数据时，先用这条命令生成 `layout_manifest.json` 骨架，再让 Build AI 或后处理脚本逐页补实。
@@ -84,10 +91,21 @@ python scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge
 ### 从真实 PPTX 抽几何
 
 ```bash
-python scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
+python3 scripts/run_deck_pipeline.py extract-layout --project-dir <project-dir>
 ```
 
 这一步会从已经生成的 `.pptx` 里抽取更真实的页级几何信息，优先用于正式 QA。
+
+### 评审与返工
+
+```bash
+python3 scripts/run_deck_pipeline.py review-package --project-dir <project-dir>
+python3 scripts/run_deck_pipeline.py qa --project-dir <project-dir> --extract-layout-from-pptx --require-review --require-commercial-scorecard --require-layout-manifest --review-findings <project-dir>/deck_review_findings.json --commercial-scorecard <project-dir>/commercial_scorecard.json --write-state
+python3 scripts/run_deck_pipeline.py route-review --project-dir <project-dir> --write-state
+python3 scripts/run_deck_pipeline.py rework-handoff --project-dir <project-dir> --role visual
+python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --formal --expert-mode --output-mode pptx+html
+python3 scripts/run_deck_pipeline.py validate-schema --project-dir <project-dir> --strict
+```
 
 ## 阶段门槛
 
