@@ -40,20 +40,27 @@
 ## 快速开始
 
 ```bash
+# 先检查本地环境健康度
+python3 scripts/run_deck_pipeline.py doctor
+
 # 初始化一套 12 页的方案型 Deck
-python scripts/run_deck_pipeline.py init \
-  --project-dir ./my-deck --pages 12 --preset solution_deck
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./my-deck --pages 12 --preset solution_deck --production-mode expert
+
+# Quick Mode：适合小型、低风险 Deck
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./quick-deck --pages 6 --preset product_intro --production-mode quick
 
 # Expert Mode（v2.0）：提取 claims + gaps，准备专家访谈
-python scripts/run_deck_pipeline.py expert-interview \
+python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
 
 # Expert Mode：脱敏审批通过后，生成 deck_expert_context.md
-python scripts/run_deck_pipeline.py finalize-interview \
+python3 scripts/run_deck_pipeline.py finalize-interview \
   --project-dir ./my-deck
 
 # 生成视觉组合规格（逐页图表/icon/数据决策）
-python scripts/run_deck_pipeline.py visual-composition \
+python3 scripts/run_deck_pipeline.py visual-composition \
   --project-dir ./my-deck
 
 # 为 Build AI 生成交接 prompt
@@ -235,7 +242,10 @@ tests/                           78 个测试（单元 + 集成 + 端到端）
 ## 安装依赖
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+
+# 本地测试依赖
+python3 -m pip install -r requirements-dev.txt
 ```
 
 - **Python 3.10+**
@@ -243,6 +253,25 @@ pip install -r requirements.txt
 - `Pillow` — Montage 生成 + 设备壳渲染
 - `jsonschema` — 运行时合同校验
 - `playwright`（可选）— 自动截图 + 页级视觉 QA
+
+安装后建议先跑健康检查：
+
+```bash
+python3 scripts/run_deck_pipeline.py doctor
+python3 scripts/run_deck_pipeline.py doctor --project-dir ./my-deck
+```
+
+## 模式与最小样例
+
+`--production-mode expert` 适合高价值商业 Deck：需要专家访谈、脱敏门槛和更完整的商业证据。`--production-mode quick` 适合小型 Deck 或快速验证，跳过 Expert Interview 的启动成本。
+
+最小 smoke test：
+
+```bash
+./examples/solution_deck_minimal/run_smoke.sh
+```
+
+多 AI 员工协作时，使用 [AI Worker Execution Guide](docs/ai_worker_execution.md) 作为执行说明。
 
 ## 预设
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -51,6 +52,28 @@ class PipelineIntegrationTest(unittest.TestCase):
         self.assertEqual(state["review_iteration"], 0)
         self.assertEqual(len(state["pages"]), 10)
         self.assertEqual(state["pages"][0]["page_id"], "slide_01")
+
+    def test_cli_init_can_set_quick_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "init",
+                    "--project-dir",
+                    tmp,
+                    "--pages",
+                    "3",
+                    "--production-mode",
+                    "quick",
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            brief = (Path(tmp) / "deck_brief.md").read_text(encoding="utf-8")
+            self.assertIn("production_mode: quick", brief)
 
     def test_preset_generates_narrative_arc(self) -> None:
         init_project(self.project_dir)

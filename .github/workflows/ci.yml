@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install python-pptx Pillow jsonschema pytest
+          pip install -r requirements-dev.txt
 
       - name: Compile all scripts
         run: |
