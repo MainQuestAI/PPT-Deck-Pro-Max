@@ -40,20 +40,27 @@ Every page gets a visual protagonist (chart, icon chain, gauge, diagram, concept
 ## Quick Start
 
 ```bash
+# Check local health first
+python3 scripts/run_deck_pipeline.py doctor
+
 # Initialize a 12-page solution deck
-python scripts/run_deck_pipeline.py init \
-  --project-dir ./my-deck --pages 12 --preset solution_deck
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./my-deck --pages 12 --preset solution_deck --production-mode expert
+
+# Quick mode for small / low-risk decks
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./quick-deck --pages 6 --preset product_intro --production-mode quick
 
 # Expert Mode (v2.0): extract claims + gaps for expert interview
-python scripts/run_deck_pipeline.py expert-interview \
+python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
 
 # Expert Mode: finalize interview after redaction review
-python scripts/run_deck_pipeline.py finalize-interview \
+python3 scripts/run_deck_pipeline.py finalize-interview \
   --project-dir ./my-deck
 
 # Generate visual composition spec (per-page chart/icon/data decisions)
-python scripts/run_deck_pipeline.py visual-composition \
+python3 scripts/run_deck_pipeline.py visual-composition \
   --project-dir ./my-deck
 
 # Generate a handoff prompt for Build AI
@@ -235,7 +242,10 @@ tests/                           78 tests (unit + integration + e2e)
 ## Requirements
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+
+# For local tests
+python3 -m pip install -r requirements-dev.txt
 ```
 
 - **Python 3.10+**
@@ -243,6 +253,25 @@ pip install -r requirements.txt
 - `Pillow` — Montage generation + device mockups
 - `jsonschema` — Runtime contract validation
 - `playwright` (optional) — Auto screenshot capture + page-level visual QA
+
+Run a health check after installation:
+
+```bash
+python3 scripts/run_deck_pipeline.py doctor
+python3 scripts/run_deck_pipeline.py doctor --project-dir ./my-deck
+```
+
+## Modes and Minimal Example
+
+Use `--production-mode expert` for high-value commercial decks that need expert enrichment and redaction gates. Use `--production-mode quick` for smaller decks where the Expert Interview would add too much startup cost.
+
+Minimal smoke path:
+
+```bash
+./examples/solution_deck_minimal/run_smoke.sh
+```
+
+For multi-agent execution, see [AI Worker Execution Guide](docs/ai_worker_execution.md).
 
 ## Presets
 

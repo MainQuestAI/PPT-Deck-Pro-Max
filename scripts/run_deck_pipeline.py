@@ -69,6 +69,17 @@ def find_latest_pptx(project_dir: Path) -> Path | None:
 def cmd_init(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     created = init_project(project_dir, with_example=args.with_example)
+    if args.production_mode:
+        brief_path = project_dir / "deck_brief.md"
+        brief_text = brief_path.read_text(encoding="utf-8") if brief_path.exists() else ""
+        if "production_mode:" in brief_text:
+            lines = [
+                f"production_mode: {args.production_mode}" if line.startswith("production_mode:") else line
+                for line in brief_text.splitlines()
+            ]
+            brief_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        else:
+            brief_path.write_text(f"production_mode: {args.production_mode}\n\n{brief_text}", encoding="utf-8")
     state_path = project_dir / "slide_state.json"
     if not state_path.exists() or args.force_state:
         state = build_state(args.project_id or project_dir.name, args.pages, args.output_mode)
@@ -627,6 +638,17 @@ def cmd_validate_schema(args: argparse.Namespace) -> None:
     run_script("validate_schema.py", *cmd)
 
 
+def cmd_doctor(args: argparse.Namespace) -> None:
+    cmd: list[str] = []
+    if args.project_dir:
+        cmd.extend(["--project-dir", str(Path(args.project_dir).expanduser().resolve())])
+    if args.json:
+        cmd.append("--json")
+    if args.strict:
+        cmd.append("--strict")
+    run_script("doctor.py", *cmd)
+
+
 def cmd_generate_placeholders(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -646,6 +668,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--pages", type=int, required=True)
     p_init.add_argument("--project-id")
     p_init.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
+    p_init.add_argument("--production-mode", choices=["expert", "quick"], help="Set production_mode in deck_brief.md")
     p_init.add_argument("--with-example", action="store_true")
     p_init.add_argument("--preset", choices=PRESET_CHOICES)
     p_init.add_argument("--force-state", action="store_true")
@@ -902,6 +925,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_schema.add_argument("--project-dir", required=True)
     p_schema.add_argument("--strict", action="store_true")
     p_schema.set_defaults(func=cmd_validate_schema)
+
+    p_doctor = sub.add_parser("doctor", help="Check dependencies, schemas, starters, and optional project health")
+    p_doctor.add_argument("--project-dir")
+    p_doctor.add_argument("--json", action="store_true")
+    p_doctor.add_argument("--strict", action="store_true", help="Treat warnings as failures")
+    p_doctor.set_defaults(func=cmd_doctor)
 
     return parser
 

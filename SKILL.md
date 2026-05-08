@@ -9,6 +9,14 @@ description: Production orchestrator for high-quality commercial slide decks. Us
 
 Use this skill to orchestrate the full production of a high-quality commercial deck. Do not treat the task as “convert document to slides.” Treat it as a production workflow: business brief, sales narrative, visual system, hero pages, clean page copy, build, and QA.
 
+Before production work, run:
+
+```bash
+python3 scripts/run_deck_pipeline.py doctor
+```
+
+Use `--production-mode expert` for high-value decks that need expert enrichment. Use `--production-mode quick` for smaller decks where the Expert Interview startup cost would outweigh the value.
+
 ## Use This Skill vs. Other Skills
 
 Use this skill when the user needs a new deck, a major remake, or a deck that must feel product-grade, sales-ready, and visually unified.
