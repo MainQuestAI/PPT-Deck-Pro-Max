@@ -308,6 +308,7 @@ QA 引擎在 9 大类下检查 25+ 项：
 | `imagegen` + `frontend-design` | HTML / 图片型 PPT | 最高 | Codex 环境下推荐：先生成主视觉、mockup、概念 UI，再组装页面 |
 | `frontend-slides` | HTML | 高 | 最推荐——专为演示文稿设计 |
 | `ui-ux-pro-max` + `frontend-design` | HTML | 最高 | 设计智能增强 + 高保真实现 |
+| `officeCLI` | PPTX / Office 文件 | 高 | 最终交付必须保持 Microsoft Office 原生格式时，用于 Office 构建与自动化 |
 | `openai-slides` | PPTX | 中 | 需要可编辑 PPTX 时 |
 
 Codex 图片型 PPT 的默认节奏是：`generate-assets` / `dispatch-build` → `$imagegen` 生成当前 batch → `asset-status` 批准资产 → HTML/PPTX 组装 → QA。这一轮图片迭代用于先锁定关键页视觉方向，降低后续返工成本。

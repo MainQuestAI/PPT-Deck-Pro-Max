@@ -282,6 +282,7 @@ This skill is the orchestration layer and should be paired with build skills.
 | `imagegen` + `frontend-design` | HTML / image-led deck | Highest | Recommended in Codex: generate hero visuals, mockups, concept UIs, then assemble pages |
 | `frontend-slides` | HTML | High | Presentation-specific HTML decks |
 | `ui-ux-pro-max` + `frontend-design` | HTML | Highest | Strong visual system exploration + high-fidelity implementation |
+| `officeCLI` | PPTX / Office files | High | Office-native build and automation when the final deliverable must stay in Microsoft Office formats |
 | `openai-slides` | PPTX | Medium | Editable PPTX delivery |
 
 For Codex image-led decks, use this default loop: `generate-assets` / `dispatch-build` -> `$imagegen` for the current batch -> `asset-status` approval -> HTML/PPTX assembly -> QA. This image iteration locks the visual direction before downstream assembly.
