@@ -238,9 +238,17 @@ Choose the correct build path:
 - Use `$slides` for editable `.pptx`
 - Use `$frontend-design` for HTML deck or high-fidelity visual exploration
 - Use `$ui-ux-pro-max` when visual direction or component decisions need strengthening
+- If the user is running Codex and the deck is image-led, recommend `$imagegen` to generate raster page visuals, hero images, product mockups, and concept UI assets before assembly
 - Use `$pptx` if a reference deck must be analyzed before rebuild
 
 Always maintain `slide_state.json`.
+
+For Codex image-led builds, add one explicit image iteration before final assembly:
+
+1. Run `generate-assets` / `dispatch-build` to create page-level image jobs.
+2. Use `$imagegen` for each approved job prompt; save final assets inside the project, not only under `$CODEX_HOME`.
+3. Update asset/job/batch status with `asset-status`.
+4. Assemble only after the first batch of hero/proof/system images is approved.
 
 For Deck Build work, use `scripts/context_manager.py` to keep context minimal. Generate one page at a time, or at most three pages in a small batch. Never let the build model accumulate long code from many previous pages.
 

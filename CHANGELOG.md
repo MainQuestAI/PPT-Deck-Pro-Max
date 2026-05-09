@@ -8,6 +8,7 @@
 - `init` 新增 `--production-mode expert|quick`，让 Expert / Quick 两种入口更直观。
 - 新增 `examples/solution_deck_minimal`，提供 `init -> handoff -> qa` 最小 smoke test。
 - 新增 `docs/ai_worker_execution.md`，作为 Claude Code / OpenCode / Codex worker 的执行说明。
+- Build 环节新增 Codex `$imagegen` 推荐路径，并加入一轮图片迭代：生图任务 → 图片生成 → 资产批准 → 页面组装。
 
 ## 2.0.0 — Expert Mode：从翻译者到共创者
 

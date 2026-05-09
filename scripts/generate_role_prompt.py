@@ -127,9 +127,9 @@ def build_build_prompt(project_dir: Path, page_ids: list[str], context_path: Pat
     output_mode = state.get("output_mode", "pptx+html")
     recommended = "`$slides`"
     if output_mode == "html":
-        recommended = "`$frontend-design`"
+        recommended = "`$imagegen` + `$frontend-design`"
     elif output_mode == "pptx+html":
-        recommended = "`$slides` + `$frontend-design`"
+        recommended = "`$imagegen` + `$frontend-design` + `$slides`"
     context_path = context_path or (project_dir / "build_context.json")
     context_payload = load_json(context_path)
     current_batch, batch_notes, job_overview = summarize_generation_jobs(context_payload)
@@ -143,6 +143,7 @@ def build_build_prompt(project_dir: Path, page_ids: list[str], context_path: Pat
             "",
             "每一页必须有视觉主角（图表/icon 链/大数字/架构图）。纯文字卡片不是合格输出。",
             "构建顺序固定为两段：先按 batch 执行生图任务，再做 HTML 组装；不要把生图和排版混成一次性黑盒。",
+            "如果当前运行环境是 Codex，图片型 PPT 的主视觉、产品 mockup、概念 UI 和纹理资产优先调用 `$imagegen` 生成；生成后必须把最终图片保存到项目目录并回写 asset runtime。",
             "",
             "## 必看输入",
             "",
@@ -159,6 +160,7 @@ def build_build_prompt(project_dir: Path, page_ids: list[str], context_path: Pat
             "",
             "- 一页一个主角",
             "- 优先执行 `build_context.json.inputs.generation_jobs` 中当前页的任务；默认先做 3 页关键页批次，确认视觉方向后再继续下一批",
+            "- Codex 环境下，generation jobs 默认交给 `$imagegen`，HTML/PPTX 组装再交给 `$frontend-design` / `$slides`",
             "- 不引用其他页面实现代码",
             "- 图表优先复用 `assets/chart_templates/` 模板",
             "- 完成后回写 `slide_state.json`",
@@ -176,7 +178,7 @@ def build_build_prompt(project_dir: Path, page_ids: list[str], context_path: Pat
             "## Subagent 拆分建议",
             "",
             "- 同一批次按页拆分：一页一个 subagent；每个 subagent 只负责自己的页面和对应资产，不跨页改动。",
-            "- 先并行生成批次内页面主视觉，再统一回到主线程做人工挑选和批准。",
+            "- 先并行生成批次内页面主视觉，再统一回到主线程做人工挑选和批准；这是进入正式组装前新增的一轮图片迭代。",
             "- 只有当前批次都确认后，才进入下一批。",
             "",
             "## build_context.json 路径",
@@ -197,7 +199,8 @@ def build_build_prompt(project_dir: Path, page_ids: list[str], context_path: Pat
             "",
             "## 配图资产",
             "",
-            "- 如果 `build_context.inputs.generation_jobs` 存在，先按 job 的 `prompt_payload` 生成图片，按 batch 批量推进，不要一张张零散跑",
+            "- 如果 `build_context.inputs.generation_jobs` 存在，先按 job 的 `prompt_payload` 调用 `$imagegen` 生成图片，按 batch 批量推进，不要一张张零散跑",
+            "- `$imagegen` 产物如果会被 deck 引用，必须复制或移动到项目内，例如 `generated/` 或 `assets/generated/`，不要只保留在 `$CODEX_HOME` 默认目录",
             "- 如果 build context 的 `inputs.assets` 包含当前页的已批准图片引用，请按 `position` 和 `final_path` 将图片嵌入到页面的正确区域",
             "- 如果只有 `asset_runtime` 且没有 approved 资产，不要假装已完成 proof 页；应先完成当前批次生图或明确保留 placeholder",
         ]
