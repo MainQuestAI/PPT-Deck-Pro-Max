@@ -158,6 +158,8 @@ class GenerateReviewPackageTests(unittest.TestCase):
             prompt = build_build_prompt(root, ["slide_01", "slide_03"], ctx, "batch_01")
             self.assertIn("当前批次", prompt)
             self.assertIn("Subagent 拆分建议", prompt)
+            self.assertIn("$imagegen", prompt)
+            self.assertIn("新增的一轮图片迭代", prompt)
             self.assertIn("cover_visual", prompt)
             self.assertIn("proof_visual", prompt)
 

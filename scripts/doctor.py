@@ -104,7 +104,7 @@ def check_build_support(checks: list[Check], skill_root: Path) -> None:
         Check(
             name="build:agent-skills",
             status="warn",
-            detail="CLI cannot introspect Codex skills; confirm frontend-design/slides availability in the agent host.",
+            detail="CLI cannot introspect Codex skills; confirm imagegen/frontend-design/slides availability in the agent host.",
         )
     )
 
