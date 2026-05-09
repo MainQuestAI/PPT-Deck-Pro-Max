@@ -1,6 +1,6 @@
 ---
-name: deck-production-orchestrator
-description: Production orchestrator for high-quality commercial slide decks. Use when Codex needs to turn a business brief, long-form strategy document, product narrative, solution material, or reference presentation into a product-grade commercial deck rather than a generic AI PPT. Trigger for requests such as “做一套高质量商业Deck”, “把这个方案做成产品级PPT”, “不要普通AI味”, “输出可成交的presentation”, “按 Vibe Coding 做 Deck”, “需要 Agent 协同做 PPT”, or any task requiring a forced workflow across brief, vibe, hero pages, editorial compression, visual components, build, and QA.
+name: PPT-Deck-Pro-Max
+description: Build product-grade commercial PPT/HTML decks from briefs, strategy docs, product narratives, or solution materials. Orchestrates brief, narrative, visual system, image-led build, QA, and rollback. Alias: deck-production-orchestrator.
 ---
 
 # Deck Production Orchestrator
