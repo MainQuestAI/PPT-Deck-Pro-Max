@@ -1,6 +1,6 @@
 ---
-name: PPT-Deck-Pro-Max
-description: Build product-grade commercial PPT/HTML decks from briefs, strategy docs, product narratives, or solution materials. Orchestrates brief, narrative, visual system, image-led build, QA, and rollback. Alias: deck-production-orchestrator.
+name: ppt-deck-pro-max
+description: PPT-Deck-Pro-Max builds product-grade commercial PPT/HTML decks from briefs, strategy docs, product narratives, or solution materials. Orchestrates brief, narrative, visual system, image-led build, QA, and rollback. Alias: deck-production-orchestrator.
 ---
 
 # Deck Production Orchestrator
