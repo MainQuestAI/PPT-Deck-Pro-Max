@@ -1,13 +1,13 @@
 ---
 name: ppt-deck-pro-max
-description: "PPT-Deck-Pro-Max builds product-grade commercial PPT/HTML decks from briefs, strategy docs, product narratives, or solution materials. Orchestrates brief, narrative, visual system, image-led build, QA, and rollback. Alias: deck-production-orchestrator."
+description: "PPT Deck Pro Max builds product-grade PPT/HTML decks from briefs, strategy docs, product narratives, or solution materials. It manages brief, narrative, visual system, image-led build, QA, and rollback."
 ---
 
-# Deck Production Orchestrator
+# PPT Deck Pro Max
 
 ## Overview
 
-Use this skill to orchestrate the full production of a high-quality commercial deck. Do not treat the task as “convert document to slides.” Treat it as a production workflow: business brief, sales narrative, visual system, hero pages, clean page copy, build, and QA.
+Use this skill to produce a high-quality PPT/HTML deck from raw materials. Do not treat the task as “convert document to slides.” Treat it as a production workflow: brief, narrative, visual system, hero pages, clean page copy, build, and QA.
 
 Before production work, run:
 

@@ -1,7 +1,7 @@
 interface:
-  display_name: "商业Deck编排器"
-  short_description: "将业务Brief、胜负页、视觉系统、出图与评审组织成高质量商业Deck生产流程"
-  default_prompt: "Use $deck-production-orchestrator 将这份业务Brief、方案文档或参考Deck编排成高质量商业Deck生产流程。"
+  display_name: "PPT Deck Pro Max"
+  short_description: "将 Brief、方案材料和产品叙事组织成产品级 PPT/HTML Deck 生产流程"
+  default_prompt: "Use $ppt-deck-pro-max 将这份 Brief、方案文档或参考 Deck 组织成产品级 PPT/HTML Deck 生产流程。"
 
 policy:
   allow_implicit_invocation: true

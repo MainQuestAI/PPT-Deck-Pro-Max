@@ -1,10 +1,10 @@
-# Deck Production Orchestrator
+# PPT Deck Pro Max
 
-> 把商业 Brief 变成产品级演示文稿——不是普通的 AI PPT。
+> 把 Brief、方案材料和产品叙事变成产品级 PPT/HTML Deck。
 
-一套 AI Skill，编排商业演示文稿的完整生产周期：从商业 Brief 到叙事弧线、视觉组合设计、页面构建，再到结构化 QA 与回退路由。
+一套 AI Skill，管理产品级 Deck 的完整生产周期：从 Brief 到叙事弧线、视觉组合设计、页面构建，再到结构化 QA 与回退路由。
 
-**这不是构建引擎。** 它是坐在构建工具（如 Anthropic 的 `$slides` / `$frontend-design`，或任何 PPTX/HTML 生成工具）之上的编排层，确保产出物在商业上可用、视觉上丰富、叙事上连贯。
+它是坐在构建工具（如 Anthropic 的 `$slides` / `$frontend-design`，或任何 PPTX/HTML 生成工具）之上的生产控制层，确保产出物目标清楚、视觉丰富、叙事连贯。
 
 ## 为什么不一样
 
@@ -301,7 +301,7 @@ QA 引擎在 9 大类下检查 25+ 项：
 
 ## 推荐的 Build Skill 组合
 
-本 Skill 是编排层，需要配合 Build Skill 使用。经过实战验证的组合：
+本 Skill 是生产控制层，需要配合 Build Skill 使用。经过实战验证的组合：
 
 | 组合 | 产出格式 | 视觉精细度 | 适用场景 |
 |------|---------|----------|---------|
