@@ -231,6 +231,46 @@ Read `references/component_system.md`, `references/chart_strategy.md`, and `refe
 
 At the end of this step, pause for lightweight human confirmation when the user is collaborating live.
 
+### Step 6.5: Formal Bid Image-Led Page Registry
+
+Use this step for formal bid, tender, RFP response, technical proposal, or leave-behind decks where the deck may be assembled from generated full-page images.
+
+Before generating or assembling images, lock a page registry from the project's source-of-truth files. This prevents page drift, wrong section ranges, and accidental exposure of production page numbers.
+
+Required source-of-truth inputs, when available:
+
+1. next-page or generation checklist, such as `*_下一阶段待生成页面清单.md`
+2. formal page scripts, such as `正式版逐页稿/`
+3. implementation method table, such as `*_逐页制作实现方式总表.md`
+4. direct-reference page list, appendix list, or non-counted chapter list
+5. current passed image directory, candidate image directory, and batch manifests
+
+Create or update:
+
+- `page_registry.md`
+- `image_generation_manifest.md`
+- `actual_page_mapping.md`
+- `known_issue_log.md`
+
+The page registry must record:
+
+1. source page id, such as `F-02`, `C-01`, `027`, `S-04`
+2. actual PPT page number after front matter, non-counted chapters, core pages, and appendix/service pages are placed
+3. chapter and page title from the formal page script
+4. generation status: `planned`, `candidate`, `Go`, `No-Go`, `replaced`, or `direct-reference`
+5. source prompt or page script path
+6. approved image path
+7. known issues and fix owner
+
+For large formal bid decks, preserve two naming systems:
+
+1. source-id directory: stable source IDs for traceability, such as `已过线PPT页面图片/059.png`
+2. actual-page directory: assembly-ready names, such as `065_059_定制开发总体方案.png`
+
+Do not overwrite the source-id directory with actual page names. Create a new actual-page directory and keep a timestamped backup before bulk renaming or replacing images.
+
+If the deck has direct-reference pages that are not generated images, leave explicit holes in `actual_page_mapping.md` so PPT assembly can reserve those page positions.
+
 ### Step 7: Build the Deck
 
 Choose the correct build path:
@@ -249,6 +289,17 @@ For Codex image-led builds, add one explicit image iteration before final assemb
 2. Use `$imagegen` for each approved job prompt; save final assets inside the project, not only under `$CODEX_HOME`.
 3. Update asset/job/batch status with `asset-status`.
 4. Assemble only after the first batch of hero/proof/system images is approved.
+
+For formal bid image-led builds, use a stricter production loop:
+
+1. Generate page prompts from `page_registry.md`, not from loose file names.
+2. Process pages in small batches and write one batch manifest per batch.
+3. Store Image2 candidates in `图片生成候选结果/<batch_id>/` or an equivalent candidate directory.
+4. Move only `Go` pages into the passed image directory.
+5. Record every Go decision in `image_go.md` or `image_generation_manifest.md`.
+6. Keep `No-Go` pages out of the passed image directory until regenerated.
+7. After all pages pass, create an actual-page directory from the source-id passed directory.
+8. Verify source count equals actual-page count, except for documented direct-reference holes.
 
 For Deck Build work, use `scripts/context_manager.py` to keep context minimal. Generate one page at a time, or at most three pages in a small batch. Never let the build model accumulate long code from many previous pages.
 
@@ -325,6 +376,16 @@ If a `.pptx` artifact already exists, prefer extracting real page geometry befor
 
 - `scripts/extract_layout_from_pptx.py`
 - `scripts/update_layout_manifest.py`
+
+For formal bid image-led decks, run these additional checks before delivery or PPT assembly:
+
+1. Image ratio: every passed image must match the requested slide ratio, usually 16:9. A wrong-ratio image is a blocker because PPT will stretch, crop, or letterbox it.
+2. Actual page mapping: section ranges on directory or response pages must match the implementation table and final page count.
+3. Title hygiene: visible titles must not include production-only source IDs, such as `27 |`, unless the deck style explicitly uses visible section numbering.
+4. Placeholder hygiene: pages containing placeholders like `公司名称`, `截图占位`, `待补`, or generic role labels are blockers unless the user explicitly accepts manual replacement.
+5. Internal-language hygiene: no visible text may expose source paths, source page markers, production notes, batch ids, prompt ids, or generation status.
+6. Naming audit: final image filenames must sort in PPT assembly order and include enough source-id traceability for debugging.
+7. Backup audit: original passed images must have a timestamped backup before bulk replacement, page-fix, or actual-page renaming.
 
 ## Role Isolation Rules
 
@@ -473,3 +534,12 @@ A deck is deliverable only when:
 3. Formal QA artifacts exist: `montage.png`, `deck_review_report.md`, `review_package.json`, `deck_review_findings.json`, `commercial_scorecard.json`, `review_rollback_plan.json`, and `review_rollback_plan.md`
 4. `validate_deck_outputs.py` passes for the requested output mode
 5. Formal review blockers are either resolved or explicitly accepted by the user with the remaining risk recorded
+
+For formal bid image-led decks, Definition of Done also requires:
+
+1. `page_registry.md` or equivalent page registry exists and covers all generated and direct-reference pages
+2. passed source-id image directory exists
+3. actual-page image directory exists and sorts in final PPT order
+4. actual page mapping file exists and explains front matter, core pages, service pages, appendix pages, and direct-reference holes
+5. all passed images have valid aspect ratio
+6. all known blocking issues are fixed or explicitly accepted by the user
