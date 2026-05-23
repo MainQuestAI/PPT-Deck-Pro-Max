@@ -48,6 +48,32 @@ Artifact validity means:
 
 If any item fails, refresh the artifact before moving forward.
 
+## Production Sub-Modes
+
+Choose a production sub-mode during Step 0 and record it in `deck_brief.md` and `slide_state.json` when those artifacts exist.
+
+Default to `standard_deck` unless the request clearly matches a specialized sub-mode.
+
+### `standard_deck`
+
+Use for product intros, solution decks, strategy decks, industry point-of-view decks, and business partnership decks that will be built as editable PPTX, HTML, or a mixed deck.
+
+Follow the main forced workflow from Step 0 to Step 8.
+
+### `formal_bid_image_led`
+
+Use for formal bid, tender, RFP response, technical proposal, or leave-behind decks where pages may be assembled from generated full-page images.
+
+This sub-mode adds stricter gates for:
+
+1. Page registry and actual PPT page mapping
+2. Source-id image traceability
+3. Candidate / Go / No-Go image separation
+4. Final assembly naming
+5. Delivery QA for page ratio, title hygiene, placeholders, internal-language leakage, and backup coverage
+
+When this sub-mode is active, the mode-specific requirements below are mandatory in addition to the main forced workflow.
+
 ### Step 0: Classify the Task
 
 Identify:
@@ -55,6 +81,7 @@ Identify:
 1. Deck type: product intro, solution, internal strategy, industry point of view, or business partnership
 2. Input type: long document, page outline, reference deck, or raw request
 3. Output type: `pptx`, `html deck`, or both
+4. Production sub-mode: `standard_deck` or `formal_bid_image_led`
 
 If the business target is still unclear, create `deck_brief.md` first.
 
@@ -231,9 +258,9 @@ Read `references/component_system.md`, `references/chart_strategy.md`, and `refe
 
 At the end of this step, pause for lightweight human confirmation when the user is collaborating live.
 
-### Step 6.5: Formal Bid Image-Led Page Registry
+### Step 6.5: `formal_bid_image_led` Page Registry Gate
 
-Use this step for formal bid, tender, RFP response, technical proposal, or leave-behind decks where the deck may be assembled from generated full-page images.
+Run this gate only when the active production sub-mode is `formal_bid_image_led`.
 
 Before generating or assembling images, lock a page registry from the project's source-of-truth files. This prevents page drift, wrong section ranges, and accidental exposure of production page numbers.
 
@@ -290,7 +317,7 @@ For Codex image-led builds, add one explicit image iteration before final assemb
 3. Update asset/job/batch status with `asset-status`.
 4. Assemble only after the first batch of hero/proof/system images is approved.
 
-For formal bid image-led builds, use a stricter production loop:
+When the active production sub-mode is `formal_bid_image_led`, use a stricter production loop:
 
 1. Generate page prompts from `page_registry.md`, not from loose file names.
 2. Process pages in small batches and write one batch manifest per batch.
@@ -377,7 +404,7 @@ If a `.pptx` artifact already exists, prefer extracting real page geometry befor
 - `scripts/extract_layout_from_pptx.py`
 - `scripts/update_layout_manifest.py`
 
-For formal bid image-led decks, run these additional checks before delivery or PPT assembly:
+When the active production sub-mode is `formal_bid_image_led`, run these additional checks before delivery or PPT assembly:
 
 1. Image ratio: every passed image must match the requested slide ratio, usually 16:9. A wrong-ratio image is a blocker because PPT will stretch, crop, or letterbox it.
 2. Actual page mapping: section ranges on directory or response pages must match the implementation table and final page count.
@@ -535,7 +562,7 @@ A deck is deliverable only when:
 4. `validate_deck_outputs.py` passes for the requested output mode
 5. Formal review blockers are either resolved or explicitly accepted by the user with the remaining risk recorded
 
-For formal bid image-led decks, Definition of Done also requires:
+When the active production sub-mode is `formal_bid_image_led`, Definition of Done also requires:
 
 1. `page_registry.md` or equivalent page registry exists and covers all generated and direct-reference pages
 2. passed source-id image directory exists
