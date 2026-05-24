@@ -55,6 +55,11 @@ def assemble(project_dir: Path, output_dir: Path, manifest_path: Path) -> dict:
     registry_rows = parse_markdown_table(project_dir / "page_registry.md")
     mapping_rows = parse_markdown_table(project_dir / "actual_page_mapping.md")
     registry_by_source = {row.get("source_id", ""): row for row in registry_rows if row.get("source_id")}
+    deliverable_source_ids = {
+        row.get("source_id", "")
+        for row in registry_rows
+        if row.get("source_id", "") and row.get("status", "") in DELIVERABLE_STATUSES
+    }
 
     output_dir.mkdir(parents=True, exist_ok=True)
     backup_dir = ""
@@ -62,10 +67,17 @@ def assemble(project_dir: Path, output_dir: Path, manifest_path: Path) -> dict:
         backup = output_dir.parent / f"{output_dir.name}_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         shutil.copytree(output_dir, backup)
         backup_dir = str(backup)
+        shutil.rmtree(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     copied = []
     skipped = []
     errors = []
+    mapped_source_ids = set()
+    seen_actual_pages = set()
+
+    if not mapping_rows:
+        errors.append({"source_id": "__mapping__", "error": "actual_page_mapping is empty"})
 
     for row in mapping_rows:
         source_id = row.get("source_id", "")
@@ -76,8 +88,16 @@ def assemble(project_dir: Path, output_dir: Path, manifest_path: Path) -> dict:
         if not source_id or not actual_page.isdigit():
             errors.append({"source_id": source_id or "unknown", "error": "invalid mapping row"})
             continue
+        if actual_page in seen_actual_pages:
+            errors.append({"source_id": source_id, "error": f"duplicate actual page: {actual_page}"})
+            continue
+        seen_actual_pages.add(actual_page)
 
-        registry = registry_by_source.get(source_id, {})
+        registry = registry_by_source.get(source_id)
+        if not registry:
+            errors.append({"source_id": source_id, "error": "source_id not found in page_registry"})
+            continue
+        mapped_source_ids.add(source_id)
         status = registry.get("status", "")
         if status not in DELIVERABLE_STATUSES:
             errors.append({"source_id": source_id, "error": f"status is not deliverable: {status or 'missing'}"})
@@ -104,6 +124,9 @@ def assemble(project_dir: Path, output_dir: Path, manifest_path: Path) -> dict:
             "source": str(source_path),
             "dest": str(dest_path),
         })
+
+    for source_id in sorted(deliverable_source_ids - mapped_source_ids):
+        errors.append({"source_id": source_id, "error": "deliverable page missing from actual_page_mapping"})
 
     payload = {
         "project_dir": str(project_dir),

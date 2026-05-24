@@ -55,6 +55,19 @@ def write_missing_templates(out_dir: Path, templates: dict[str, str]) -> list[st
     return created
 
 
+def upsert_field(path: Path, field: str, value: str) -> None:
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    prefix = f"{field}:"
+    if prefix in text:
+        lines = [
+            f"{field}: {value}" if line.startswith(prefix) else line
+            for line in text.splitlines()
+        ]
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    else:
+        path.write_text(f"{field}: {value}\n\n{text}", encoding="utf-8")
+
+
 def init_project(out_dir: Path, with_example: bool = False, production_sub_mode: str = "standard_deck") -> list[str]:
     if production_sub_mode not in PRODUCTION_SUB_MODES:
         raise ValueError(f"invalid production_sub_mode: {production_sub_mode}")
@@ -62,6 +75,7 @@ def init_project(out_dir: Path, with_example: bool = False, production_sub_mode:
     (out_dir / "assets").mkdir(exist_ok=True)
 
     created = write_missing_templates(out_dir, TEMPLATES)
+    upsert_field(out_dir / "deck_brief.md", "production_sub_mode", production_sub_mode)
     if production_sub_mode == "formal_bid_image_led":
         created.extend(write_missing_templates(out_dir, FORMAL_BID_IMAGE_LED_TEMPLATES))
 

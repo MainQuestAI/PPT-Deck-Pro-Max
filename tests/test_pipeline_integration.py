@@ -144,10 +144,15 @@ class PipelineIntegrationTest(unittest.TestCase):
             self.assertIn("formal_placeholder_visible:截图占位", issues["__formal__"])
 
     def test_formal_bid_qa_accepts_closed_registry(self) -> None:
+        from PIL import Image
+
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             init_project(project, production_sub_mode="formal_bid_image_led")
             state = build_state("test", 1, "html", "formal_bid_image_led")
+            passed = project / "passed"
+            passed.mkdir()
+            Image.new("RGB", (1600, 900), "white").save(passed / "F-01.png")
             (project / "page_registry.md").write_text(
                 "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
                 "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
@@ -201,6 +206,66 @@ class PipelineIntegrationTest(unittest.TestCase):
             self.assertIn("actual_page_filename_order:F-01:images/bad.png", issues["__formal__"])
             self.assertIn("formal_image_ratio:F-01:800x800", issues["__formal__"])
 
+    def test_formal_bid_qa_detects_missing_approved_image_and_mapping_gap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            state = build_state("test", 2, "html", "formal_bid_image_led")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | missing/F-01.png |  | design |\n"
+                "| F-02 | 2 | Core | Proof | replaced | formal/F-02.md | missing/F-02.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "image_generation_manifest.md").write_text(
+                "| Batch ID | Source ID | Page ID | Candidate Directory | Decision | Selected Image | Decision Note | Decided At |\n"
+                "|----------|-----------|---------|---------------------|----------|----------------|---------------|------------|\n"
+                "| batch_01 | F-01 | slide_01 | candidates/batch_01 | Go | missing/F-01.png | ok | 2026-05-23 |\n",
+                encoding="utf-8",
+            )
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n"
+                "| 1 | F-01 | Front | Cover | 001_F-01_Cover.png | false |  |\n",
+                encoding="utf-8",
+            )
+            issues = detect_formal_bid_issues(project, state, "## 第 1 页\n正式封面\n")
+            self.assertIn("formal_approved_image_not_found:F-01:missing/F-01.png", issues["__formal__"])
+            self.assertIn("formal_approved_image_not_found:F-02:missing/F-02.png", issues["__formal__"])
+            self.assertIn("actual_mapping_missing:F-02", issues["__formal__"])
+
+    def test_formal_bid_qa_detects_unknown_source_and_duplicate_actual_page(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            state = build_state("test", 2, "html", "formal_bid_image_led")
+            passed = project / "passed"
+            passed.mkdir()
+            (passed / "F-01.png").write_bytes(b"fake-image")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | passed/F-01.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "image_generation_manifest.md").write_text(
+                "| Batch ID | Source ID | Page ID | Candidate Directory | Decision | Selected Image | Decision Note | Decided At |\n"
+                "|----------|-----------|---------|---------------------|----------|----------------|---------------|------------|\n"
+                "| batch_01 | F-01 | slide_01 | candidates/batch_01 | Go | passed/F-01.png | ok | 2026-05-23 |\n",
+                encoding="utf-8",
+            )
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n"
+                "| 1 | F-01 | Front | Cover | 001_F-01_Cover.png | false |  |\n"
+                "| 1 | F-99 | Ghost | Missing | 001_F-99_Missing.png | false |  |\n",
+                encoding="utf-8",
+            )
+            issues = detect_formal_bid_issues(project, state, "## 第 1 页\n正式封面\n")
+            self.assertIn("actual_mapping_unknown_source:F-99", issues["__formal__"])
+            self.assertIn("actual_page_duplicate:1", issues["__formal__"])
+
     def test_cli_assemble_formal_images_copies_go_pages(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
@@ -236,6 +301,98 @@ class PipelineIntegrationTest(unittest.TestCase):
             self.assertTrue((project / "actual_page_images" / "001_F-01_Cover.png").exists())
             manifest = json.loads((project / "actual_page_assembly_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(len(manifest["copied"]), 1)
+
+    def test_cli_assemble_formal_images_clears_stale_output_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            passed = project / "passed"
+            passed.mkdir()
+            (passed / "F-01.png").write_bytes(b"fake-image")
+            output_dir = project / "actual_page_images"
+            output_dir.mkdir()
+            (output_dir / "010_old.png").write_bytes(b"old")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | passed/F-01.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n"
+                "| 1 | F-01 | Front | Cover | 001_F-01_Cover.png | false |  |\n",
+                encoding="utf-8",
+            )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "assemble-formal-images",
+                    "--project-dir",
+                    str(project),
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertTrue((output_dir / "001_F-01_Cover.png").exists())
+            self.assertFalse((output_dir / "010_old.png").exists())
+            manifest = json.loads((project / "actual_page_assembly_manifest.json").read_text(encoding="utf-8"))
+            self.assertTrue(manifest["backup_dir"])
+
+    def test_cli_assemble_formal_images_fails_when_mapping_omits_go_page(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            passed = project / "passed"
+            passed.mkdir()
+            (passed / "F-01.png").write_bytes(b"fake-image")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | passed/F-01.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n",
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "assemble-formal-images",
+                    "--project-dir",
+                    str(project),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("deliverable page missing from actual_page_mapping", result.stdout)
+
+    def test_init_deck_project_cli_writes_formal_sub_mode_to_brief(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "init_deck_project.py"),
+                    "--output",
+                    tmp,
+                    "--production-sub-mode",
+                    "formal_bid_image_led",
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            brief = (Path(tmp) / "deck_brief.md").read_text(encoding="utf-8")
+            self.assertIn("production_sub_mode: formal_bid_image_led", brief)
 
     def test_preset_generates_narrative_arc(self) -> None:
         init_project(self.project_dir)

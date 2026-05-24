@@ -214,6 +214,8 @@ def detect_formal_bid_issues(project_dir: Path, state: dict, clean_pages_text: s
     page_registry_rows = parse_markdown_table(project_dir / "page_registry.md")
     if not page_registry_rows:
         issues.setdefault("__formal__", []).append("page_registry_empty")
+    registry_by_source = {row.get("source_id", ""): row for row in page_registry_rows if row.get("source_id")}
+    deliverable_source_ids: set[str] = set()
     for row in page_registry_rows:
         source_id = row.get("source_id", "unknown") or "unknown"
         status = row.get("status", "")
@@ -221,8 +223,13 @@ def detect_formal_bid_issues(project_dir: Path, state: dict, clean_pages_text: s
             issues.setdefault("__formal__", []).append(f"formal_page_status_invalid:{source_id}:{status}")
         if status and status not in FORMAL_BID_DELIVERABLE_PAGE_STATUSES:
             issues.setdefault("__formal__", []).append(f"formal_page_not_go:{source_id}:{status}")
-        if status in {"Go", "replaced"} and not row.get("approved_image", ""):
-            issues.setdefault("__formal__", []).append(f"formal_approved_image_missing:{source_id}")
+        if status in {"Go", "replaced"}:
+            deliverable_source_ids.add(source_id)
+            approved_image = row.get("approved_image", "")
+            if not approved_image:
+                issues.setdefault("__formal__", []).append(f"formal_approved_image_missing:{source_id}")
+            elif not (project_dir / approved_image).exists():
+                issues.setdefault("__formal__", []).append(f"formal_approved_image_not_found:{source_id}:{approved_image}")
 
     image_manifest_rows = parse_markdown_table(project_dir / "image_generation_manifest.md")
     if not image_manifest_rows:
@@ -231,12 +238,22 @@ def detect_formal_bid_issues(project_dir: Path, state: dict, clean_pages_text: s
     mapping_rows = parse_markdown_table(project_dir / "actual_page_mapping.md")
     if not mapping_rows:
         issues.setdefault("__formal__", []).append("actual_page_mapping_empty")
+    mapped_source_ids: set[str] = set()
+    seen_actual_pages: set[str] = set()
     for row in mapping_rows:
         actual_page = row.get("actual_ppt_page", "")
         source_id = row.get("source_id", "unknown") or "unknown"
+        if source_id not in registry_by_source:
+            issues.setdefault("__formal__", []).append(f"actual_mapping_unknown_source:{source_id}")
+        else:
+            mapped_source_ids.add(source_id)
         if actual_page and not actual_page.isdigit():
             issues.setdefault("__formal__", []).append(f"actual_page_invalid:{source_id}:{actual_page}")
             continue
+        if actual_page:
+            if actual_page in seen_actual_pages:
+                issues.setdefault("__formal__", []).append(f"actual_page_duplicate:{actual_page}")
+            seen_actual_pages.add(actual_page)
         final_image = row.get("final_image_filename", "")
         if actual_page and final_image:
             expected_prefix = f"{int(actual_page):03d}"
@@ -248,6 +265,9 @@ def detect_formal_bid_issues(project_dir: Path, state: dict, clean_pages_text: s
                     ratio = img.width / img.height if img.height else 0
                 if abs(ratio - (16 / 9)) > 0.02:
                     issues.setdefault("__formal__", []).append(f"formal_image_ratio:{source_id}:{img.width}x{img.height}")
+
+    for source_id in sorted(deliverable_source_ids - mapped_source_ids):
+        issues.setdefault("__formal__", []).append(f"actual_mapping_missing:{source_id}")
 
     issue_rows = parse_markdown_table(project_dir / "known_issue_log.md")
     for row in issue_rows:
