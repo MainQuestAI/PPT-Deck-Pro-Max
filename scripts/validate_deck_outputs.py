@@ -33,6 +33,37 @@ REVIEW_ARTIFACTS = [
     "review_rollback_plan.md",
 ]
 
+FORMAL_BID_IMAGE_LED_ARTIFACTS = [
+    "page_registry.md",
+    "image_generation_manifest.md",
+    "actual_page_mapping.md",
+    "known_issue_log.md",
+]
+
+
+def load_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def infer_production_sub_mode(project_dir: Path) -> str:
+    state = load_json(project_dir / "slide_state.json")
+    mode = state.get("production_sub_mode")
+    if mode:
+        return str(mode)
+
+    brief_path = project_dir / "deck_brief.md"
+    if brief_path.exists():
+        for line in brief_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("production_sub_mode:"):
+                return line.split(":", 1)[1].strip() or "standard_deck"
+
+    return "standard_deck"
+
 
 def find_artifact(project_dir: Path, patterns: list[str]) -> Path | None:
     for pattern in patterns:
@@ -68,9 +99,11 @@ def main() -> None:
     parser.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
     parser.add_argument("--require-review", action="store_true", help="Also check review artifacts")
     parser.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
+    parser.add_argument("--production-sub-mode", choices=["standard_deck", "formal_bid_image_led"], help="Override inferred production sub-mode")
     args = parser.parse_args()
 
     project_dir = Path(args.project_dir).expanduser().resolve()
+    production_sub_mode = args.production_sub_mode or infer_production_sub_mode(project_dir)
 
     missing = [name for name in CORE_ARTIFACTS if not (project_dir / name).exists()]
 
@@ -83,6 +116,9 @@ def main() -> None:
 
     if args.require_review:
         missing.extend(name for name in REVIEW_ARTIFACTS if not (project_dir / name).exists())
+
+    if production_sub_mode == "formal_bid_image_led":
+        missing.extend(name for name in FORMAL_BID_IMAGE_LED_ARTIFACTS if not (project_dir / name).exists())
 
     if getattr(args, "expert_mode", False):
         expert_artifacts = ["deck_expert_context.md", "interview_session.json"]

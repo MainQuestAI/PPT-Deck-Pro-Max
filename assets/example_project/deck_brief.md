@@ -1,6 +1,7 @@
 # Deck Brief
 
 production_mode: expert
+production_sub_mode: standard_deck
 
 ## 产品主语
 

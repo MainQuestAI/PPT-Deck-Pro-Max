@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from init_deck_project import init_project
-from init_slide_state import build_state
+from init_slide_state import PRODUCTION_SUB_MODES, build_state
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -29,6 +29,23 @@ def load_json(path: Path) -> dict:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def save_json(path: Path, payload: dict) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def upsert_brief_field(brief_path: Path, field: str, value: str) -> None:
+    brief_text = brief_path.read_text(encoding="utf-8") if brief_path.exists() else ""
+    line_prefix = f"{field}:"
+    if line_prefix in brief_text:
+        lines = [
+            f"{field}: {value}" if line.startswith(line_prefix) else line
+            for line in brief_text.splitlines()
+        ]
+        brief_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    else:
+        brief_path.write_text(f"{field}: {value}\n\n{brief_text}", encoding="utf-8")
 
 
 def resolve_batch_page_ids(project_dir: Path, batch_id: str) -> list[str]:
@@ -68,23 +85,23 @@ def find_latest_pptx(project_dir: Path) -> Path | None:
 
 def cmd_init(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
-    created = init_project(project_dir, with_example=args.with_example)
+    production_sub_mode = args.production_sub_mode or "standard_deck"
+    created = init_project(project_dir, with_example=args.with_example, production_sub_mode=production_sub_mode)
+    brief_path = project_dir / "deck_brief.md"
     if args.production_mode:
-        brief_path = project_dir / "deck_brief.md"
-        brief_text = brief_path.read_text(encoding="utf-8") if brief_path.exists() else ""
-        if "production_mode:" in brief_text:
-            lines = [
-                f"production_mode: {args.production_mode}" if line.startswith("production_mode:") else line
-                for line in brief_text.splitlines()
-            ]
-            brief_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        else:
-            brief_path.write_text(f"production_mode: {args.production_mode}\n\n{brief_text}", encoding="utf-8")
+        upsert_brief_field(brief_path, "production_mode", args.production_mode)
+    if args.production_sub_mode:
+        upsert_brief_field(brief_path, "production_sub_mode", args.production_sub_mode)
     state_path = project_dir / "slide_state.json"
     if not state_path.exists() or args.force_state:
-        state = build_state(args.project_id or project_dir.name, args.pages, args.output_mode)
-        state_path.write_text(__import__("json").dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+        state = build_state(args.project_id or project_dir.name, args.pages, args.output_mode, production_sub_mode)
+        save_json(state_path, state)
         created.append("slide_state.json")
+    else:
+        state = load_json(state_path)
+        if "production_sub_mode" not in state or args.production_sub_mode:
+            state["production_sub_mode"] = production_sub_mode
+            save_json(state_path, state)
 
     if args.preset:
         preset_path = SKILL_ROOT / "assets" / "presets" / f"{args.preset}.json"
@@ -214,6 +231,8 @@ def cmd_qa(args: argparse.Namespace) -> None:
 def cmd_validate(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir), "--output-mode", args.output_mode]
+    if getattr(args, "production_sub_mode", None):
+        cmd.extend(["--production-sub-mode", args.production_sub_mode])
     if args.require_review or getattr(args, "formal", False):
         cmd.append("--require-review")
     if getattr(args, "expert_mode", False):
@@ -607,6 +626,16 @@ def cmd_post_assemble_qa(args: argparse.Namespace) -> None:
     run_script("build_montage_and_report.py", *qa_cmd)
 
 
+def cmd_assemble_formal_images(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.output_dir:
+        cmd.extend(["--output-dir", str(Path(args.output_dir).expanduser().resolve())])
+    if args.manifest:
+        cmd.extend(["--manifest", str(Path(args.manifest).expanduser().resolve())])
+    run_script("assemble_formal_bid_images.py", *cmd)
+
+
 def cmd_capture_assets(args: argparse.Namespace) -> None:
     project_dir = Path(args.project_dir).expanduser().resolve()
     cmd = ["--project-dir", str(project_dir)]
@@ -669,6 +698,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--project-id")
     p_init.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
     p_init.add_argument("--production-mode", choices=["expert", "quick"], help="Set production_mode in deck_brief.md")
+    p_init.add_argument("--production-sub-mode", choices=PRODUCTION_SUB_MODES, help="Set production_sub_mode in deck_brief.md and slide_state.json")
     p_init.add_argument("--with-example", action="store_true")
     p_init.add_argument("--preset", choices=PRESET_CHOICES)
     p_init.add_argument("--force-state", action="store_true")
@@ -723,6 +753,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--require-review", action="store_true", help="Also check review/QA artifacts including montage and review_package")
     p_validate.add_argument("--formal", action="store_true", help="Alias for --require-review: full formal review validation")
     p_validate.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
+    p_validate.add_argument("--production-sub-mode", choices=PRODUCTION_SUB_MODES, help="Override inferred production sub-mode")
     p_validate.set_defaults(func=cmd_validate)
 
     p_preset = sub.add_parser("preset", help="Apply a common deck preset")
@@ -900,6 +931,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_post_assemble_qa.add_argument("--warn-chars", type=int, default=700)
     p_post_assemble_qa.add_argument("--fail-chars", type=int, default=1000)
     p_post_assemble_qa.set_defaults(func=cmd_post_assemble_qa)
+
+    p_assemble_formal_images = sub.add_parser("assemble-formal-images", help="Copy formal-bid Go images into actual PPT page order")
+    p_assemble_formal_images.add_argument("--project-dir", required=True)
+    p_assemble_formal_images.add_argument("--output-dir")
+    p_assemble_formal_images.add_argument("--manifest")
+    p_assemble_formal_images.set_defaults(func=cmd_assemble_formal_images)
 
     p_capture = sub.add_parser("capture-assets", help="Capture product screenshots from URLs")
     p_capture.add_argument("--project-dir", required=True)

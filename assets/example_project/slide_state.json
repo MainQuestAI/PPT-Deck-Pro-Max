@@ -2,7 +2,9 @@
   "project_id": "example_mirrorworld",
   "global_status": "designing",
   "visual_locked": true,
+  "review_iteration": 0,
   "output_mode": "pptx+html",
+  "production_sub_mode": "standard_deck",
   "pages": [
     { "page_id": "slide_01", "role": "hero_cover", "status": "ready", "qa_status": "passed", "qa_reason": "", "visual_status": "locked", "rollback_stage": "", "rollback_owner": "", "rollback_targets": [], "rollback_reason": "", "rollback_routes": [], "content_hash": "demo_01", "css_components_used": ["glass-panel", "flow-node"] },
     { "page_id": "slide_02", "role": "hero_value", "status": "ready", "qa_status": "passed", "qa_reason": "", "visual_status": "locked", "rollback_stage": "", "rollback_owner": "", "rollback_targets": [], "rollback_reason": "", "rollback_routes": [], "content_hash": "demo_02", "css_components_used": ["glass-panel", "diagnosis-card"] },

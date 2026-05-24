@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from collections import OrderedDict
 from pathlib import Path
 
@@ -33,6 +34,97 @@ def load_json(path: Path) -> dict:
 def save_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def parse_markdown_table(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, str]] = []
+    table_lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip().startswith("|")]
+    idx = 0
+    while idx + 1 < len(table_lines):
+        header_line = table_lines[idx]
+        separator_line = table_lines[idx + 1]
+        if not re.fullmatch(r"\|[\s:\-|]+\|", separator_line):
+            idx += 1
+            continue
+        headers = [cell.strip().lower().replace(" ", "_") for cell in header_line.strip("|").split("|")]
+        idx += 2
+        while idx < len(table_lines):
+            line = table_lines[idx]
+            if re.fullmatch(r"\|[\s:\-|]+\|", line):
+                break
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if len(cells) == len(headers) and any(cells):
+                rows.append(dict(zip(headers, cells)))
+            idx += 1
+    return rows
+
+
+def asset_id_from_source_id(source_id: str) -> str:
+    safe = re.sub(r"[^0-9A-Za-z_-]+", "_", source_id.strip()).strip("_")
+    return f"{safe or 'formal_page'}_page_image"
+
+
+def page_id_from_actual_page(actual_page: str) -> str:
+    if not actual_page.strip().isdigit():
+        return ""
+    return f"slide_{int(actual_page):02d}"
+
+
+def assets_from_page_registry(project_dir: Path) -> list[dict]:
+    rows = parse_markdown_table(project_dir / "page_registry.md")
+    assets: list[dict] = []
+    for row in rows:
+        source_id = row.get("source_id", "")
+        page_id = page_id_from_actual_page(row.get("actual_ppt_page", ""))
+        status = row.get("status", "")
+        if not source_id or not page_id or status == "direct-reference":
+            continue
+
+        approved_image = row.get("approved_image", "")
+        asset = {
+            "id": asset_id_from_source_id(source_id),
+            "page_id": page_id,
+            "desc": row.get("page_title", "") or f"Generated full-page visual for {source_id}",
+            "source": "declared",
+            "source_mode": "generate",
+            "asset_type": "generated_visual",
+            "generation_mode": "gptimage2",
+            "status": "queued",
+            "aspect_ratio": "16:9",
+            "variant_count": 2,
+            "position": "full",
+            "frame": "none",
+            "prompt_intent": row.get("source_path", ""),
+            "formal_source_id": source_id,
+            "formal_actual_page": row.get("actual_ppt_page", ""),
+            "formal_status": status,
+        }
+        if status in {"Go", "replaced"} and approved_image:
+            asset["status"] = "approved"
+            asset["final_path"] = approved_image
+        assets.append(asset)
+    return assets
+
+
+def merge_registry_assets(manifest: dict, registry_assets: list[dict]) -> dict:
+    existing_assets = manifest.get("assets", [])
+    by_id = {asset.get("id"): asset for asset in existing_assets if asset.get("id")}
+    for registry_asset in registry_assets:
+        asset_id = registry_asset.get("id")
+        if not asset_id:
+            continue
+        if asset_id in by_id:
+            current = by_id[asset_id]
+            current.update(registry_asset)
+            if "final_path" not in registry_asset:
+                current.pop("final_path", None)
+                current.pop("selected_variant", None)
+        else:
+            existing_assets.append(registry_asset)
+    manifest["assets"] = existing_assets
+    return manifest
 
 
 def page_priority(page: dict) -> tuple[int, int]:
@@ -127,6 +219,8 @@ def main() -> None:
 
     manifest = load_json(manifest_path)
     state = load_json(state_path)
+    if state.get("production_sub_mode") == "formal_bid_image_led":
+        manifest = merge_registry_assets(manifest, assets_from_page_registry(project_dir))
     style_lock = load_json(style_lock_path)
     clean_slices = extract_page_slices(read_text(clean_pages_path))
     visual_slices = extract_page_slices(read_text(visual_path))

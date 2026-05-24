@@ -51,6 +51,11 @@ python3 scripts/run_deck_pipeline.py init \
 python3 scripts/run_deck_pipeline.py init \
   --project-dir ./quick-deck --pages 6 --preset product_intro --production-mode quick
 
+# 正式投标图片型子模式
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./formal-bid-deck --pages 60 --production-mode expert \
+  --production-sub-mode formal_bid_image_led
+
 # Expert Mode（v2.0）：提取 claims + gaps，准备专家访谈
 python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
@@ -132,6 +137,7 @@ Step 5     内容压缩 + 视觉组合设计             → deck_clean_pages.md
                                               → deck_visual_composition.md（逐页视觉规格）
 Step 5.5   配图规划                           → deck_asset_plan.md       🔔 用户确认
 Step 6     视觉组件系统                       → tokens、geometry、skeletons
+Step 6.5   正式投标页表门禁                   → 页表 + 实际页码映射（仅 formal_bid_image_led）
 Step 7     构建 Deck                          → .pptx / .html
 Step 8     QA 与评审循环                      → findings、评分卡、回退计划
 ```
@@ -264,6 +270,21 @@ python3 scripts/run_deck_pipeline.py doctor --project-dir ./my-deck
 ## 模式与最小样例
 
 `--production-mode expert` 适合高价值商业 Deck：需要专家访谈、脱敏门槛和更完整的商业证据。`--production-mode quick` 适合小型 Deck 或快速验证，跳过 Expert Interview 的启动成本。
+
+`--production-sub-mode standard_deck` 适合普通产品介绍、方案、战略、行业观点或合作 Deck。`--production-sub-mode formal_bid_image_led` 适合正式投标、RFP、技术方案或留资型 Deck，重点控制页表、源 ID 图片可追溯、Go / No-Go 图片评审和最终 PPT 实际页码映射。
+
+`formal_bid_image_led` 初始化会额外生成：
+
+- `page_registry.md`
+- `image_generation_manifest.md`
+- `actual_page_mapping.md`
+- `known_issue_log.md`
+
+`validate` 会从 `slide_state.json` 或 `deck_brief.md` 识别这个子模式，并在交付前强制检查这些文件。
+
+当启用 `formal_bid_image_led` 时，`generate-assets` 会读取 `page_registry.md`，并按源页面 ID 与实际 PPT 页码派生整页图片生成任务。
+
+Go 决策记录完成后，使用 `assemble-formal-images` 把已批准的源 ID 图片复制成按实际页码排序的 PPT 装配目录。
 
 最小 smoke test：
 

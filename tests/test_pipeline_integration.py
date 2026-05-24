@@ -20,6 +20,7 @@ from build_montage_and_report import (  # noqa: E402
     detect_density_issues,
     detect_missing_speaker_notes,
     detect_missing_assets,
+    detect_formal_bid_issues,
     merge_issue_maps,
     apply_qa_to_state,
     is_scorecard_scaffold,
@@ -50,8 +51,16 @@ class PipelineIntegrationTest(unittest.TestCase):
     def test_init_state_has_review_iteration(self) -> None:
         state = build_state("test_project", 10, "pptx+html")
         self.assertEqual(state["review_iteration"], 0)
+        self.assertEqual(state["production_sub_mode"], "standard_deck")
         self.assertEqual(len(state["pages"]), 10)
         self.assertEqual(state["pages"][0]["page_id"], "slide_01")
+
+    def test_init_project_creates_formal_bid_artifacts_when_requested(self) -> None:
+        created = init_project(self.project_dir, production_sub_mode="formal_bid_image_led")
+        self.assertIn("page_registry.md", created)
+        self.assertIn("image_generation_manifest.md", created)
+        self.assertIn("actual_page_mapping.md", created)
+        self.assertIn("known_issue_log.md", created)
 
     def test_cli_init_can_set_quick_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -74,6 +83,159 @@ class PipelineIntegrationTest(unittest.TestCase):
             )
             brief = (Path(tmp) / "deck_brief.md").read_text(encoding="utf-8")
             self.assertIn("production_mode: quick", brief)
+
+    def test_cli_init_can_set_formal_bid_sub_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "init",
+                    "--project-dir",
+                    tmp,
+                    "--pages",
+                    "3",
+                    "--production-sub-mode",
+                    "formal_bid_image_led",
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            project = Path(tmp)
+            brief = (project / "deck_brief.md").read_text(encoding="utf-8")
+            state = json.loads((project / "slide_state.json").read_text(encoding="utf-8"))
+            self.assertIn("production_sub_mode: formal_bid_image_led", brief)
+            self.assertEqual(state["production_sub_mode"], "formal_bid_image_led")
+            self.assertTrue((project / "page_registry.md").exists())
+
+    def test_validate_formal_bid_sub_mode_requires_registry_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project)
+            state = build_state("test", 1, "html", "formal_bid_image_led")
+            (project / "slide_state.json").write_text(json.dumps(state), encoding="utf-8")
+            (project / "index.html").write_text("<html></html>", encoding="utf-8")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "validate_deck_outputs.py"),
+                    "--project-dir",
+                    str(project),
+                    "--output-mode",
+                    "html",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("page_registry.md", result.stdout)
+
+    def test_formal_bid_qa_detects_open_registry_items(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            state = build_state("test", 1, "html", "formal_bid_image_led")
+            issues = detect_formal_bid_issues(project, state, "## 第 1 页\n截图占位\n")
+            self.assertIn("__formal__", issues)
+            self.assertIn("page_registry_empty", issues["__formal__"])
+            self.assertIn("formal_placeholder_visible:截图占位", issues["__formal__"])
+
+    def test_formal_bid_qa_accepts_closed_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            state = build_state("test", 1, "html", "formal_bid_image_led")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | passed/F-01.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "image_generation_manifest.md").write_text(
+                "| Batch ID | Source ID | Page ID | Candidate Directory | Decision | Selected Image | Decision Note | Decided At |\n"
+                "|----------|-----------|---------|---------------------|----------|----------------|---------------|------------|\n"
+                "| batch_01 | F-01 | slide_01 | candidates/batch_01 | Go | passed/F-01.png | ok | 2026-05-23 |\n",
+                encoding="utf-8",
+            )
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n"
+                "| 1 | F-01 | Front | Cover | 001_F-01_Cover.png | false |  |\n",
+                encoding="utf-8",
+            )
+            issues = detect_formal_bid_issues(project, state, "## 第 1 页\n正式封面\n")
+            self.assertEqual(issues, {})
+
+    def test_formal_bid_qa_checks_actual_page_filename_and_ratio(self) -> None:
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            state = build_state("test", 1, "html", "formal_bid_image_led")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | images/bad.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "image_generation_manifest.md").write_text(
+                "| Batch ID | Source ID | Page ID | Candidate Directory | Decision | Selected Image | Decision Note | Decided At |\n"
+                "|----------|-----------|---------|---------------------|----------|----------------|---------------|------------|\n"
+                "| batch_01 | F-01 | slide_01 | candidates/batch_01 | Go | images/bad.png | ok | 2026-05-23 |\n",
+                encoding="utf-8",
+            )
+            image_dir = project / "images"
+            image_dir.mkdir()
+            Image.new("RGB", (800, 800), "white").save(image_dir / "bad.png")
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n"
+                "| 1 | F-01 | Front | Cover | images/bad.png | false |  |\n",
+                encoding="utf-8",
+            )
+            issues = detect_formal_bid_issues(project, state, "## 第 1 页\n正式封面\n")
+            self.assertIn("actual_page_filename_order:F-01:images/bad.png", issues["__formal__"])
+            self.assertIn("formal_image_ratio:F-01:800x800", issues["__formal__"])
+
+    def test_cli_assemble_formal_images_copies_go_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project, production_sub_mode="formal_bid_image_led")
+            passed = project / "passed"
+            passed.mkdir()
+            (passed / "F-01.png").write_bytes(b"fake-image")
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | Go | formal/F-01.md | passed/F-01.png |  | design |\n",
+                encoding="utf-8",
+            )
+            (project / "actual_page_mapping.md").write_text(
+                "| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n"
+                "|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n"
+                "| 1 | F-01 | Front | Cover | 001_F-01_Cover.png | false |  |\n",
+                encoding="utf-8",
+            )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "assemble-formal-images",
+                    "--project-dir",
+                    str(project),
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertTrue((project / "actual_page_images" / "001_F-01_Cover.png").exists())
+            manifest = json.loads((project / "actual_page_assembly_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(manifest["copied"]), 1)
 
     def test_preset_generates_narrative_arc(self) -> None:
         init_project(self.project_dir)

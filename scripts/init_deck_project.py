@@ -5,8 +5,10 @@ import argparse
 import shutil
 from pathlib import Path
 
+PRODUCTION_SUB_MODES = ("standard_deck", "formal_bid_image_led")
+
 TEMPLATES = {
-    "deck_brief.md": "# Deck Brief\n\nproduction_mode: expert\n\n## 产品主语\n\n## 产品定位\n\n## 第一受众\n\n## 第一购买理由\n\n## 最强差异化\n\n## 最强证据\n\n## 首单入口\n\n## 最终 CTA\n",
+    "deck_brief.md": "# Deck Brief\n\nproduction_mode: expert\nproduction_sub_mode: standard_deck\n\n## 产品主语\n\n## 产品定位\n\n## 第一受众\n\n## 第一购买理由\n\n## 最强差异化\n\n## 最强证据\n\n## 首单入口\n\n## 最终 CTA\n",
     "deck_vibe_brief.md": "# Vibe Brief\n\n## 视觉气质\n\n## 配色系统\n\n## 字体系统\n\n## 图形语言\n\n## 密度上限\n",
     "deck_narrative_arc.md": "# Narrative Arc\n\n## 弧线模板\n\n（待锁定）\n\n## 逐页 Beat\n\n| 页码 | Beat | 情绪目标 | 过渡逻辑 |\n|------|------|---------|--------|\n\n## 信心拐点\n\n（待锁定）\n\n## 呼吸页\n\n（待锁定）\n",
     "deck_hero_pages.md": "# Hero Pages\n\n## 关键页\n\n1. 封面\n2. 痛点/诊断\n3. 样例/证据\n4. 核心能力/系统\n5. CTA\n",
@@ -33,19 +35,35 @@ TEMPLATES = {
     "commercial_scorecard.json": "{\n  \"overall_score\": null,\n  \"dimensions\": {\n    \"audience_fit\": null,\n    \"buying_reason_clarity\": null,\n    \"proof_strength\": null,\n    \"objection_coverage\": null,\n    \"narrative_flow\": null,\n    \"commercial_ask\": null\n  },\n  \"summary\": null,\n  \"recommended_action\": null,\n  \"weak_dimensions\": []\n}\n",
 }
 
+FORMAL_BID_IMAGE_LED_TEMPLATES = {
+    "page_registry.md": "# Page Registry\n\nproduction_sub_mode: formal_bid_image_led\n\n| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n\n## Status Values\n\nUse `planned`, `candidate`, `Go`, `No-Go`, `replaced`, or `direct-reference`.\n",
+    "image_generation_manifest.md": "# Image Generation Manifest\n\nproduction_sub_mode: formal_bid_image_led\n\n| Batch ID | Source ID | Page ID | Candidate Directory | Decision | Selected Image | Decision Note | Decided At |\n|----------|-----------|---------|---------------------|----------|----------------|---------------|------------|\n\n## Directory Policy\n\n- Candidate images stay under `图片生成候选结果/<batch_id>/` or an equivalent candidate directory.\n- Only `Go` images move into the passed source-id image directory.\n- Keep `No-Go` images out of the passed directory until regenerated.\n",
+    "actual_page_mapping.md": "# Actual Page Mapping\n\nproduction_sub_mode: formal_bid_image_led\n\n| Actual PPT Page | Source ID | Chapter | Page Title | Final Image Filename | Direct Reference | Notes |\n|-----------------|-----------|---------|------------|----------------------|------------------|-------|\n\n## Mapping Notes\n\nRecord front matter, core pages, service pages, appendix pages, and direct-reference holes here before final PPT assembly.\n",
+    "known_issue_log.md": "# Known Issue Log\n\nproduction_sub_mode: formal_bid_image_led\n\n| ID | Source ID | Actual PPT Page | Severity | Issue | Owner | Status | Resolution |\n|----|-----------|-----------------|----------|-------|-------|--------|------------|\n\n## Blocking Status\n\nBefore delivery, every blocking issue must be fixed or explicitly accepted by the user.\n",
+}
+
 EXAMPLE_DIR_NAME = "example_project"
 
 
-def init_project(out_dir: Path, with_example: bool = False) -> list[str]:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "assets").mkdir(exist_ok=True)
-
+def write_missing_templates(out_dir: Path, templates: dict[str, str]) -> list[str]:
     created = []
-    for name, content in TEMPLATES.items():
+    for name, content in templates.items():
         path = out_dir / name
         if not path.exists():
             path.write_text(content, encoding="utf-8")
             created.append(path.name)
+    return created
+
+
+def init_project(out_dir: Path, with_example: bool = False, production_sub_mode: str = "standard_deck") -> list[str]:
+    if production_sub_mode not in PRODUCTION_SUB_MODES:
+        raise ValueError(f"invalid production_sub_mode: {production_sub_mode}")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "assets").mkdir(exist_ok=True)
+
+    created = write_missing_templates(out_dir, TEMPLATES)
+    if production_sub_mode == "formal_bid_image_led":
+        created.extend(write_missing_templates(out_dir, FORMAL_BID_IMAGE_LED_TEMPLATES))
 
     if with_example:
         skill_root = Path(__file__).resolve().parent.parent
@@ -68,10 +86,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Initialize a deck production project scaffold.")
     parser.add_argument("--output", required=True, help="Project directory")
     parser.add_argument("--with-example", action="store_true", help="Copy bundled example project files")
+    parser.add_argument("--production-sub-mode", default="standard_deck", choices=PRODUCTION_SUB_MODES)
     args = parser.parse_args()
 
     out_dir = Path(args.output).expanduser().resolve()
-    created = init_project(out_dir, with_example=args.with_example)
+    created = init_project(out_dir, with_example=args.with_example, production_sub_mode=args.production_sub_mode)
 
     print(f"[OK] project initialized: {out_dir}")
     if created:

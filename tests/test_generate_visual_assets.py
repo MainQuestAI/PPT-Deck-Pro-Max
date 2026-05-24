@@ -10,7 +10,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from generate_visual_assets import assign_batches, build_prompt_payload, compute_content_hash  # noqa: E402
+from generate_visual_assets import assign_batches, assets_from_page_registry, build_prompt_payload, compute_content_hash, merge_registry_assets  # noqa: E402
 from init_slide_state import build_state  # noqa: E402
 
 
@@ -44,6 +44,30 @@ class GenerateVisualAssetsTests(unittest.TestCase):
         self.assertEqual(payload["layout_constraints"]["frame"], "browser")
         self.assertEqual(payload["generation_rules"]["text_in_image"], "avoid")
         self.assertIn("generic ai poster look", payload["generation_rules"]["negative_prompts"])
+
+    def test_formal_page_registry_generates_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / "page_registry.md").write_text(
+                "| Source ID | Actual PPT Page | Chapter | Page Title | Status | Source Path | Approved Image | Known Issues | Owner |\n"
+                "|-----------|-----------------|---------|------------|--------|-------------|----------------|--------------|-------|\n"
+                "| F-01 | 1 | Front | Cover | planned | formal/F-01.md |  |  | design |\n"
+                "| F-02 | 2 | Front | Terms | direct-reference | formal/F-02.md |  |  | design |\n"
+                "| F-03 | 3 | Core | Proof | Go | formal/F-03.md | passed/F-03.png |  | design |\n",
+                encoding="utf-8",
+            )
+            assets = assets_from_page_registry(project)
+            self.assertEqual([asset["page_id"] for asset in assets], ["slide_01", "slide_03"])
+            self.assertEqual(assets[0]["status"], "queued")
+            self.assertEqual(assets[1]["status"], "approved")
+            self.assertEqual(assets[1]["final_path"], "passed/F-03.png")
+
+    def test_formal_registry_overrides_existing_asset_status(self) -> None:
+        manifest = {"assets": [{"id": "F-01_page_image", "page_id": "slide_01", "status": "approved", "final_path": "old.png"}]}
+        registry_assets = [{"id": "F-01_page_image", "page_id": "slide_01", "status": "queued"}]
+        merged = merge_registry_assets(manifest, registry_assets)
+        self.assertEqual(merged["assets"][0]["status"], "queued")
+        self.assertNotIn("final_path", merged["assets"][0])
 
 
 if __name__ == "__main__":

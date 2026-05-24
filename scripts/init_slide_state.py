@@ -6,13 +6,19 @@ import json
 from pathlib import Path
 
 
-def build_state(project_id: str, pages: int, output_mode: str) -> dict:
+PRODUCTION_SUB_MODES = ("standard_deck", "formal_bid_image_led")
+
+
+def build_state(project_id: str, pages: int, output_mode: str, production_sub_mode: str = "standard_deck") -> dict:
+    if production_sub_mode not in PRODUCTION_SUB_MODES:
+        raise ValueError(f"invalid production_sub_mode: {production_sub_mode}")
     return {
         "project_id": project_id,
         "global_status": "briefing",
         "visual_locked": False,
         "review_iteration": 0,
         "output_mode": output_mode,
+        "production_sub_mode": production_sub_mode,
         "pages": [
             {
                 "page_id": f"slide_{i:02d}",
@@ -40,11 +46,12 @@ def main() -> None:
     parser.add_argument("--project-id", default="deck_project", help="Project identifier")
     parser.add_argument("--pages", type=int, required=True, help="Number of slides")
     parser.add_argument("--output-mode", default="pptx+html", choices=["pptx", "html", "pptx+html"])
+    parser.add_argument("--production-sub-mode", default="standard_deck", choices=PRODUCTION_SUB_MODES)
     args = parser.parse_args()
 
     output = Path(args.output).expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    state = build_state(args.project_id, args.pages, args.output_mode)
+    state = build_state(args.project_id, args.pages, args.output_mode, args.production_sub_mode)
     output.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[OK] wrote {output}")
 

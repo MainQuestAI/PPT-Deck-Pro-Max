@@ -39,6 +39,17 @@ REQUIRED_SCORECARD_DIMENSIONS = (
     "narrative_flow",
     "commercial_ask",
 )
+FORMAL_BID_REQUIRED_ARTIFACTS = (
+    "page_registry.md",
+    "image_generation_manifest.md",
+    "actual_page_mapping.md",
+    "known_issue_log.md",
+)
+FORMAL_BID_ALLOWED_PAGE_STATUSES = {"planned", "candidate", "Go", "No-Go", "replaced", "direct-reference"}
+FORMAL_BID_DELIVERABLE_PAGE_STATUSES = {"Go", "replaced", "direct-reference"}
+FORMAL_BID_CLOSED_ISSUE_STATUSES = {"fixed", "resolved", "closed", "accepted", "clear", "cleared", "done"}
+FORMAL_BID_PLACEHOLDER_TERMS = ("公司名称", "截图占位", "待补", "SCREENSHOT PLACEHOLDER")
+FORMAL_BID_INTERNAL_TERMS = ("source_id", "batch_id", "prompt_id", "generation_status")
 
 
 def maybe_build_montage(images: list[Path], output: Path) -> bool:
@@ -82,6 +93,31 @@ def load_json(path: Path | None) -> dict | list | None:
     if not path or not path.exists():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def parse_markdown_table(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, str]] = []
+    table_lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip().startswith("|")]
+    idx = 0
+    while idx + 1 < len(table_lines):
+        header_line = table_lines[idx]
+        separator_line = table_lines[idx + 1]
+        if not re.fullmatch(r"\|[\s:\-|]+\|", separator_line):
+            idx += 1
+            continue
+        headers = [cell.strip().lower().replace(" ", "_") for cell in header_line.strip("|").split("|")]
+        idx += 2
+        while idx < len(table_lines):
+            line = table_lines[idx]
+            if re.fullmatch(r"\|[\s:\-|]+\|", line):
+                break
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if len(cells) == len(headers) and any(cells):
+                rows.append(dict(zip(headers, cells)))
+            idx += 1
+    return rows
 
 
 def detect_component_drift(state: dict, theme: dict | None) -> dict[str, list[str]]:
@@ -162,6 +198,73 @@ def detect_asset_runtime_issues(asset_manifest: dict | None, image_build_jobs: d
         for batch in image_build_jobs.get("batches", []):
             if batch.get("status") not in {"approved", "completed"}:
                 issues.setdefault("__build__", []).append(f"batch_incomplete:{batch.get('batch_id', 'unknown')}")
+    return issues
+
+
+def detect_formal_bid_issues(project_dir: Path, state: dict, clean_pages_text: str | None) -> dict[str, list[str]]:
+    if state.get("production_sub_mode") != "formal_bid_image_led":
+        return {}
+
+    issues: dict[str, list[str]] = {}
+    missing = [name for name in FORMAL_BID_REQUIRED_ARTIFACTS if not (project_dir / name).exists()]
+    if missing:
+        issues.setdefault("__formal__", []).append("formal_artifact_missing:" + ",".join(missing))
+        return issues
+
+    page_registry_rows = parse_markdown_table(project_dir / "page_registry.md")
+    if not page_registry_rows:
+        issues.setdefault("__formal__", []).append("page_registry_empty")
+    for row in page_registry_rows:
+        source_id = row.get("source_id", "unknown") or "unknown"
+        status = row.get("status", "")
+        if status and status not in FORMAL_BID_ALLOWED_PAGE_STATUSES:
+            issues.setdefault("__formal__", []).append(f"formal_page_status_invalid:{source_id}:{status}")
+        if status and status not in FORMAL_BID_DELIVERABLE_PAGE_STATUSES:
+            issues.setdefault("__formal__", []).append(f"formal_page_not_go:{source_id}:{status}")
+        if status in {"Go", "replaced"} and not row.get("approved_image", ""):
+            issues.setdefault("__formal__", []).append(f"formal_approved_image_missing:{source_id}")
+
+    image_manifest_rows = parse_markdown_table(project_dir / "image_generation_manifest.md")
+    if not image_manifest_rows:
+        issues.setdefault("__formal__", []).append("image_generation_manifest_empty")
+
+    mapping_rows = parse_markdown_table(project_dir / "actual_page_mapping.md")
+    if not mapping_rows:
+        issues.setdefault("__formal__", []).append("actual_page_mapping_empty")
+    for row in mapping_rows:
+        actual_page = row.get("actual_ppt_page", "")
+        source_id = row.get("source_id", "unknown") or "unknown"
+        if actual_page and not actual_page.isdigit():
+            issues.setdefault("__formal__", []).append(f"actual_page_invalid:{source_id}:{actual_page}")
+            continue
+        final_image = row.get("final_image_filename", "")
+        if actual_page and final_image:
+            expected_prefix = f"{int(actual_page):03d}"
+            if not Path(final_image).name.startswith(expected_prefix):
+                issues.setdefault("__formal__", []).append(f"actual_page_filename_order:{source_id}:{final_image}")
+            final_image_path = project_dir / final_image
+            if final_image_path.exists() and Image:
+                with Image.open(final_image_path) as img:
+                    ratio = img.width / img.height if img.height else 0
+                if abs(ratio - (16 / 9)) > 0.02:
+                    issues.setdefault("__formal__", []).append(f"formal_image_ratio:{source_id}:{img.width}x{img.height}")
+
+    issue_rows = parse_markdown_table(project_dir / "known_issue_log.md")
+    for row in issue_rows:
+        severity = row.get("severity", "").lower()
+        status = row.get("status", "").lower()
+        issue_id = row.get("id", "unknown") or "unknown"
+        if severity in {"high", "critical", "blocker"} and status not in FORMAL_BID_CLOSED_ISSUE_STATUSES:
+            issues.setdefault("__formal__", []).append(f"formal_blocking_issue_open:{issue_id}")
+
+    if clean_pages_text:
+        for term in FORMAL_BID_PLACEHOLDER_TERMS:
+            if term in clean_pages_text:
+                issues.setdefault("__formal__", []).append(f"formal_placeholder_visible:{term}")
+        for term in FORMAL_BID_INTERNAL_TERMS:
+            if term in clean_pages_text:
+                issues.setdefault("__formal__", []).append(f"formal_internal_language:{term}")
+
     return issues
 
 
@@ -470,6 +573,7 @@ def main() -> None:
             asset_manifest if isinstance(asset_manifest, dict) else None,
             image_build_jobs if isinstance(image_build_jobs, dict) else None,
         ),
+        detect_formal_bid_issues(project_dir, state, clean_pages_text),
         detect_expert_mode_issues(
             interview_session if isinstance(interview_session, dict) else None,
             interview_preparation if isinstance(interview_preparation, dict) else None,
@@ -556,6 +660,19 @@ def main() -> None:
                 f"- queued_assets：`{sum(1 for asset in assets if asset.get('status') == 'queued')}`",
                 f"- stale_assets：`{sum(1 for asset in assets if asset.get('stale'))}`",
                 f"- initial_review_batch：`{image_build_jobs.get('initial_review_batch', 'batch_01') if isinstance(image_build_jobs, dict) else 'batch_01'}`",
+                "",
+            ]
+        )
+
+    if state.get("production_sub_mode") == "formal_bid_image_led":
+        report_lines.extend(
+            [
+                "## Formal Bid Image-Led Gate",
+                "",
+                f"- page_registry：`{'present' if (project_dir / 'page_registry.md').exists() else 'missing'}`",
+                f"- image_generation_manifest：`{'present' if (project_dir / 'image_generation_manifest.md').exists() else 'missing'}`",
+                f"- actual_page_mapping：`{'present' if (project_dir / 'actual_page_mapping.md').exists() else 'missing'}`",
+                f"- known_issue_log：`{'present' if (project_dir / 'known_issue_log.md').exists() else 'missing'}`",
                 "",
             ]
         )

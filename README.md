@@ -51,6 +51,11 @@ python3 scripts/run_deck_pipeline.py init \
 python3 scripts/run_deck_pipeline.py init \
   --project-dir ./quick-deck --pages 6 --preset product_intro --production-mode quick
 
+# Formal bid image-led sub-mode
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./formal-bid-deck --pages 60 --production-mode expert \
+  --production-sub-mode formal_bid_image_led
+
 # Expert Mode (v2.0): extract claims + gaps for expert interview
 python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
@@ -132,6 +137,7 @@ Step 5     Compression + Visual Composition  → deck_clean_pages.md
                                              → deck_visual_composition.md (per-page visual spec)
 Step 5.5   Plan Assets                       → deck_asset_plan.md     🔔 User confirms
 Step 6     Visual Component System           → tokens, geometry, skeletons
+Step 6.5   Formal Bid Page Registry          → registry + actual page mapping (formal_bid_image_led only)
 Step 7     Build the Deck                    → .pptx / .html
 Step 8     QA & Review Loop                  → findings, scorecard, rollback plan
 ```
@@ -264,6 +270,21 @@ python3 scripts/run_deck_pipeline.py doctor --project-dir ./my-deck
 ## Modes and Minimal Example
 
 Use `--production-mode expert` for high-value commercial decks that need expert enrichment and redaction gates. Use `--production-mode quick` for smaller decks where the Expert Interview would add too much startup cost.
+
+Use `--production-sub-mode standard_deck` for normal product, solution, strategy, industry POV, or partnership decks. Use `--production-sub-mode formal_bid_image_led` for tender, RFP, technical proposal, or leave-behind decks that need page registry, source-id image traceability, Go / No-Go image review, and actual PPT page mapping.
+
+`formal_bid_image_led` initialization adds:
+
+- `page_registry.md`
+- `image_generation_manifest.md`
+- `actual_page_mapping.md`
+- `known_issue_log.md`
+
+`validate` infers this sub-mode from `slide_state.json` or `deck_brief.md` and requires those files before delivery.
+
+When `formal_bid_image_led` is active, `generate-assets` also reads `page_registry.md` and derives full-page image jobs from source IDs and actual PPT page numbers.
+
+Use `assemble-formal-images` after Go decisions are recorded to copy approved source-id images into an actual-page image directory for PPT assembly.
 
 Minimal smoke path:
 
