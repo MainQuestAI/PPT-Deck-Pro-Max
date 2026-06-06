@@ -58,6 +58,22 @@ class GenerateLayoutManifestTests(unittest.TestCase):
         self.assertAlmostEqual(manifest["pages"][0]["occupancy"]["ratio"], 0.38)
         self.assertEqual(manifest["pages"][1]["archetype"], "cta_board")
 
+    def test_build_manifest_preserves_existing_zero_info_units(self) -> None:
+        state = {"pages": [{"page_id": "slide_01", "role": "hero_cover"}]}
+        existing = {
+            "pages": [
+                {
+                    "page_id": "slide_01",
+                    "info_units": 0,
+                    "density_level": "low",
+                    "dense_archetype": "",
+                }
+            ]
+        }
+        manifest = build_manifest(state, {1: {"info_units": "7", "density_level": "high"}}, existing)
+        self.assertEqual(manifest["pages"][0]["info_units"], 0)
+        self.assertEqual(manifest["pages"][0]["density_level"], "low")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -55,6 +55,14 @@ def parse_info_units(value: str) -> int | None:
     return int(match.group(0)) if match else None
 
 
+def has_explicit_value(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
 def default_page_manifest(page_id: str, role: str, skeleton: dict | None) -> dict:
     skeleton = skeleton or {}
     archetype = skeleton.get("archetype") or ROLE_TO_ARCHETYPE.get(role, "content_board")
@@ -118,7 +126,7 @@ def build_manifest(state: dict, skeletons: dict[int, dict], existing: dict | Non
                 if current.get(key):
                     merged[key] = current[key]
             for key in ("archetype", "dense_archetype", "density_level", "info_units", "split_trigger", "visual_protagonist"):
-                if current.get(key):
+                if has_explicit_value(current.get(key)):
                     merged[key] = current[key]
         pages.append(merged)
     return {"pages": pages}

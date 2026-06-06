@@ -11,6 +11,7 @@ SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from content_governance import (  # noqa: E402
+    normalize_claims,
     summarize_content_governance,
     validate_content_governance,
     validate_longform_governance,
@@ -148,6 +149,22 @@ def write_longform_files(project: Path) -> None:
 
 
 class ContentGovernanceTests(unittest.TestCase):
+    def test_normalize_claims_treats_string_false_is_hero_as_false(self) -> None:
+        claims = normalize_claims(
+            {
+                "claims": [
+                    {
+                        "claim_id": "claim_01",
+                        "page_no": 1,
+                        "claim_text": "普通论点",
+                        "role": "content",
+                        "is_hero": "false",
+                    }
+                ]
+            }
+        )
+        self.assertFalse(claims[0]["is_hero"])
+
     def test_validate_content_governance_passes_when_capacity_and_gaps_are_ready(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)

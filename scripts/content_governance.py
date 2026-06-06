@@ -261,7 +261,7 @@ def normalize_claims(claim_map: Any) -> list[dict]:
             "full_text": full_text,
             "gaps": item.get("gaps") if isinstance(item.get("gaps"), list) else [],
             "richness_score": item.get("richness_score"),
-            "is_hero": bool(item.get("is_hero")) or role.startswith("hero_"),
+            "is_hero": _as_bool(item.get("is_hero")) or role.startswith("hero_"),
         })
     return claims
 
