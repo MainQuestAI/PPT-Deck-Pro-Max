@@ -30,6 +30,9 @@ KNOWN_SCHEMAS: dict[str, str] = {
     "asset_manifest.json": "asset_manifest.schema.json",
     "style_lock.json": "style_lock.schema.json",
     "image_build_jobs.json": "image_build_jobs.schema.json",
+    "deck_claim_map.json": "content_claim_map.schema.json",
+    "deck_capacity_plan.json": "content_capacity_plan.schema.json",
+    "deck_gap_registry.json": "content_gap_registry.schema.json",
 }
 
 

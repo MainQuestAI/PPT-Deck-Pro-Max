@@ -33,9 +33,9 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
 def write_valid_content_governance(project: Path, *, target: int = 12, max_supported: int = 18, blocking: bool = False) -> None:
-    (project / "deck_source_digest.md").write_text("# Source Digest\n", encoding="utf-8")
-    (project / "deck_capacity_plan.md").write_text("# Capacity Plan\n", encoding="utf-8")
-    (project / "deck_question_queue.md").write_text("# Question Queue\n", encoding="utf-8")
+    (project / "deck_source_digest.md").write_text("# Source Digest\n\n- 已覆盖核心资料和证据来源。\n", encoding="utf-8")
+    (project / "deck_capacity_plan.md").write_text("# Capacity Plan\n\n- 当前资料可支撑 18 页以内。\n", encoding="utf-8")
+    (project / "deck_question_queue.md").write_text("# Question Queue\n\n1. 补充一个可公开数据锚点。\n", encoding="utf-8")
     (project / "deck_claim_map.json").write_text(
         json.dumps(
             {

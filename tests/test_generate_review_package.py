@@ -40,9 +40,9 @@ class GenerateReviewPackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "deck_brief.md").write_text("production_mode: expert\n", encoding="utf-8")
-            (root / "deck_source_digest.md").write_text("# Source Digest\n", encoding="utf-8")
-            (root / "deck_capacity_plan.md").write_text("# Capacity Plan\n", encoding="utf-8")
-            (root / "deck_question_queue.md").write_text("# Question Queue\n", encoding="utf-8")
+            (root / "deck_source_digest.md").write_text("# Source Digest\n\n- 已覆盖核心资料和证据来源。\n", encoding="utf-8")
+            (root / "deck_capacity_plan.md").write_text("# Capacity Plan\n\n- 当前资料可支撑 15 页以内。\n", encoding="utf-8")
+            (root / "deck_question_queue.md").write_text("# Question Queue\n\n1. 补充一个可公开数据锚点。\n", encoding="utf-8")
             (root / "deck_claim_map.json").write_text(
                 json.dumps({"claims": [{"claim_id": "claim_01", "page_no": 1, "claim_text": "内容容量门禁", "role": "hero_problem"}]}, ensure_ascii=False),
                 encoding="utf-8",

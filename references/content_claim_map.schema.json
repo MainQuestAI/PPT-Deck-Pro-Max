@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Content Claim Map",
+  "type": "object",
+  "required": ["claims"],
+  "properties": {
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "claim_text"],
+        "properties": {
+          "claim_id": { "type": "string", "minLength": 1 },
+          "page_no": { "type": ["integer", "string", "null"] },
+          "page_id": { "type": "string" },
+          "source_pages": {
+            "type": "array",
+            "items": { "type": ["integer", "string"] }
+          },
+          "claim_text": { "type": "string", "minLength": 1 },
+          "claim_type": { "type": "string" },
+          "role": { "type": "string" },
+          "beat_hint": { "type": "string" },
+          "evidence": {
+            "type": ["array", "object", "string"],
+            "items": { "type": ["object", "string"] },
+            "additionalProperties": true
+          },
+          "gaps": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "richness_score": { "type": ["integer", "number", "null"], "minimum": 0, "maximum": 5 },
+          "is_hero": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

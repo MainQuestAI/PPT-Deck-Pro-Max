@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Content Capacity Plan",
+  "type": "object",
+  "properties": {
+    "target_pages": { "type": ["integer", "number", "string", "null"] },
+    "planned_pages": { "type": ["integer", "number", "string", "null"] },
+    "requested_pages": { "type": ["integer", "number", "string", "null"] },
+    "recommended_pages": { "type": ["integer", "number", "string", "null"] },
+    "recommended_page_count": { "type": ["integer", "number", "string", "null"] },
+    "max_supported_pages": { "type": ["integer", "number", "string", "null"] },
+    "supported_pages": { "type": ["integer", "number", "string", "null"] },
+    "capacity_pages": { "type": ["integer", "number", "string", "null"] },
+    "recommended_max_pages": { "type": ["integer", "number", "string", "null"] },
+    "page_budget": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "deck": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": true
+}

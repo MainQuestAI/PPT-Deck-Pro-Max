@@ -27,6 +27,19 @@ CONTENT_GOVERNANCE_JSON_ARTIFACTS = [
     "deck_gap_registry.json",
 ]
 
+CONTENT_GOVERNANCE_MARKDOWN_ARTIFACTS = [
+    "deck_source_digest.md",
+    "deck_capacity_plan.md",
+    "deck_question_queue.md",
+]
+
+PLACEHOLDER_SIGNALS = [
+    "待提炼",
+    "待填写",
+    "待登记",
+    "由 expert-interview 生成",
+]
+
 BLOCKING_STATUSES = {
     "blocked",
     "blocking",
@@ -80,6 +93,20 @@ def _as_number(value: Any) -> int | None:
         if nums:
             return int(nums[-1])
     return None
+
+
+def _as_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "y", "1", "on"}:
+            return True
+        if normalized in {"false", "no", "n", "0", "off", ""}:
+            return False
+    return False
 
 
 def _find_number(data: dict, keys: list[str]) -> int | None:
@@ -222,7 +249,7 @@ def normalize_gap_registry(gap_registry: Any) -> list[dict]:
             "desc": _first_text(item, ["desc", "description", "reason"], ""),
             "status": _first_text(item, ["status"], "open"),
             "severity": _first_text(item, ["severity", "priority"], ""),
-            "blocking": bool(item.get("blocking")),
+            "blocking": _as_bool(item.get("blocking")),
         })
     return normalized
 
@@ -230,7 +257,28 @@ def normalize_gap_registry(gap_registry: Any) -> list[dict]:
 def is_blocking_gap(gap: dict) -> bool:
     status = str(gap.get("status", "")).strip().lower()
     severity = str(gap.get("severity", "")).strip().lower()
-    return bool(gap.get("blocking")) or status in BLOCKING_STATUSES or severity in BLOCKING_SEVERITIES
+    return _as_bool(gap.get("blocking")) or status in BLOCKING_STATUSES or severity in BLOCKING_SEVERITIES
+
+
+def markdown_artifact_issue(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return f"markdown_unreadable:{path.name}:{exc}"
+    meaningful_lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip()
+        and not line.strip().startswith("#")
+        and not set(line.strip()) <= {"|", "-", " "}
+    ]
+    if not meaningful_lines:
+        return f"markdown_empty:{path.name}"
+    if any(signal in text for signal in PLACEHOLDER_SIGNALS):
+        return f"markdown_placeholder:{path.name}"
+    return None
 
 
 def attach_registry_gaps(claims: list[dict], registry_gaps: list[dict]) -> list[dict]:
@@ -316,6 +364,12 @@ def summarize_content_governance(project_dir: Path) -> dict:
                 invalid_artifacts[name] = err
         else:
             loaded[name] = data
+    markdown_issues = [
+        issue
+        for name in CONTENT_GOVERNANCE_MARKDOWN_ARTIFACTS
+        for issue in [markdown_artifact_issue(project_dir / name)]
+        if issue
+    ]
 
     claims = normalize_claims(loaded.get("deck_claim_map.json"))
     gaps = normalize_gap_registry(loaded.get("deck_gap_registry.json"))
@@ -325,6 +379,7 @@ def summarize_content_governance(project_dir: Path) -> dict:
     issues: list[str] = []
     issues.extend(f"missing_artifact:{name}" for name in missing_artifacts)
     issues.extend(f"invalid_json:{name}" for name in sorted(invalid_artifacts))
+    issues.extend(markdown_issues)
     if "deck_claim_map.json" in loaded and not claims:
         issues.append("claim_map_empty")
     if "deck_capacity_plan.json" in loaded:

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Content Gap Registry",
+  "type": "object",
+  "properties": {
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gap_id", "gap_type", "status"],
+        "properties": {
+          "gap_id": { "type": "string", "minLength": 1 },
+          "claim_id": { "type": "string" },
+          "gap_type": { "type": "string", "minLength": 1 },
+          "topic": { "type": "string" },
+          "desc": { "type": "string" },
+          "description": { "type": "string" },
+          "reason": { "type": "string" },
+          "status": { "type": "string", "minLength": 1 },
+          "severity": { "type": "string" },
+          "priority": { "type": "string" },
+          "blocking": { "type": ["boolean", "string", "integer"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "blocking_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

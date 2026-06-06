@@ -112,10 +112,13 @@ Before writing narrative pages, create the content governance artifacts:
 4. `deck_gap_registry.json`: open gaps, with `blocking: true`, `status: blocking`, or `severity: critical` for hard blockers
 5. `deck_question_queue.md`: prioritized questions for the user / domain expert
 
+The three JSON artifacts are covered by `scripts/validate_schema.py`.
+
 Gate rule:
 
 - Do not enter page-by-page drafting when `target_pages > max_supported_pages`
 - Do not enter page-by-page drafting while any blocking gap remains open
+- Do not pass this gate with empty placeholder markdown artifacts
 - Quick mode may skip this gate unless the user explicitly asks for content governance
 
 Use:
