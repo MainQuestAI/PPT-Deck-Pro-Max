@@ -18,11 +18,13 @@ class GenerateLayoutManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "deck_page_skeletons.md"
             path.write_text(
-                "# Skeletons\n\n## 第 1 页\n- archetype: hero_cover\n- 预期占比: 0.38\n",
+                "# Skeletons\n\n## 第 1 页\n- archetype: hero_cover\n- dense_archetype: evidence_wall\n- density_level: high\n- info_units: 7\n- split_trigger: 证据超过 9 个\n- visual_protagonist: 中央证据墙\n- 预期占比: 0.38\n",
                 encoding="utf-8",
             )
             parsed = parse_skeletons(path)
             self.assertEqual(parsed[1]["archetype"], "hero_cover")
+            self.assertEqual(parsed[1]["dense_archetype"], "evidence_wall")
+            self.assertEqual(parsed[1]["density_level"], "high")
             self.assertEqual(parsed[1]["预期占比"], "0.38")
 
     def test_build_manifest_generates_page_entries_from_state(self) -> None:
@@ -32,9 +34,27 @@ class GenerateLayoutManifestTests(unittest.TestCase):
                 {"page_id": "slide_02", "role": "hero_cta"},
             ]
         }
-        manifest = build_manifest(state, {1: {"archetype": "hero_cover", "预期占比": "0.38"}}, None)
+        manifest = build_manifest(
+            state,
+            {
+                1: {
+                    "archetype": "hero_cover",
+                    "dense_archetype": "evidence_wall",
+                    "density_level": "high",
+                    "info_units": "7",
+                    "split_trigger": "证据超过 9 个",
+                    "visual_protagonist": "中央证据墙",
+                    "预期占比": "0.38",
+                }
+            },
+            None,
+        )
         self.assertEqual(len(manifest["pages"]), 2)
         self.assertEqual(manifest["pages"][0]["archetype"], "hero_cover")
+        self.assertEqual(manifest["pages"][0]["dense_archetype"], "evidence_wall")
+        self.assertEqual(manifest["pages"][0]["density_level"], "high")
+        self.assertEqual(manifest["pages"][0]["info_units"], 7)
+        self.assertEqual(manifest["pages"][0]["visual_protagonist"], "中央证据墙")
         self.assertAlmostEqual(manifest["pages"][0]["occupancy"]["ratio"], 0.38)
         self.assertEqual(manifest["pages"][1]["archetype"], "cta_board")
 

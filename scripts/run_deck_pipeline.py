@@ -239,6 +239,8 @@ def cmd_validate(args: argparse.Namespace) -> None:
         cmd.append("--expert-mode")
     if getattr(args, "content_governance", False):
         cmd.append("--content-governance")
+    if getattr(args, "longform_governance", False):
+        cmd.append("--longform-governance")
     run_script("validate_deck_outputs.py", *cmd)
 
 
@@ -296,6 +298,19 @@ def cmd_handoff(args: argparse.Namespace) -> None:
         run_script("generate_review_package.py", "--project-dir", str(project_dir), "--output", str(review_package))
         cmd.extend(["--context-path", str(review_package)])
     run_script("generate_role_prompt.py", *cmd)
+
+
+def cmd_section_handoff(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = [
+        "--project-dir", str(project_dir),
+        "--section-id", args.section_id,
+    ]
+    if args.output:
+        cmd.extend(["--output", str(Path(args.output).expanduser().resolve())])
+    if args.output_json:
+        cmd.extend(["--output-json", str(Path(args.output_json).expanduser().resolve())])
+    run_script("generate_section_handoff.py", *cmd)
 
 
 def cmd_review_package(args: argparse.Namespace) -> None:
@@ -766,6 +781,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--formal", action="store_true", help="Alias for --require-review: full formal review validation")
     p_validate.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
     p_validate.add_argument("--content-governance", action="store_true", help="Also check source digest, claim map, capacity plan, and gap gate")
+    p_validate.add_argument("--longform-governance", action="store_true", help="Also check budget tiers, section packages, and dense archetype coverage")
     p_validate.add_argument("--production-sub-mode", choices=PRODUCTION_SUB_MODES, help="Override inferred production sub-mode")
     p_validate.set_defaults(func=cmd_validate)
 
@@ -803,6 +819,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_handoff.add_argument("--batch-id")
     p_handoff.add_argument("--output")
     p_handoff.set_defaults(func=cmd_handoff)
+
+    p_section_handoff = sub.add_parser("section-handoff", help="Generate a focused handoff package for one longform section")
+    p_section_handoff.add_argument("--project-dir", required=True)
+    p_section_handoff.add_argument("--section-id", required=True)
+    p_section_handoff.add_argument("--output")
+    p_section_handoff.add_argument("--output-json")
+    p_section_handoff.set_defaults(func=cmd_section_handoff)
 
     p_review_pkg = sub.add_parser("review-package", help="Generate a multimodal review package manifest")
     p_review_pkg.add_argument("--project-dir", required=True)

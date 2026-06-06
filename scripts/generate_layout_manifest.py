@@ -40,6 +40,21 @@ def parse_skeletons(path: Path | None) -> dict[int, dict]:
     return parsed
 
 
+def skeleton_value(skeleton: dict, *keys: str, default: str = "") -> str:
+    for key in keys:
+        value = skeleton.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return default
+
+
+def parse_info_units(value: str) -> int | None:
+    if not value:
+        return None
+    match = re.search(r"\d+", value)
+    return int(match.group(0)) if match else None
+
+
 def default_page_manifest(page_id: str, role: str, skeleton: dict | None) -> dict:
     skeleton = skeleton or {}
     archetype = skeleton.get("archetype") or ROLE_TO_ARCHETYPE.get(role, "content_board")
@@ -52,6 +67,11 @@ def default_page_manifest(page_id: str, role: str, skeleton: dict | None) -> dic
         "page_id": page_id,
         "role": role,
         "archetype": archetype,
+        "dense_archetype": skeleton_value(skeleton, "dense_archetype", "高密度原型"),
+        "density_level": skeleton_value(skeleton, "density_level", "密度级别"),
+        "info_units": parse_info_units(skeleton_value(skeleton, "info_units", "信息单元数")),
+        "split_trigger": skeleton_value(skeleton, "split_trigger", "拆页条件"),
+        "visual_protagonist": skeleton_value(skeleton, "visual_protagonist", "视觉主角"),
         "main_group": {
             "center_x": 0.50,
             "expected_center_x": 0.50,
@@ -71,6 +91,11 @@ def default_page_manifest(page_id: str, role: str, skeleton: dict | None) -> dic
             "对齐轴": skeleton.get("对齐轴", ""),
             "组件组关系": skeleton.get("组件组关系", ""),
             "预期占比": skeleton.get("预期占比", ""),
+            "density_level": skeleton_value(skeleton, "density_level", "密度级别"),
+            "info_units": skeleton_value(skeleton, "info_units", "信息单元数"),
+            "split_trigger": skeleton_value(skeleton, "split_trigger", "拆页条件"),
+            "visual_protagonist": skeleton_value(skeleton, "visual_protagonist", "视觉主角"),
+            "dense_archetype": skeleton_value(skeleton, "dense_archetype", "高密度原型"),
         },
     }
 
@@ -92,8 +117,9 @@ def build_manifest(state: dict, skeletons: dict[int, dict], existing: dict | Non
             for key in ("main_group", "occupancy", "alignment_groups", "connectors", "cards"):
                 if current.get(key):
                     merged[key] = current[key]
-            if current.get("archetype"):
-                merged["archetype"] = current["archetype"]
+            for key in ("archetype", "dense_archetype", "density_level", "info_units", "split_trigger", "visual_protagonist"):
+                if current.get(key):
+                    merged[key] = current[key]
         pages.append(merged)
     return {"pages": pages}
 

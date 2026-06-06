@@ -128,6 +128,34 @@ python3 scripts/run_deck_pipeline.py validate \
   --project-dir <project-dir> --output-mode pptx+html --expert-mode --content-governance
 ```
 
+### Step 1.3: Longform Governance Gate (expert + standard_deck + longform)
+
+For long decks, extend Step 1.2 before page-by-page drafting.
+
+Required additions:
+
+1. `deck_capacity_plan.json` must include four page-budget tiers: `conservative`, `recommended`, `extended`, `appendix_heavy`
+2. Each tier must name page count and page mix: core, proof, extension, appendix
+3. If `target_pages` exceeds `recommended`, the plan must state required inputs or appendix-heavy strategy
+4. `deck_section_packages.md` and `section_packages.json` must define section objective, page quota, claim ownership, allowed evidence, forbidden topics, input / output transitions, and suggested archetype
+5. High-density sections must reference `references/dense_page_archetypes.md`
+
+Use:
+
+```bash
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir <project-dir> --output-mode pptx+html --expert-mode --longform-governance
+```
+
+When assigning a section to Codex / Claude Code / OpenCode, generate a minimal section package:
+
+```bash
+python3 scripts/run_deck_pipeline.py section-handoff \
+  --project-dir <project-dir> --section-id section_01
+```
+
+The section handoff must contain only the current section's objective, claim / gap subset, page quota, allowed evidence, forbidden topics, transition requirements, and dense archetype. The main thread owns global narrative, deduplication, and final merge.
+
 ### Step 1.5: Expert Interview (expert mode only)
 
 If `production_mode: expert` (default), run a structured interview with the user to enrich the deck's content with implicit expert knowledge.
@@ -363,10 +391,13 @@ Do not let the build model freehand page geometry when the page has already been
 2. page skeleton
 3. geometry rules
 4. component family
+5. dense page archetype for high-density pages
 
 If the build path supports it, also emit `layout_manifest.json` or page-level layout metadata so later QA can validate geometry instead of only validating copy density.
 
 If the build path does not yet emit geometry metadata natively, generate or refresh the manifest through `scripts/generate_layout_manifest.py` before formal QA.
+
+High-density pages must carry these fields in `deck_page_skeletons.md` and `layout_manifest.json`: `density_level`, `info_units`, `split_trigger`, `visual_protagonist`, `dense_archetype`.
 
 ### Step 8: QA and Review Loop
 
@@ -396,7 +427,7 @@ Use:
 - `scripts/generate_commercial_scorecard.py`
 - `scripts/update_layout_manifest.py`
 
-For expert or longform decks, run validate with `--content-governance` before formal delivery.
+For expert decks, run validate with `--content-governance` before formal delivery. For longform expert decks, run `--longform-governance` as the stricter gate.
 
 If the deck is moving from build stage into formal review, generate `review_package.json` first and require structured review findings before marking the deck as ready.
 
@@ -589,7 +620,7 @@ A deck is deliverable only when:
 1. Required planning artifacts are current: brief, vibe, narrative arc, hero pages, layout, clean pages, visual composition, asset plan, visual system, component tokens, theme tokens, geometry rules, page skeletons, and `slide_state.json`
 2. The requested final artifact exists: `.pptx`, HTML deck, or both
 3. Formal QA artifacts exist: `montage.png`, `deck_review_report.md`, `review_package.json`, `deck_review_findings.json`, `commercial_scorecard.json`, `review_rollback_plan.json`, and `review_rollback_plan.md`
-4. `validate_deck_outputs.py` passes for the requested output mode; expert / longform decks also pass `--content-governance`
+4. `validate_deck_outputs.py` passes for the requested output mode; expert decks also pass `--content-governance`; longform expert decks also pass `--longform-governance`
 5. Formal review blockers are either resolved or explicitly accepted by the user with the remaining risk recorded
 
 When the active production sub-mode is `formal_bid_image_led`, Definition of Done also requires:

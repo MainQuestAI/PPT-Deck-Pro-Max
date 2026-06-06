@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Section Packages",
+  "type": "object",
+  "required": ["sections"],
+  "properties": {
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "objective"],
+        "properties": {
+          "section_id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string" },
+          "objective": { "type": "string", "minLength": 1 },
+          "page_count": { "type": ["integer", "number", "string", "null"] },
+          "page_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "claim_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "allowed_evidence": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "allowed_topics": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "forbidden_topics": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "input_transition": { "type": "string" },
+          "output_transition": { "type": "string" },
+          "density_level": { "type": "string" },
+          "suggested_archetypes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "dense_archetype": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

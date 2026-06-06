@@ -122,6 +122,8 @@
 - 缩略总览
 - `deck_clean_pages.md`
 - `slide_state.json`
+- `section_packages.json`（longform 时必看）
+- `deck_section_packages.md`（longform 时必看）
 - `review_findings.schema.json`
 - `commercial_scorecard.schema.json`
 
@@ -134,6 +136,7 @@
 - 必须同时输出 `commercial_scorecard.json`
 - 每条必须包含 `page_id`、`severity`、`type`、`reason`、`suggested_fix`、`source_image`
 - 优先结合 `montage.png`、页级 PNG 或截图做多模态评审，再回看文字与状态文件
+- 如果 `review_package.json.longform_governance_summary.enabled=true`，先检查页数预算、章节重复风险、章节包完成度和 dense archetype 覆盖
 - 重点检查是否有普通 AI 味、视觉层级是否清晰、关键页是否失焦、是否偏离既定视觉系统
 - 检查叙事弧线是否连贯：beat 序列是否合理、过渡逻辑是否成立、有无节奏单调
 - 检查 hero pages 是否有演讲备注

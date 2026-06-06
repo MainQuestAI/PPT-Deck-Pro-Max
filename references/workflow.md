@@ -13,28 +13,30 @@
 5. `deck_capacity_plan.json`
 6. `deck_gap_registry.json`
 7. `deck_question_queue.md`
-8. `deck_vibe_brief.md`
-9. `deck_narrative_arc.md`
-10. `deck_hero_pages.md`
-11. `deck_layout_v1.md`
-12. `deck_clean_pages.md`
-13. `deck_visual_composition.md`
-14. `deck_asset_plan.md`
-15. `asset_manifest.json`
-16. `deck_visual_system.md`
-17. `deck_component_tokens.md`
-18. `deck_theme_tokens.json`
-19. `deck_geometry_rules.md`
-20. `deck_page_skeletons.md`
-21. `slide_state.json`
-22. 成品 deck
-23. `deck_review_report.md`
-24. `layout_manifest.json`（如构建路径支持）
-25. `review_package.json`
-26. `deck_review_findings.json`
-27. `commercial_scorecard.json`
-28. `review_rollback_plan.json`
-29. `review_rollback_plan.md`
+8. `deck_section_packages.md`（longform）
+9. `section_packages.json`（longform）
+10. `deck_vibe_brief.md`
+11. `deck_narrative_arc.md`
+12. `deck_hero_pages.md`
+13. `deck_layout_v1.md`
+14. `deck_clean_pages.md`
+15. `deck_visual_composition.md`
+16. `deck_asset_plan.md`
+17. `asset_manifest.json`
+18. `deck_visual_system.md`
+19. `deck_component_tokens.md`
+20. `deck_theme_tokens.json`
+21. `deck_geometry_rules.md`
+22. `deck_page_skeletons.md`
+23. `slide_state.json`
+24. 成品 deck
+25. `deck_review_report.md`
+26. `layout_manifest.json`（如构建路径支持）
+27. `review_package.json`
+28. `deck_review_findings.json`
+29. `commercial_scorecard.json`
+30. `review_rollback_plan.json`
+31. `review_rollback_plan.md`
 
 ## 生产子模式
 
@@ -67,6 +69,8 @@ python3 scripts/run_deck_pipeline.py route-review --project-dir <project-dir> --
 python3 scripts/run_deck_pipeline.py rework-handoff --project-dir <project-dir> --role visual
 python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html
 python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html --expert-mode --content-governance
+python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html --expert-mode --longform-governance
+python3 scripts/run_deck_pipeline.py section-handoff --project-dir <project-dir> --section-id section_01
 python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html --production-sub-mode formal_bid_image_led
 python3 scripts/run_deck_pipeline.py assemble-formal-images --project-dir <project-dir>
 ```
@@ -101,6 +105,7 @@ python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role 
 python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role visual
 python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role build --page-ids slide_05
 python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role review
+python3 scripts/run_deck_pipeline.py section-handoff --project-dir <project-dir> --section-id section_01
 ```
 
 ### 生成几何 manifest
@@ -170,6 +175,41 @@ python3 scripts/run_deck_pipeline.py validate \
 ```
 
 Quick mode 默认可跳过该门禁，除非用户主动要求内容治理。
+
+### Gate 1.7：长篇治理门禁（longform）
+
+适用于 expert + standard_deck + longform。formal_bid_image_led 暂时不强制接入该主链路。
+
+必须回答：
+
+- 四档页数预算分别能做多少页：conservative、recommended、extended、appendix_heavy
+- 超过 recommended 后，需要补充哪些信息或转入哪些附录型内容
+- 每个章节包的目标、页数配额、claim 归属和证据复用边界
+- 哪些话题禁止在其他章节重复
+- 每个高密度章节应使用哪个 dense archetype
+
+必须产出：
+
+- `deck_section_packages.md`
+- `section_packages.json`
+- `references/dense_page_archetypes.md`
+
+长篇 deck 在进入分章节逐页稿前必须通过：
+
+```bash
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir <project-dir> --output-mode pptx+html \
+  --expert-mode --longform-governance
+```
+
+章节稿建议使用独立 handoff：
+
+```bash
+python3 scripts/run_deck_pipeline.py section-handoff \
+  --project-dir <project-dir> --section-id section_01
+```
+
+每个章节交接包只包含该章节目标、页数配额、claim / gap 子集、允许证据、禁止重复话题、过渡要求和建议原型。主线程负责整本叙事、跨章节去重和最终合并。
 
 ### Gate 1.5：Expert Interview 完成（expert mode only）
 

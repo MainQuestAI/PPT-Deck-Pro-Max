@@ -2,7 +2,7 @@
 
 ## 目标
 
-让 Deck 的稳定性不再依赖“设计感觉”，而是依赖一组可复用的几何规则。
+让 Deck 的稳定性依赖一组可复用的几何规则，减少对“设计感觉”的依赖。
 
 这份规则主要解决四类问题：
 
@@ -89,6 +89,13 @@
 5. 对齐轴
 6. 组件组关系
 7. 预期占比
+8. `density_level`
+9. `info_units`
+10. `split_trigger`
+11. `visual_protagonist`
+12. `dense_archetype`（高密度页必填）
+
+高密度页还必须引用 `references/dense_page_archetypes.md` 中的原型。原型给出最大信息承载量和拆页条件，Build AI 不能把超载内容强行塞进单页。
 
 ## 需要进入 QA 的几何指标
 

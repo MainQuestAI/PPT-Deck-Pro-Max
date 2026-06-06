@@ -66,6 +66,18 @@
 
 content_thin / expert_data_ignored / redaction_incomplete 对应 finding。
 
+## 长篇治理检查（longform governance）
+
+1. `deck_capacity_plan.json.budget_tiers` 是否包含 conservative、recommended、extended、appendix_heavy 四档
+2. 目标页数超过 recommended 时，是否声明补充资料或 appendix-heavy 策略
+3. `section_packages.json` 是否覆盖所有正文页，且没有重复页面归属
+4. 每个章节包是否包含章节目标、页数配额、允许复用证据、禁止重复话题、输入过渡、输出过渡
+5. 跨章节 forbidden_topics 是否与其他章节 allowed_topics 冲突
+6. 高密度章节是否绑定 `dense_archetype`，且该原型存在于 `references/dense_page_archetypes.md`
+7. `deck_page_skeletons.md` / `layout_manifest.json` 是否写入 `density_level`、`info_units`、`split_trigger`、`visual_protagonist`
+
+如果上述问题出现，应优先报 `content_thin`、`narrative_gap`、`visual_flat` 或 `geometry_broken` 的具体原因，并要求回到 section package 或 page skeleton，而不能直接在成品页上局部补字。
+
 自动 QA / 报告要求：
 
 - `deck_review_report.md` 必须显式输出 `Expert Mode Gate` 区块
@@ -126,4 +138,4 @@ content_thin / expert_data_ignored / redaction_incomplete 对应 finding。
 5. 同一组卡片上下边界不齐
 6. 表格主体没有形成稳定的左中右分区
 
-如果上述问题出现超过 2 个，说明不是“微调”，而是该页 archetype 或 skeleton 设计错误。
+如果上述问题出现超过 2 个，说明该页 archetype 或 skeleton 设计需要回退重做，不能只靠局部微调解决。

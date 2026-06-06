@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from content_governance import validate_content_governance
+from content_governance import validate_content_governance, validate_longform_governance
 
 
 CORE_ARTIFACTS = [
@@ -102,6 +102,7 @@ def main() -> None:
     parser.add_argument("--require-review", action="store_true", help="Also check review artifacts")
     parser.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
     parser.add_argument("--content-governance", action="store_true", help="Also check source digest, claim map, capacity plan, and gap gate")
+    parser.add_argument("--longform-governance", action="store_true", help="Also check budget tiers, section packages, and dense archetype coverage")
     parser.add_argument("--production-sub-mode", choices=["standard_deck", "formal_bid_image_led"], help="Override inferred production sub-mode")
     args = parser.parse_args()
 
@@ -123,7 +124,10 @@ def main() -> None:
     if production_sub_mode == "formal_bid_image_led":
         missing.extend(name for name in FORMAL_BID_IMAGE_LED_ARTIFACTS if not (project_dir / name).exists())
 
-    if args.content_governance:
+    if args.longform_governance:
+        governance_errors, _ = validate_longform_governance(project_dir)
+        missing.extend(f"longform_governance:{err}" for err in governance_errors)
+    elif args.content_governance:
         governance_errors, _ = validate_content_governance(project_dir)
         missing.extend(f"content_governance:{err}" for err in governance_errors)
 

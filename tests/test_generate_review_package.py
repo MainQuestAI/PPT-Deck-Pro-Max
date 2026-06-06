@@ -71,6 +71,8 @@ class GenerateReviewPackageTests(unittest.TestCase):
             self.assertTrue(summary["enabled"])
             self.assertTrue(summary["review_ready"])
             self.assertEqual(summary["capacity"]["max_supported_pages"], 15)
+            self.assertIn("longform_governance_summary", payload)
+            self.assertFalse(payload["longform_governance_summary"]["enabled"])
 
     def test_summarize_expert_mode_reports_ready_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -139,6 +141,7 @@ class GenerateReviewPackageTests(unittest.TestCase):
             root = Path(tmp)
             prompt = build_review_prompt(root)
             self.assertIn("content_governance_summary", prompt)
+            self.assertIn("longform_governance_summary", prompt)
             self.assertIn("expert_mode_summary", prompt)
             self.assertIn("asset_build_summary", prompt)
             self.assertIn("deck_expert_context.md", prompt)

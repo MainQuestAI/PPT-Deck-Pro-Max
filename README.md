@@ -65,6 +65,15 @@ python3 scripts/run_deck_pipeline.py validate \
   --project-dir ./my-deck --output-mode pptx+html \
   --expert-mode --content-governance
 
+# Longform governance gate: page budget tiers + section packages + dense archetypes
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir ./my-deck --output-mode pptx+html \
+  --expert-mode --longform-governance
+
+# Generate one focused section handoff package
+python3 scripts/run_deck_pipeline.py section-handoff \
+  --project-dir ./my-deck --section-id section_01
+
 # Expert Mode: finalize interview after redaction review
 python3 scripts/run_deck_pipeline.py finalize-interview \
   --project-dir ./my-deck
@@ -136,6 +145,7 @@ Step 1     Lock the Brief                    → deck_brief.md          🔔 Use
 Step 1.2 ★ Source Digest                     → deck_source_digest.md
 Step 1.3 ★ Capacity Plan                     → deck_capacity_plan.md / .json
 Step 1.4 ★ Gap Gate                          → deck_gap_registry.json / deck_question_queue.md
+Step 1.4b★ Longform Governance               → section_packages.json / dense archetypes
 Step 1.5 ★ Expert Interview (expert mode)    → interview_preparation.json
 Step 1.6 ★ Redaction Review (expert mode)    → deck_expert_context.md 🔔 User confirms
 Step 2     Lock the Vibe                     → deck_vibe_brief.md
@@ -157,6 +167,13 @@ For expert / longform decks, content governance must pass before page-by-page dr
 - `target_pages <= max_supported_pages`
 - zero blocking gaps in `deck_gap_registry.json`
 - `deck_question_queue.md` exists and reflects the highest-priority gaps
+
+For longform expert decks, the stricter gate must also pass:
+
+- `deck_capacity_plan.json.budget_tiers` includes conservative、recommended、extended、appendix_heavy
+- `section_packages.json` assigns all body pages to sections
+- high-density pages use known archetypes from `references/dense_page_archetypes.md`
+- section drafting uses `section-handoff --section-id <id>` so each worker receives only the current section context
 
 ## Visual Composition Layer (v1.0+)
 

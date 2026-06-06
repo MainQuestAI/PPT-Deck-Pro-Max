@@ -16,11 +16,48 @@
       "type": "object",
       "additionalProperties": true
     },
+    "budget_tiers": {
+      "type": "object",
+      "properties": {
+        "conservative": { "$ref": "#/$defs/budgetTier" },
+        "recommended": { "$ref": "#/$defs/budgetTier" },
+        "extended": { "$ref": "#/$defs/budgetTier" },
+        "appendix_heavy": { "$ref": "#/$defs/budgetTier" }
+      },
+      "additionalProperties": { "$ref": "#/$defs/budgetTier" }
+    },
     "deck": {
       "type": "object",
       "additionalProperties": true
     },
     "notes": { "type": "string" }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "$defs": {
+    "budgetTier": {
+      "type": "object",
+      "properties": {
+        "pages": { "type": ["integer", "number", "string", "null"] },
+        "page_count": { "type": ["integer", "number", "string", "null"] },
+        "total_pages": { "type": ["integer", "number", "string", "null"] },
+        "core_pages": { "type": ["integer", "number", "string", "null"] },
+        "proof_pages": { "type": ["integer", "number", "string", "null"] },
+        "extension_pages": { "type": ["integer", "number", "string", "null"] },
+        "appendix_pages": { "type": ["integer", "number", "string", "null"] },
+        "required_inputs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "needs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "supplemental_info": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
 }

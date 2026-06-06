@@ -33,11 +33,28 @@ CONTENT_GOVERNANCE_MARKDOWN_ARTIFACTS = [
     "deck_question_queue.md",
 ]
 
+LONGFORM_GOVERNANCE_ARTIFACTS = [
+    "deck_section_packages.md",
+    "section_packages.json",
+]
+
+BUDGET_TIER_ORDER = ["conservative", "recommended", "extended", "appendix_heavy"]
+
+KNOWN_DENSE_ARCHETYPES = {
+    "evidence_wall",
+    "decision_matrix",
+    "three_layer_diagnostic",
+    "roadmap_risk_sidebar",
+    "case_breakdown",
+    "appendix_reference",
+}
+
 PLACEHOLDER_SIGNALS = [
     "待提炼",
     "待填写",
     "待登记",
     "由 expert-interview 生成",
+    "待拆包",
 ]
 
 BLOCKING_STATUSES = {
@@ -125,6 +142,37 @@ def _find_number(data: dict, keys: list[str]) -> int | None:
         if number is not None:
             return number
     return None
+
+
+def _as_list(value: Any) -> list:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    if isinstance(value, str):
+        return [item.strip() for item in re.split(r"[,，、\n]+", value) if item.strip()]
+    return [value]
+
+
+def _as_text_set(value: Any) -> set[str]:
+    return {str(item).strip() for item in _as_list(value) if str(item).strip()}
+
+
+def _page_count_from_section(section: dict) -> int:
+    for key in ("page_count", "pages", "page_quota", "target_pages"):
+        number = _as_number(section.get(key))
+        if number is not None:
+            return number
+    page_ids = _as_list(section.get("page_ids"))
+    if page_ids:
+        return len(page_ids)
+    start = _as_number(section.get("page_start"))
+    end = _as_number(section.get("page_end"))
+    if start is not None and end is not None and end >= start:
+        return end - start + 1
+    return 0
 
 
 def _join_evidence(item: dict) -> str:
@@ -341,6 +389,84 @@ def capacity_summary(capacity_plan: Any, project_dir: Path | None = None) -> dic
         "recommended_pages": recommended_pages,
         "max_supported_pages": max_supported_pages,
         "over_capacity": over_capacity,
+        "budget_summary": budget_summary(data, target_pages),
+    }
+
+
+def _budget_tier_entries(data: dict) -> dict[str, dict]:
+    raw = data.get("budget_tiers") or data.get("page_budget_tiers") or data.get("tiers")
+    if isinstance(raw, dict):
+        return {str(key): value for key, value in raw.items() if isinstance(value, dict)}
+    if isinstance(raw, list):
+        entries: dict[str, dict] = {}
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            tier = item.get("tier") or item.get("name") or item.get("id")
+            if tier:
+                entries[str(tier)] = item
+        return entries
+    return {}
+
+
+def _tier_page_count(tier: dict) -> int | None:
+    return _find_number(tier, ["pages", "page_count", "total_pages", "target_pages", "max_pages"])
+
+
+def _tier_has_extension_plan(tier: dict) -> bool:
+    fields = [
+        "required_inputs",
+        "needs",
+        "supplemental_info",
+        "required_supplements",
+        "appendix_sources",
+        "assumptions",
+    ]
+    return any(_as_list(tier.get(field)) for field in fields)
+
+
+def budget_summary(capacity_plan: Any, target_pages: int | None = None) -> dict:
+    data = capacity_plan if isinstance(capacity_plan, dict) else {}
+    entries = _budget_tier_entries(data)
+    tiers: dict[str, dict] = {}
+    for tier_name in BUDGET_TIER_ORDER:
+        tier = entries.get(tier_name, {})
+        if not isinstance(tier, dict):
+            tier = {}
+        tiers[tier_name] = {
+            "pages": _tier_page_count(tier),
+            "core_pages": _as_number(tier.get("core_pages")),
+            "proof_pages": _as_number(tier.get("proof_pages")),
+            "extension_pages": _as_number(tier.get("extension_pages")),
+            "appendix_pages": _as_number(tier.get("appendix_pages")),
+            "required_inputs": _as_list(tier.get("required_inputs") or tier.get("needs") or tier.get("supplemental_info")),
+            "has_extension_plan": _tier_has_extension_plan(tier),
+        }
+    missing_tiers = [name for name in BUDGET_TIER_ORDER if name not in entries]
+    recommended_pages = tiers["recommended"]["pages"] or _find_number(data, ["recommended_pages", "recommended_page_count"])
+    max_tier_pages = max((tier["pages"] or 0 for tier in tiers.values()), default=0) or None
+    target_over_recommended = (
+        target_pages is not None
+        and recommended_pages is not None
+        and target_pages > recommended_pages
+    )
+    target_exceeds_all_tiers = (
+        target_pages is not None
+        and max_tier_pages is not None
+        and target_pages > max_tier_pages
+    )
+    has_extension_strategy = (
+        tiers["extended"]["has_extension_plan"]
+        or tiers["appendix_heavy"]["has_extension_plan"]
+        or (tiers["appendix_heavy"]["appendix_pages"] or 0) > 0
+    )
+    return {
+        "tiers": tiers,
+        "missing_tiers": missing_tiers,
+        "target_over_recommended": target_over_recommended,
+        "target_exceeds_all_tiers": target_exceeds_all_tiers,
+        "has_extension_strategy": has_extension_strategy,
+        "max_tier_pages": max_tier_pages,
     }
 
 
@@ -429,3 +555,223 @@ def validate_content_governance(project_dir: Path) -> tuple[list[str], dict]:
     summary = summarize_content_governance(project_dir)
     errors = list(summary.get("issues", []))
     return errors, summary
+
+
+def load_section_packages(project_dir: Path) -> tuple[dict, str | None]:
+    data, err = read_json_file(project_dir / "section_packages.json")
+    if err:
+        return {}, err
+    return data if isinstance(data, dict) else {}, None
+
+
+def normalize_sections(section_packages: Any) -> list[dict]:
+    if isinstance(section_packages, list):
+        raw_sections = section_packages
+    elif isinstance(section_packages, dict):
+        raw_sections = section_packages.get("sections", [])
+    else:
+        raw_sections = []
+    sections: list[dict] = []
+    for idx, section in enumerate(raw_sections, 1):
+        if not isinstance(section, dict):
+            continue
+        section_id = _first_text(section, ["section_id", "id"], f"section_{idx:02d}")
+        page_ids = [str(item) for item in _as_list(section.get("page_ids"))]
+        if not page_ids:
+            start = _as_number(section.get("page_start"))
+            end = _as_number(section.get("page_end"))
+            if start is not None and end is not None and end >= start:
+                page_ids = [f"slide_{page_no:02d}" for page_no in range(start, end + 1)]
+        suggested = _as_list(
+            section.get("suggested_archetypes")
+            or section.get("dense_archetypes")
+            or section.get("suggested_dense_archetypes")
+        )
+        sections.append({
+            "section_id": section_id,
+            "title": _first_text(section, ["title", "section_title"], section_id),
+            "objective": _first_text(section, ["objective", "goal", "section_goal"], ""),
+            "page_count": _page_count_from_section(section),
+            "page_ids": page_ids,
+            "claim_ids": [str(item) for item in _as_list(section.get("claim_ids"))],
+            "allowed_evidence": [str(item) for item in _as_list(section.get("allowed_evidence"))],
+            "allowed_topics": [str(item) for item in _as_list(section.get("allowed_topics"))],
+            "forbidden_topics": [str(item) for item in _as_list(section.get("forbidden_topics"))],
+            "input_transition": _first_text(section, ["input_transition", "from_previous"], ""),
+            "output_transition": _first_text(section, ["output_transition", "to_next"], ""),
+            "density_level": _first_text(section, ["density_level", "density"], ""),
+            "suggested_archetypes": [str(item) for item in suggested],
+            "dense_archetype": _first_text(section, ["dense_archetype"], ""),
+            "raw": section,
+        })
+    return sections
+
+
+def section_package_summary(project_dir: Path, capacity: dict) -> dict:
+    payload, err = load_section_packages(project_dir)
+    sections = normalize_sections(payload)
+    issues: list[str] = []
+    if err:
+        issues.append(f"invalid_section_packages:{err}")
+    if not sections:
+        issues.append("section_packages_empty")
+
+    required_fields = ["objective", "input_transition", "output_transition"]
+    for section in sections:
+        for field in required_fields:
+            if not section.get(field):
+                issues.append(f"section_missing_{field}:{section['section_id']}")
+        if section["page_count"] <= 0:
+            issues.append(f"section_missing_page_count:{section['section_id']}")
+        if not section["page_ids"]:
+            issues.append(f"section_missing_page_ids:{section['section_id']}")
+        if not section["suggested_archetypes"] and not section["dense_archetype"]:
+            issues.append(f"section_missing_archetype:{section['section_id']}")
+
+    target_pages = capacity.get("target_pages")
+    total_pages = sum(section["page_count"] for section in sections)
+    if target_pages is not None and total_pages and total_pages != target_pages:
+        issues.append(f"section_page_total_mismatch:{total_pages}!={target_pages}")
+
+    page_owner: dict[str, str] = {}
+    duplicate_pages: list[str] = []
+    for section in sections:
+        for page_id in section["page_ids"]:
+            if page_id in page_owner and page_owner[page_id] != section["section_id"]:
+                duplicate_pages.append(page_id)
+            page_owner[page_id] = section["section_id"]
+    if duplicate_pages:
+        issues.append("duplicate_page_assignment:" + ",".join(sorted(set(duplicate_pages))[:12]))
+
+    state_data, _ = read_json_file(project_dir / "slide_state.json")
+    state_pages = []
+    if isinstance(state_data, dict):
+        state_pages = [
+            str(page.get("page_id"))
+            for page in state_data.get("pages", [])
+            if isinstance(page, dict) and page.get("page_id")
+        ]
+    if state_pages:
+        unassigned = sorted(set(state_pages) - set(page_owner))
+        unknown = sorted(set(page_owner) - set(state_pages))
+        if unassigned:
+            issues.append("unassigned_pages:" + ",".join(unassigned[:12]))
+        if unknown:
+            issues.append("unknown_page_ids:" + ",".join(unknown[:12]))
+
+    claim_owner: dict[str, str] = {}
+    duplicate_claims: list[str] = []
+    for section in sections:
+        for claim_id in section["claim_ids"]:
+            if claim_id in claim_owner and claim_owner[claim_id] != section["section_id"]:
+                duplicate_claims.append(claim_id)
+            claim_owner[claim_id] = section["section_id"]
+    if duplicate_claims:
+        issues.append("duplicate_claim_assignment:" + ",".join(sorted(set(duplicate_claims))[:8]))
+
+    forbidden_by_section = {section["section_id"]: _as_text_set(section["forbidden_topics"]) for section in sections}
+    allowed_by_section = {section["section_id"]: _as_text_set(section["allowed_topics"]) for section in sections}
+    conflicts: list[str] = []
+    for section_id, forbidden in forbidden_by_section.items():
+        for other_id, allowed in allowed_by_section.items():
+            if section_id == other_id:
+                continue
+            overlap = sorted(forbidden & allowed)
+            if overlap:
+                conflicts.append(f"{section_id}->{other_id}:{','.join(overlap[:4])}")
+    if conflicts:
+        issues.append("forbidden_topic_conflict:" + ";".join(conflicts[:4]))
+
+    dense_sections = [
+        section for section in sections
+        if section["density_level"].lower() in {"high", "dense", "高", "高密度"}
+        or section["dense_archetype"]
+    ]
+    unknown_dense: list[str] = []
+    missing_dense: list[str] = []
+    for section in dense_sections:
+        dense_id = section["dense_archetype"] or next((a for a in section["suggested_archetypes"] if a in KNOWN_DENSE_ARCHETYPES), "")
+        if not dense_id:
+            missing_dense.append(section["section_id"])
+        elif dense_id not in KNOWN_DENSE_ARCHETYPES:
+            unknown_dense.append(f"{section['section_id']}:{dense_id}")
+    if missing_dense:
+        issues.append("dense_archetype_missing:" + ",".join(missing_dense[:8]))
+    if unknown_dense:
+        issues.append("dense_archetype_unknown:" + ",".join(unknown_dense[:8]))
+
+    return {
+        "sections": sections,
+        "total_sections": len(sections),
+        "total_pages": total_pages,
+        "target_pages": target_pages,
+        "dense_sections": len(dense_sections),
+        "known_dense_archetypes": sorted(KNOWN_DENSE_ARCHETYPES),
+        "issues": issues,
+    }
+
+
+def summarize_longform_governance(project_dir: Path) -> dict:
+    content_errors, content_summary = validate_content_governance(project_dir)
+    capacity = content_summary.get("capacity", {})
+    budget = capacity.get("budget_summary", {})
+    section_summary = section_package_summary(project_dir, capacity)
+    markdown_issue = markdown_artifact_issue(project_dir / "deck_section_packages.md")
+
+    issues: list[str] = []
+    issues.extend(f"content:{issue}" for issue in content_errors)
+    missing = [name for name in LONGFORM_GOVERNANCE_ARTIFACTS if not (project_dir / name).exists()]
+    issues.extend(f"missing_artifact:{name}" for name in missing)
+    if markdown_issue:
+        issues.append(markdown_issue)
+    missing_tiers = budget.get("missing_tiers", [])
+    if missing_tiers:
+        issues.append("budget_tiers_missing:" + ",".join(missing_tiers))
+    tiers = budget.get("tiers", {})
+    missing_pages = [name for name in BUDGET_TIER_ORDER if isinstance(tiers.get(name), dict) and tiers[name].get("pages") is None]
+    if missing_pages:
+        issues.append("budget_tier_missing_pages:" + ",".join(missing_pages))
+    missing_mix = []
+    for name in BUDGET_TIER_ORDER:
+        tier = tiers.get(name, {})
+        if not isinstance(tier, dict):
+            continue
+        mix_fields = ["core_pages", "proof_pages", "extension_pages", "appendix_pages"]
+        if all(tier.get(field) is None for field in mix_fields):
+            missing_mix.append(name)
+    if missing_mix:
+        issues.append("budget_tier_missing_page_mix:" + ",".join(missing_mix))
+    if budget.get("target_exceeds_all_tiers"):
+        issues.append("budget_target_exceeds_all_tiers")
+    if budget.get("target_over_recommended") and not budget.get("has_extension_strategy"):
+        issues.append("budget_requires_extension_strategy")
+    issues.extend(section_summary.get("issues", []))
+
+    enabled = not _brief_is_quick(project_dir) and (
+        any((project_dir / name).exists() for name in LONGFORM_GOVERNANCE_ARTIFACTS)
+        or bool(section_summary.get("sections"))
+    )
+    return {
+        "enabled": enabled,
+        "review_ready": enabled and not issues,
+        "content_governance_summary": content_summary,
+        "budget_summary": budget,
+        "section_summary": {
+            "total_sections": section_summary["total_sections"],
+            "total_pages": section_summary["total_pages"],
+            "target_pages": section_summary["target_pages"],
+            "dense_sections": section_summary["dense_sections"],
+        },
+        "known_dense_archetypes": section_summary["known_dense_archetypes"],
+        "issues": issues,
+        "review_focus": [
+            "确认目标页数落在已声明的预算档位内",
+            "确认每个章节包都有页数配额、证据复用边界和过渡要求",
+            "确认高密度章节已绑定 dense archetype",
+        ] if enabled else [],
+    }
+
+
+def validate_longform_governance(project_dir: Path) -> tuple[list[str], dict]:
+    summary = summarize_longform_governance(project_dir)
+    return list(summary.get("issues", [])), summary

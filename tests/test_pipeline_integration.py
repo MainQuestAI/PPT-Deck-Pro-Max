@@ -80,6 +80,71 @@ def write_valid_content_governance(project: Path, *, target: int = 12, max_suppo
     )
 
 
+def write_valid_longform_governance(project: Path) -> None:
+    write_valid_content_governance(project, target=4, max_supported=6)
+    (project / "deck_capacity_plan.json").write_text(
+        json.dumps(
+            {
+                "target_pages": 4,
+                "recommended_pages": 4,
+                "max_supported_pages": 6,
+                "budget_tiers": {
+                    "conservative": {"pages": 2, "core_pages": 1, "proof_pages": 1, "extension_pages": 0, "appendix_pages": 0, "required_inputs": []},
+                    "recommended": {"pages": 4, "core_pages": 2, "proof_pages": 1, "extension_pages": 1, "appendix_pages": 0, "required_inputs": []},
+                    "extended": {"pages": 5, "core_pages": 2, "proof_pages": 2, "extension_pages": 1, "appendix_pages": 0, "required_inputs": ["补案例"]},
+                    "appendix_heavy": {"pages": 6, "core_pages": 2, "proof_pages": 2, "extension_pages": 1, "appendix_pages": 1, "required_inputs": ["补附录"]},
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    (project / "deck_section_packages.md").write_text(
+        "# Section Packages\n\n## Section 1\n\n容量诊断。\n\n## Section 2\n\n章节生产。\n",
+        encoding="utf-8",
+    )
+    (project / "section_packages.json").write_text(
+        json.dumps(
+            {
+                "sections": [
+                    {
+                        "section_id": "section_01",
+                        "title": "容量诊断",
+                        "objective": "判断资料容量",
+                        "page_count": 2,
+                        "page_ids": ["slide_01", "slide_02"],
+                        "claim_ids": ["claim_01"],
+                        "allowed_evidence": ["核心资料"],
+                        "allowed_topics": ["容量"],
+                        "forbidden_topics": ["附录"],
+                        "input_transition": "进入容量判断",
+                        "output_transition": "进入章节生产",
+                        "density_level": "high",
+                        "dense_archetype": "evidence_wall",
+                    },
+                    {
+                        "section_id": "section_02",
+                        "title": "章节生产",
+                        "objective": "降低重复扩写",
+                        "page_count": 2,
+                        "page_ids": ["slide_03", "slide_04"],
+                        "claim_ids": [],
+                        "allowed_evidence": ["复盘资料"],
+                        "allowed_topics": ["章节"],
+                        "forbidden_topics": ["容量细节"],
+                        "input_transition": "承接容量判断",
+                        "output_transition": "进入逐页稿",
+                        "density_level": "medium",
+                        "suggested_archetypes": ["roadmap_risk_sidebar"],
+                    },
+                ]
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+
 class PipelineIntegrationTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmpdir = tempfile.mkdtemp()
@@ -93,6 +158,8 @@ class PipelineIntegrationTest(unittest.TestCase):
         self.assertIn("deck_capacity_plan.json", created)
         self.assertIn("deck_gap_registry.json", created)
         self.assertIn("deck_question_queue.md", created)
+        self.assertIn("deck_section_packages.md", created)
+        self.assertIn("section_packages.json", created)
         self.assertIn("deck_narrative_arc.md", created)
         self.assertIn("deck_asset_plan.md", created)
         self.assertIn("asset_manifest.json", created)
@@ -235,6 +302,57 @@ class PipelineIntegrationTest(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("content_governance:blocking_gaps:gap_01", result.stdout)
+
+    def test_validate_longform_governance_passes_when_gate_is_ready(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project)
+            state = build_state("test", 4, "html")
+            (project / "slide_state.json").write_text(json.dumps(state), encoding="utf-8")
+            (project / "index.html").write_text("<html></html>", encoding="utf-8")
+            write_valid_longform_governance(project)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "validate",
+                    "--project-dir",
+                    str(project),
+                    "--output-mode",
+                    "html",
+                    "--longform-governance",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validate_longform_governance_fails_on_placeholder_section_packages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project)
+            state = build_state("test", 4, "html")
+            (project / "slide_state.json").write_text(json.dumps(state), encoding="utf-8")
+            (project / "index.html").write_text("<html></html>", encoding="utf-8")
+            write_valid_content_governance(project, target=4, max_supported=6)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "validate",
+                    "--project-dir",
+                    str(project),
+                    "--output-mode",
+                    "html",
+                    "--longform-governance",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("longform_governance:markdown_placeholder:deck_section_packages.md", result.stdout)
 
     def test_formal_bid_qa_detects_open_registry_items(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

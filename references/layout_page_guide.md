@@ -32,6 +32,16 @@
 - 带状流程
 - 结果板
 
+高密度页必须从 `references/dense_page_archetypes.md` 选择一个原型，并写清：
+
+- `dense_archetype`
+- `density_level`
+- `info_units`
+- `split_trigger`
+- `visual_protagonist`
+
+如果一页需要承载超过原型上限的信息单元，先拆页，再继续写逐页稿。
+
 ## 原则
 
 1. 一页只保留一个主角

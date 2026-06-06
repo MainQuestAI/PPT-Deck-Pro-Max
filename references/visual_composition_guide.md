@@ -2,7 +2,7 @@
 
 ## 目标
 
-指导 AI 从 `deck_clean_pages.md` 的文字内容，自主生成 `deck_visual_composition.md` — 一份逐页视觉施工图，让 Build AI 拿到的不再是"文字描述"而是"视觉规格"。
+指导 AI 从 `deck_clean_pages.md` 的文字内容，自主生成 `deck_visual_composition.md` — 一份逐页视觉施工图，让 Build AI 拿到清晰的视觉规格，避免只拿文字描述开工。
 
 ## 核心原则
 

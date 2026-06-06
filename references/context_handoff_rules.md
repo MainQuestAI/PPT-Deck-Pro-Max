@@ -33,6 +33,29 @@
 - 原始长文档
 - 内部评审对话
 
+## Section Writer AI（longform）
+
+可见：
+
+- `section-handoff --section-id <id>` 生成的章节交接包
+- 当前章节绑定的 claim / gap 子集
+- 当前章节允许复用的证据和话题
+- 当前章节输入过渡、输出过渡、页数配额和建议 dense archetype
+
+不可见：
+
+- 全量 `deck_clean_pages.md`
+- 无关章节的 claim / gap / 案例
+- 其他章节的完整页面文稿
+
+硬规则：
+
+1. 只写当前章节页面
+2. 不复用 forbidden_topics 中的内容
+3. 发现信息不足时标记缺口，不能靠重复相近话题扩写
+4. 每页写清 `dense_archetype`、`density_level`、`info_units`、`split_trigger`、`visual_protagonist`
+5. 主线程负责跨章节合并、去重和最终叙事顺序
+
 ## Deck Build AI
 
 可见：
@@ -78,6 +101,8 @@ Build AI 默认按单页生成，最多 3 页小批次。
 每次生成前必须重置上下文。
 
 建议通过 `scripts/context_manager.py` 生成上下文包，而不是手动拼接。
+
+长篇章节写作建议通过 `scripts/run_deck_pipeline.py section-handoff --section-id <id>` 生成上下文包。不要把完整 deck 材料直接转发给章节写作 AI。
 
 ## 返工期硬规则
 
