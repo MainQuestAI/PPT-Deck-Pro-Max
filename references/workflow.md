@@ -7,28 +7,34 @@
 ## 标准阶段
 
 1. `deck_brief.md`
-2. `deck_vibe_brief.md`
-3. `deck_narrative_arc.md`
-4. `deck_hero_pages.md`
-5. `deck_layout_v1.md`
-6. `deck_clean_pages.md`
-7. `deck_visual_composition.md`
-8. `deck_asset_plan.md`
-9. `asset_manifest.json`
-10. `deck_visual_system.md`
-11. `deck_component_tokens.md`
-12. `deck_theme_tokens.json`
-13. `deck_geometry_rules.md`
-14. `deck_page_skeletons.md`
-15. `slide_state.json`
-16. 成品 deck
-17. `deck_review_report.md`
-18. `layout_manifest.json`（如构建路径支持）
-19. `review_package.json`
-20. `deck_review_findings.json`
-21. `commercial_scorecard.json`
-22. `review_rollback_plan.json`
-23. `review_rollback_plan.md`
+2. `deck_source_digest.md`
+3. `deck_claim_map.json`
+4. `deck_capacity_plan.md`
+5. `deck_capacity_plan.json`
+6. `deck_gap_registry.json`
+7. `deck_question_queue.md`
+8. `deck_vibe_brief.md`
+9. `deck_narrative_arc.md`
+10. `deck_hero_pages.md`
+11. `deck_layout_v1.md`
+12. `deck_clean_pages.md`
+13. `deck_visual_composition.md`
+14. `deck_asset_plan.md`
+15. `asset_manifest.json`
+16. `deck_visual_system.md`
+17. `deck_component_tokens.md`
+18. `deck_theme_tokens.json`
+19. `deck_geometry_rules.md`
+20. `deck_page_skeletons.md`
+21. `slide_state.json`
+22. 成品 deck
+23. `deck_review_report.md`
+24. `layout_manifest.json`（如构建路径支持）
+25. `review_package.json`
+26. `deck_review_findings.json`
+27. `commercial_scorecard.json`
+28. `review_rollback_plan.json`
+29. `review_rollback_plan.md`
 
 ## 生产子模式
 
@@ -60,6 +66,7 @@ python3 scripts/run_deck_pipeline.py qa --project-dir <project-dir> --write-stat
 python3 scripts/run_deck_pipeline.py route-review --project-dir <project-dir> --write-state
 python3 scripts/run_deck_pipeline.py rework-handoff --project-dir <project-dir> --role visual
 python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html
+python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html --expert-mode --content-governance
 python3 scripts/run_deck_pipeline.py validate --project-dir <project-dir> --output-mode pptx+html --production-sub-mode formal_bid_image_led
 python3 scripts/run_deck_pipeline.py assemble-formal-images --project-dir <project-dir>
 ```
@@ -134,6 +141,35 @@ python3 scripts/run_deck_pipeline.py validate-schema --project-dir <project-dir>
 - 最终 CTA 是什么
 - 生产模式：expert（默认）还是 quick
 - 生产子模式：standard_deck 还是 formal_bid_image_led
+
+### Gate 1.2：内容治理门禁（expert / longform）
+
+必须回答：
+
+- 原始资料里有哪些可用事实、证据、案例和明确缺口
+- 当前资料能支撑多少核心页、证明页、扩展页
+- `target_pages` 是否超过 `max_supported_pages`
+- 哪些 gap 会阻塞逐页稿
+- 进入 Expert Interview 前优先问哪些问题
+
+必须产出：
+
+- `deck_source_digest.md`
+- `deck_claim_map.json`
+- `deck_capacity_plan.md`
+- `deck_capacity_plan.json`
+- `deck_gap_registry.json`
+- `deck_question_queue.md`
+
+长篇 / expert deck 在进入逐页稿前必须通过：
+
+```bash
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir <project-dir> --output-mode pptx+html \
+  --expert-mode --content-governance
+```
+
+Quick mode 默认可跳过该门禁，除非用户主动要求内容治理。
 
 ### Gate 1.5：Expert Interview 完成（expert mode only）
 

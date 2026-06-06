@@ -6,6 +6,8 @@ import json
 import re
 from pathlib import Path
 
+from content_governance import summarize_content_governance
+
 
 PAGE_IMAGE_PATTERNS = [
     re.compile(r"slide[_-](\d+)\.(png|jpg|jpeg)$", re.I),
@@ -234,6 +236,7 @@ def main() -> None:
         "project_dir": str(project_dir),
         "review_order": [
             "先看 montage.png 做全局节奏与重心判断",
+            "再看内容治理摘要，确认页数容量、blocking gap 和 claim 覆盖",
             "再看页级 PNG 检查对齐、几何关系、留白与主角性",
             "最后回看 deck_clean_pages.md、slide_state.json、视觉系统文件，以及 expert gate 摘要",
         ],
@@ -253,7 +256,13 @@ def main() -> None:
             "expert_context": str((project_dir / "deck_expert_context.md").resolve()) if (project_dir / "deck_expert_context.md").exists() else "",
             "interview_session": str((project_dir / "interview_session.json").resolve()) if (project_dir / "interview_session.json").exists() else "",
             "interview_preparation": str((project_dir / "interview_preparation.json").resolve()) if (project_dir / "interview_preparation.json").exists() else "",
+            "source_digest": str((project_dir / "deck_source_digest.md").resolve()) if (project_dir / "deck_source_digest.md").exists() else "",
+            "claim_map": str((project_dir / "deck_claim_map.json").resolve()) if (project_dir / "deck_claim_map.json").exists() else "",
+            "capacity_plan": str((project_dir / "deck_capacity_plan.json").resolve()) if (project_dir / "deck_capacity_plan.json").exists() else "",
+            "gap_registry": str((project_dir / "deck_gap_registry.json").resolve()) if (project_dir / "deck_gap_registry.json").exists() else "",
+            "question_queue": str((project_dir / "deck_question_queue.md").resolve()) if (project_dir / "deck_question_queue.md").exists() else "",
         },
+        "content_governance_summary": summarize_content_governance(project_dir),
         "expert_mode_summary": summarize_expert_mode(project_dir, interview_session, interview_preparation),
         "asset_build_summary": summarize_asset_build(project_dir, asset_manifest, image_jobs),
         "page_images": list_page_images(rendered_dir),

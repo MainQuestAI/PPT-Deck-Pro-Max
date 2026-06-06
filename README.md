@@ -60,6 +60,11 @@ python3 scripts/run_deck_pipeline.py init \
 python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
 
+# Content governance gate for expert / longform decks
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir ./my-deck --output-mode pptx+html \
+  --expert-mode --content-governance
+
 # Expert Mode: finalize interview after redaction review
 python3 scripts/run_deck_pipeline.py finalize-interview \
   --project-dir ./my-deck
@@ -128,6 +133,9 @@ python scripts/run_deck_pipeline.py validate \
 ```
 Step 0     Classify the task
 Step 1     Lock the Brief                    → deck_brief.md          🔔 User confirms
+Step 1.2 ★ Source Digest                     → deck_source_digest.md
+Step 1.3 ★ Capacity Plan                     → deck_capacity_plan.md / .json
+Step 1.4 ★ Gap Gate                          → deck_gap_registry.json / deck_question_queue.md
 Step 1.5 ★ Expert Interview (expert mode)    → interview_preparation.json
 Step 1.6 ★ Redaction Review (expert mode)    → deck_expert_context.md 🔔 User confirms
 Step 2     Lock the Vibe                     → deck_vibe_brief.md
@@ -142,7 +150,13 @@ Step 7     Build the Deck                    → .pptx / .html
 Step 8     QA & Review Loop                  → findings, scorecard, rollback plan
 ```
 
-Steps marked ★ are Expert Mode only (default). Set `production_mode: quick` in the Brief to skip them. Each step has a gate. You cannot skip to build without locking the brief. You cannot claim ready without passing QA. If QA fails, the system routes findings to the correct upstream stage and role — not "start over."
+Steps marked ★ are Expert Mode only (default). Set `production_mode: quick` in the Brief to skip them. Each step has a gate. You cannot skip to build without locking the brief. You cannot claim ready without passing QA. If QA fails, the system routes findings to the correct upstream stage and role.
+
+For expert / longform decks, content governance must pass before page-by-page drafting:
+
+- `target_pages <= max_supported_pages`
+- zero blocking gaps in `deck_gap_registry.json`
+- `deck_question_queue.md` exists and reflects the highest-priority gaps
 
 ## Visual Composition Layer (v1.0+)
 
@@ -281,6 +295,8 @@ Use `--production-sub-mode standard_deck` for normal product, solution, strategy
 - `known_issue_log.md`
 
 `validate` infers this sub-mode from `slide_state.json` or `deck_brief.md` and requires those files before delivery.
+
+When content governance is required, add `--content-governance` to `validate`. This checks source digest, claim map, capacity plan, gap registry, and question queue before delivery.
 
 When `formal_bid_image_led` is active, `generate-assets` also reads `page_registry.md` and derives full-page image jobs from source IDs and actual PPT page numbers.
 

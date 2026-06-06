@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -33,6 +35,42 @@ class GenerateReviewPackageTests(unittest.TestCase):
             starter.mkdir(parents=True, exist_ok=True)
             candidates = find_candidate_dirs(root)
             self.assertIn(starter, candidates)
+
+    def test_review_package_includes_content_governance_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "deck_brief.md").write_text("production_mode: expert\n", encoding="utf-8")
+            (root / "deck_source_digest.md").write_text("# Source Digest\n", encoding="utf-8")
+            (root / "deck_capacity_plan.md").write_text("# Capacity Plan\n", encoding="utf-8")
+            (root / "deck_question_queue.md").write_text("# Question Queue\n", encoding="utf-8")
+            (root / "deck_claim_map.json").write_text(
+                json.dumps({"claims": [{"claim_id": "claim_01", "page_no": 1, "claim_text": "内容容量门禁", "role": "hero_problem"}]}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            (root / "deck_capacity_plan.json").write_text(
+                json.dumps({"target_pages": 12, "recommended_pages": 10, "max_supported_pages": 15}),
+                encoding="utf-8",
+            )
+            (root / "deck_gap_registry.json").write_text(json.dumps({"gaps": []}), encoding="utf-8")
+
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "generate_review_package.py"),
+                    "--project-dir",
+                    str(root),
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+
+            payload = json.loads((root / "review_package.json").read_text(encoding="utf-8"))
+            summary = payload["content_governance_summary"]
+            self.assertTrue(summary["enabled"])
+            self.assertTrue(summary["review_ready"])
+            self.assertEqual(summary["capacity"]["max_supported_pages"], 15)
 
     def test_summarize_expert_mode_reports_ready_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -100,6 +138,7 @@ class GenerateReviewPackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             prompt = build_review_prompt(root)
+            self.assertIn("content_governance_summary", prompt)
             self.assertIn("expert_mode_summary", prompt)
             self.assertIn("asset_build_summary", prompt)
             self.assertIn("deck_expert_context.md", prompt)

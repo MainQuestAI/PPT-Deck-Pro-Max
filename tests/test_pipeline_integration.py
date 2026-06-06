@@ -32,6 +32,54 @@ from validate_schema import validate_project  # noqa: E402
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
+def write_valid_content_governance(project: Path, *, target: int = 12, max_supported: int = 18, blocking: bool = False) -> None:
+    (project / "deck_source_digest.md").write_text("# Source Digest\n", encoding="utf-8")
+    (project / "deck_capacity_plan.md").write_text("# Capacity Plan\n", encoding="utf-8")
+    (project / "deck_question_queue.md").write_text("# Question Queue\n", encoding="utf-8")
+    (project / "deck_claim_map.json").write_text(
+        json.dumps(
+            {
+                "claims": [
+                    {
+                        "claim_id": "claim_01",
+                        "page_no": 1,
+                        "claim_text": "长篇资料需要容量门禁",
+                        "role": "hero_problem",
+                    }
+                ]
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    (project / "deck_capacity_plan.json").write_text(
+        json.dumps(
+            {
+                "target_pages": target,
+                "recommended_pages": min(target, max_supported),
+                "max_supported_pages": max_supported,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (project / "deck_gap_registry.json").write_text(
+        json.dumps(
+            {
+                "gaps": [
+                    {
+                        "gap_id": "gap_01",
+                        "claim_id": "claim_01",
+                        "gap_type": "data",
+                        "status": "blocking" if blocking else "open",
+                    }
+                ]
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+
 class PipelineIntegrationTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmpdir = tempfile.mkdtemp()
@@ -40,6 +88,11 @@ class PipelineIntegrationTest(unittest.TestCase):
     def test_init_creates_all_required_files(self) -> None:
         created = init_project(self.project_dir)
         self.assertIn("deck_brief.md", created)
+        self.assertIn("deck_source_digest.md", created)
+        self.assertIn("deck_claim_map.json", created)
+        self.assertIn("deck_capacity_plan.json", created)
+        self.assertIn("deck_gap_registry.json", created)
+        self.assertIn("deck_question_queue.md", created)
         self.assertIn("deck_narrative_arc.md", created)
         self.assertIn("deck_asset_plan.md", created)
         self.assertIn("asset_manifest.json", created)
@@ -132,6 +185,56 @@ class PipelineIntegrationTest(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("page_registry.md", result.stdout)
+
+    def test_validate_content_governance_passes_when_gate_is_ready(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project)
+            state = build_state("test", 3, "html")
+            (project / "slide_state.json").write_text(json.dumps(state), encoding="utf-8")
+            (project / "index.html").write_text("<html></html>", encoding="utf-8")
+            write_valid_content_governance(project)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "run_deck_pipeline.py"),
+                    "validate",
+                    "--project-dir",
+                    str(project),
+                    "--output-mode",
+                    "html",
+                    "--content-governance",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_validate_content_governance_fails_on_blocking_gap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            init_project(project)
+            state = build_state("test", 3, "html")
+            (project / "slide_state.json").write_text(json.dumps(state), encoding="utf-8")
+            (project / "index.html").write_text("<html></html>", encoding="utf-8")
+            write_valid_content_governance(project, blocking=True)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "validate_deck_outputs.py"),
+                    "--project-dir",
+                    str(project),
+                    "--output-mode",
+                    "html",
+                    "--content-governance",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("content_governance:blocking_gaps:gap_01", result.stdout)
 
     def test_formal_bid_qa_detects_open_registry_items(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

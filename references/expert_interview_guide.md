@@ -10,6 +10,25 @@
 
 Expert Interview 在 `production_mode: expert` 时执行（默认模式）。Quick Mode 跳过此步。
 
+## vNext 输入顺序
+
+Expert Interview 默认先读取 Step 1.2 内容治理产物：
+
+1. `deck_source_digest.md`
+2. `deck_claim_map.json`
+3. `deck_capacity_plan.json`
+4. `deck_gap_registry.json`
+5. `deck_question_queue.md`
+
+如果这些产物还没有形成，脚本兼容旧路径，会继续从 `deck_clean_pages.md` 提取 claims。
+
+进入访谈前必须先判断：
+
+- 目标页数是否超过当前资料容量
+- 是否存在 blocking gap
+- 哪些 claim 的 evidence、case、data、causal chain 最弱
+- 哪些问题应先问用户，哪些问题可以延后
+
 ## 运行时对象的生命周期
 
 ### Gap 是过程对象，Claim 是持久对象
@@ -26,10 +45,11 @@ Expert Interview 在 `production_mode: expert` 时执行（默认模式）。Qui
 ### 脚本 vs AI 的职责分工
 
 **`generate_interview_questions.py` 做规则化的事：**
-- 从原稿按页切片提取初始 claims
+- 优先读取 `deck_claim_map.json` 和 `deck_gap_registry.json`
+- 若 claim map 为空，则从原稿按页切片提取初始 claims
 - 对每条 claim 用规则检查 5 种 gap（有没有具体名词？有没有因果连接词？有没有数字？）
 - 计算每条 claim 的 richness_score
-- 输出 gap 清单 + 按优先级排序
+- 输出 `interview_preparation.json` 和 `deck_question_queue.md`
 
 **AI 在运行时做理解力的事：**
 - 读取 gap 清单和原稿上下文

@@ -60,6 +60,11 @@ python3 scripts/run_deck_pipeline.py init \
 python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
 
+# 专家模式 / 长篇 Deck 的内容治理门禁
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir ./my-deck --output-mode pptx+html \
+  --expert-mode --content-governance
+
 # Expert Mode：脱敏审批通过后，生成 deck_expert_context.md
 python3 scripts/run_deck_pipeline.py finalize-interview \
   --project-dir ./my-deck
@@ -128,6 +133,9 @@ python scripts/run_deck_pipeline.py validate \
 ```
 Step 0     分类任务
 Step 1     锁定 Brief                        → deck_brief.md            🔔 用户确认
+Step 1.2 ★ 资料理解                           → deck_source_digest.md
+Step 1.3 ★ 页数容量评估                       → deck_capacity_plan.md / .json
+Step 1.4 ★ 缺口门禁                           → deck_gap_registry.json / deck_question_queue.md
 Step 1.5 ★ Expert Interview（专家模式）       → interview_preparation.json
 Step 1.6 ★ Redaction Review（脱敏审批）       → deck_expert_context.md   🔔 用户确认
 Step 2     锁定 Vibe                         → deck_vibe_brief.md
@@ -142,7 +150,13 @@ Step 7     构建 Deck                          → .pptx / .html
 Step 8     QA 与评审循环                      → findings、评分卡、回退计划
 ```
 
-★ 标记的步骤仅 Expert Mode（默认）执行。在 Brief 中设置 `production_mode: quick` 可跳过。每一步都有门槛。不锁 Brief 不能进构建。不通过 QA 不能标记完成。QA 失败时，系统把问题路由到正确的上游阶段和角色——不是"从头来过"。
+★ 标记的步骤仅 Expert Mode（默认）执行。在 Brief 中设置 `production_mode: quick` 可跳过。每一步都有门槛。不锁 Brief 不能进构建。不通过 QA 不能标记完成。QA 失败时，系统把问题路由到正确的上游阶段和角色。
+
+专家模式 / 长篇 Deck 在逐页稿之前必须通过内容治理门禁：
+
+- `target_pages <= max_supported_pages`
+- `deck_gap_registry.json` 中没有 blocking gap
+- `deck_question_queue.md` 已生成，并且覆盖最高优先级缺口
 
 ## 视觉组合层（v1.0+）
 
@@ -281,6 +295,8 @@ python3 scripts/run_deck_pipeline.py doctor --project-dir ./my-deck
 - `known_issue_log.md`
 
 `validate` 会从 `slide_state.json` 或 `deck_brief.md` 识别这个子模式，并在交付前强制检查这些文件。
+
+需要内容治理时，在 `validate` 中增加 `--content-governance`。它会检查 source digest、claim map、capacity plan、gap registry 和 question queue。
 
 当启用 `formal_bid_image_led` 时，`generate-assets` 会读取 `page_registry.md`，并按源页面 ID 与实际 PPT 页码派生整页图片生成任务。
 

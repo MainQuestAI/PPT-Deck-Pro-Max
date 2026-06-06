@@ -237,6 +237,8 @@ def cmd_validate(args: argparse.Namespace) -> None:
         cmd.append("--require-review")
     if getattr(args, "expert_mode", False):
         cmd.append("--expert-mode")
+    if getattr(args, "content_governance", False):
+        cmd.append("--content-governance")
     run_script("validate_deck_outputs.py", *cmd)
 
 
@@ -454,10 +456,20 @@ def cmd_expert_interview(args: argparse.Namespace) -> None:
         cmd.extend(["--state", str(Path(args.state).expanduser().resolve())])
     if args.brief:
         cmd.extend(["--brief", str(Path(args.brief).expanduser().resolve())])
+    if getattr(args, "claim_map", None):
+        cmd.extend(["--claim-map", str(Path(args.claim_map).expanduser().resolve())])
+    if getattr(args, "gap_registry", None):
+        cmd.extend(["--gap-registry", str(Path(args.gap_registry).expanduser().resolve())])
+    if getattr(args, "capacity_plan", None):
+        cmd.extend(["--capacity-plan", str(Path(args.capacity_plan).expanduser().resolve())])
+    if getattr(args, "source_digest", None):
+        cmd.extend(["--source-digest", str(Path(args.source_digest).expanduser().resolve())])
     if getattr(args, "output_md", None):
         cmd.extend(["--output-md", str(Path(args.output_md).expanduser().resolve())])
     if getattr(args, "output_json", None):
         cmd.extend(["--output-json", str(Path(args.output_json).expanduser().resolve())])
+    if getattr(args, "question_queue", None):
+        cmd.extend(["--question-queue", str(Path(args.question_queue).expanduser().resolve())])
     run_script("generate_interview_questions.py", *cmd)
 
 
@@ -753,6 +765,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--require-review", action="store_true", help="Also check review/QA artifacts including montage and review_package")
     p_validate.add_argument("--formal", action="store_true", help="Alias for --require-review: full formal review validation")
     p_validate.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
+    p_validate.add_argument("--content-governance", action="store_true", help="Also check source digest, claim map, capacity plan, and gap gate")
     p_validate.add_argument("--production-sub-mode", choices=PRODUCTION_SUB_MODES, help="Override inferred production sub-mode")
     p_validate.set_defaults(func=cmd_validate)
 
@@ -766,8 +779,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_expert.add_argument("--clean-pages")
     p_expert.add_argument("--state")
     p_expert.add_argument("--brief")
+    p_expert.add_argument("--claim-map")
+    p_expert.add_argument("--gap-registry")
+    p_expert.add_argument("--capacity-plan")
+    p_expert.add_argument("--source-digest")
     p_expert.add_argument("--output-md")
     p_expert.add_argument("--output-json")
+    p_expert.add_argument("--question-queue")
     p_expert.set_defaults(func=cmd_expert_interview)
 
     p_finalize = sub.add_parser("finalize-interview", help="Finalize Expert Interview: validate redaction and produce deck_expert_context.md")

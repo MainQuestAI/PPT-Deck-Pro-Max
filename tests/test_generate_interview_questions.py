@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -9,6 +12,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from generate_interview_questions import (  # noqa: E402
     extract_claims,
+    extract_claims_from_claim_map,
     detect_gaps,
     compute_richness,
     prioritize_gaps,
@@ -35,6 +39,87 @@ class ExtractClaimsTests(unittest.TestCase):
         state = {"pages": [{"page_id": "slide_01", "role": "unassigned"}]}
         claims = extract_claims(text, state)
         self.assertFalse(claims[0]["is_hero"])
+
+    def test_extracts_claims_from_claim_map_and_gap_registry(self) -> None:
+        claim_map = {
+            "claims": [
+                {
+                    "claim_id": "claim_01",
+                    "page_no": 1,
+                    "claim_text": "资料容量先行判断",
+                    "role": "hero_problem",
+                    "evidence": [{"text": "用户要求 100 页，但原始资料只支撑 30 页"}],
+                }
+            ]
+        }
+        gap_registry = {
+            "gaps": [
+                {
+                    "gap_id": "gap_01",
+                    "claim_id": "claim_01",
+                    "gap_type": "data",
+                    "desc": "缺少容量测算依据",
+                    "status": "open",
+                }
+            ]
+        }
+        claims = extract_claims_from_claim_map(claim_map, gap_registry)
+        self.assertEqual(len(claims), 1)
+        self.assertEqual(claims[0]["claim_id"], "claim_01")
+        self.assertTrue(claims[0]["is_hero"])
+        self.assertEqual(claims[0]["gaps"][0]["gap_id"], "gap_01")
+
+
+class ClaimMapCliTests(unittest.TestCase):
+    def test_cli_generates_question_queue_without_clean_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / "deck_brief.md").write_text("production_mode: expert\n", encoding="utf-8")
+            (project / "slide_state.json").write_text('{"pages":[]}', encoding="utf-8")
+            (project / "deck_source_digest.md").write_text("# Source Digest\n", encoding="utf-8")
+            (project / "deck_claim_map.json").write_text(
+                json.dumps(
+                    {
+                        "claims": [
+                            {
+                                "claim_id": "claim_01",
+                                "page_no": 1,
+                                "claim_text": "长篇内容需要容量门禁",
+                                "role": "hero_problem",
+                                "evidence": ["目标页数 80，当前资料上限 32"],
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            (project / "deck_gap_registry.json").write_text(
+                json.dumps({"gaps": [{"gap_id": "gap_01", "claim_id": "claim_01", "gap_type": "case", "status": "open"}]}),
+                encoding="utf-8",
+            )
+            (project / "deck_capacity_plan.json").write_text(
+                json.dumps({"target_pages": 30, "recommended_pages": 24, "max_supported_pages": 36}),
+                encoding="utf-8",
+            )
+
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_DIR / "generate_interview_questions.py"),
+                    "--project-dir",
+                    str(project),
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+
+            preparation = json.loads((project / "interview_preparation.json").read_text(encoding="utf-8"))
+            self.assertEqual(preparation["claims"][0]["claim_id"], "claim_01")
+            self.assertEqual(preparation["content_governance"]["source"], "content_governance")
+            self.assertTrue((project / "deck_question_queue.md").exists())
 
 
 class MultiClaimTests(unittest.TestCase):

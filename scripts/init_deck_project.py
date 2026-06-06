@@ -9,6 +9,12 @@ PRODUCTION_SUB_MODES = ("standard_deck", "formal_bid_image_led")
 
 TEMPLATES = {
     "deck_brief.md": "# Deck Brief\n\nproduction_mode: expert\nproduction_sub_mode: standard_deck\n\n## 产品主语\n\n## 产品定位\n\n## 第一受众\n\n## 第一购买理由\n\n## 最强差异化\n\n## 最强证据\n\n## 首单入口\n\n## 最终 CTA\n",
+    "deck_source_digest.md": "# Source Digest\n\n## 资料清单\n\n| Source | Type | Coverage | Confidence |\n|--------|------|----------|------------|\n\n## 核心事实\n\n（待提炼）\n\n## 可用证据\n\n（待提炼）\n\n## 明确缺口\n\n（待登记到 deck_gap_registry.json）\n",
+    "deck_claim_map.json": "{\n  \"claims\": []\n}\n",
+    "deck_capacity_plan.md": "# Capacity Plan\n\n## 页数容量判断\n\n- target_pages:\n- recommended_pages:\n- max_supported_pages:\n\n## 结论\n\n（待填写当前资料能支撑的核心页、证明页和扩展页）\n",
+    "deck_capacity_plan.json": "{\n  \"target_pages\": null,\n  \"recommended_pages\": null,\n  \"max_supported_pages\": null,\n  \"notes\": \"\"\n}\n",
+    "deck_gap_registry.json": "{\n  \"gaps\": []\n}\n",
+    "deck_question_queue.md": "# Question Queue\n\n（由 expert-interview 生成；进入逐页稿前先补齐 blocking gap）\n",
     "deck_vibe_brief.md": "# Vibe Brief\n\n## 视觉气质\n\n## 配色系统\n\n## 字体系统\n\n## 图形语言\n\n## 密度上限\n",
     "deck_narrative_arc.md": "# Narrative Arc\n\n## 弧线模板\n\n（待锁定）\n\n## 逐页 Beat\n\n| 页码 | Beat | 情绪目标 | 过渡逻辑 |\n|------|------|---------|--------|\n\n## 信心拐点\n\n（待锁定）\n\n## 呼吸页\n\n（待锁定）\n",
     "deck_hero_pages.md": "# Hero Pages\n\n## 关键页\n\n1. 封面\n2. 痛点/诊断\n3. 样例/证据\n4. 核心能力/系统\n5. CTA\n",

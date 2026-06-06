@@ -102,6 +102,29 @@ It must lock:
 
 Read `references/deck_brief_template.md` if the brief is missing or weak.
 
+### Step 1.2: Content Governance Gate (expert / longform)
+
+Before writing narrative pages, create the content governance artifacts:
+
+1. `deck_source_digest.md`: source inventory, key facts, usable proof, explicit gaps
+2. `deck_claim_map.json`: core claims with source pages, roles, evidence, and risk notes
+3. `deck_capacity_plan.md` + `deck_capacity_plan.json`: target pages, recommended pages, and max supported pages
+4. `deck_gap_registry.json`: open gaps, with `blocking: true`, `status: blocking`, or `severity: critical` for hard blockers
+5. `deck_question_queue.md`: prioritized questions for the user / domain expert
+
+Gate rule:
+
+- Do not enter page-by-page drafting when `target_pages > max_supported_pages`
+- Do not enter page-by-page drafting while any blocking gap remains open
+- Quick mode may skip this gate unless the user explicitly asks for content governance
+
+Use:
+
+```bash
+python3 scripts/run_deck_pipeline.py validate \
+  --project-dir <project-dir> --output-mode pptx+html --expert-mode --content-governance
+```
+
 ### Step 1.5: Expert Interview (expert mode only)
 
 If `production_mode: expert` (default), run a structured interview with the user to enrich the deck's content with implicit expert knowledge.
@@ -109,11 +132,12 @@ If `production_mode: expert` (default), run a structured interview with the user
 The AI role here is **co-creator, not interviewer**. It brings its own understanding of the source material, identifies content gaps, and asks targeted questions with hypotheses attached.
 
 Process:
-1. Run `scripts/generate_interview_questions.py` to extract claims, detect gaps, and prioritize
-2. AI reads the gap analysis and source material, then constructs hypothesis-led questions at runtime
-3. Dialogue is coverage-driven: target hero claims gap fill rate ≥ 80%
-4. Every 3-4 questions, include at least one counter-hypothesis question (anti-bias)
-5. Output: `interview_session.json` (runtime state) + insights collected
+1. Run `scripts/generate_interview_questions.py` after Step 1.2; it reads `deck_claim_map.json`, `deck_gap_registry.json`, and `deck_capacity_plan.json` when available
+2. If content governance artifacts are absent, the command falls back to `deck_clean_pages.md` for legacy projects
+3. AI reads the gap analysis and source material, then constructs hypothesis-led questions at runtime
+4. Dialogue is coverage-driven: target hero claims gap fill rate ≥ 80%
+5. Every 3-4 questions, include at least one counter-hypothesis question (anti-bias)
+6. Output: `deck_question_queue.md`, `interview_preparation.json`, `interview_session.json` (runtime state) + insights collected
 
 Read `references/expert_interview_guide.md`.
 
@@ -369,6 +393,8 @@ Use:
 - `scripts/generate_commercial_scorecard.py`
 - `scripts/update_layout_manifest.py`
 
+For expert or longform decks, run validate with `--content-governance` before formal delivery.
+
 If the deck is moving from build stage into formal review, generate `review_package.json` first and require structured review findings before marking the deck as ready.
 
 Do not stop at findings. After structured findings are available, route them into a rollback plan so the system can tell:
@@ -546,11 +572,12 @@ This skill succeeds only if the final deck is:
 Use these thresholds unless the project brief sets stricter ones:
 
 1. `commercial_scorecard.json` overall score >= 3.3/5, with no core dimension below 3.0/5
-2. Expert mode hero claims gap fill rate >= 80%, and average `richness_score` >= 3/5
-3. Page copy density: warn at >700 characters per page, fail at >1000 characters per page unless the page is explicitly marked as appendix/reference
-4. Visual protagonist coverage: every non-appendix page has one visual protagonist, occupying >= 40% of the intended main visual area
-5. Geometry tolerance: actual center alignment deviation <= 3% of slide width for centered archetypes; occupancy ratio stays within the page skeleton's min/max range
-6. Review blockers: zero unresolved `redaction_incomplete`, `world_incomplete`, `geometry_broken`, or `internal_language_leak` findings before delivery
+2. Content governance: `target_pages <= max_supported_pages`, with zero blocking gaps
+3. Expert mode hero claims gap fill rate >= 80%, and average `richness_score` >= 3/5
+4. Page copy density: warn at >700 characters per page, fail at >1000 characters per page unless the page is explicitly marked as appendix/reference
+5. Visual protagonist coverage: every non-appendix page has one visual protagonist, occupying >= 40% of the intended main visual area
+6. Geometry tolerance: actual center alignment deviation <= 3% of slide width for centered archetypes; occupancy ratio stays within the page skeleton's min/max range
+7. Review blockers: zero unresolved `redaction_incomplete`, `world_incomplete`, `geometry_broken`, or `internal_language_leak` findings before delivery
 
 ### Definition of Done
 
@@ -559,7 +586,7 @@ A deck is deliverable only when:
 1. Required planning artifacts are current: brief, vibe, narrative arc, hero pages, layout, clean pages, visual composition, asset plan, visual system, component tokens, theme tokens, geometry rules, page skeletons, and `slide_state.json`
 2. The requested final artifact exists: `.pptx`, HTML deck, or both
 3. Formal QA artifacts exist: `montage.png`, `deck_review_report.md`, `review_package.json`, `deck_review_findings.json`, `commercial_scorecard.json`, `review_rollback_plan.json`, and `review_rollback_plan.md`
-4. `validate_deck_outputs.py` passes for the requested output mode
+4. `validate_deck_outputs.py` passes for the requested output mode; expert / longform decks also pass `--content-governance`
 5. Formal review blockers are either resolved or explicitly accepted by the user with the remaining risk recorded
 
 When the active production sub-mode is `formal_bid_image_led`, Definition of Done also requires:

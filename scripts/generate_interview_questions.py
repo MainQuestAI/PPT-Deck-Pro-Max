@@ -17,6 +17,14 @@ import json
 import re
 from pathlib import Path
 
+from content_governance import (
+    attach_registry_gaps,
+    capacity_summary,
+    is_blocking_gap,
+    normalize_claims,
+    normalize_gap_registry,
+    read_json_file,
+)
 from page_parser import extract_page_slices, page_id_to_number
 
 
@@ -128,6 +136,15 @@ def extract_claims(clean_pages_text: str, state: dict) -> list[dict]:
                 "is_hero": is_hero,
             })
 
+    return claims
+
+
+def extract_claims_from_claim_map(claim_map: dict | list, gap_registry: dict | list | None = None) -> list[dict]:
+    """Extract claims from the upstream content-governance claim map."""
+    claims = normalize_claims(claim_map)
+    registry_gaps = normalize_gap_registry(gap_registry) if gap_registry is not None else []
+    if registry_gaps:
+        claims = attach_registry_gaps(claims, registry_gaps)
     return claims
 
 
@@ -297,10 +314,30 @@ def extract_brief_concerns(brief_path: Path) -> list[str]:
     return concerns
 
 
-def write_output(claims: list[dict], prioritized_gaps: list[dict], output: Path) -> None:
+def write_output(
+    claims: list[dict],
+    prioritized_gaps: list[dict],
+    output: Path,
+    governance_summary: dict | None = None,
+) -> None:
     """Write claims + gaps analysis as markdown."""
     lines = [
         "# Interview Preparation",
+        "",
+        "## 内容治理输入",
+        "",
+        f"- 输入来源：{governance_summary.get('source', 'clean_pages') if governance_summary else 'clean_pages'}",
+    ]
+    if governance_summary:
+        capacity = governance_summary.get("capacity", {})
+        lines.extend([
+            f"- 目标页数：{capacity.get('target_pages') if capacity.get('target_pages') is not None else '未填写'}",
+            f"- 推荐页数：{capacity.get('recommended_pages') if capacity.get('recommended_pages') is not None else '未填写'}",
+            f"- 最大支撑页数：{capacity.get('max_supported_pages') if capacity.get('max_supported_pages') is not None else '未填写'}",
+            f"- 容量风险：{'超出当前资料容量' if capacity.get('over_capacity') else '未触发'}",
+            f"- Blocking gaps：{governance_summary.get('blocking_gaps', 0)}",
+        ])
+    lines.extend([
         "",
         "## Claims 总览",
         "",
@@ -311,7 +348,7 @@ def write_output(claims: list[dict], prioritized_gaps: list[dict], output: Path)
         "",
         "## 逐 Claim 分析",
         "",
-    ]
+    ])
 
     for claim in claims:
         lines.extend([
@@ -338,7 +375,12 @@ def write_output(claims: list[dict], prioritized_gaps: list[dict], output: Path)
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_json(claims: list[dict], prioritized_gaps: list[dict], output: Path) -> None:
+def write_json(
+    claims: list[dict],
+    prioritized_gaps: list[dict],
+    output: Path,
+    governance_summary: dict | None = None,
+) -> None:
     """Write claims + gaps as JSON for programmatic consumption."""
     payload = {
         "claims": [
@@ -364,8 +406,38 @@ def write_json(claims: list[dict], prioritized_gaps: list[dict], output: Path) -
             "avg_richness": round(sum(c["richness_score"] for c in claims) / max(len(claims), 1), 1),
         },
     }
+    if governance_summary:
+        payload["content_governance"] = governance_summary
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _load_optional_json(path: Path) -> dict | list | None:
+    data, err = read_json_file(path)
+    if err:
+        if path.exists():
+            raise SystemExit(f"[ERROR] {err}")
+        return None
+    return data
+
+
+def _default_claim_map(project_dir: Path, explicit: str | None) -> tuple[Path | None, dict | list | None]:
+    if explicit:
+        path = Path(explicit).expanduser().resolve()
+        data, err = read_json_file(path)
+        if err:
+            raise SystemExit(f"[ERROR] {err}")
+        return path, data
+
+    path = project_dir / "deck_claim_map.json"
+    if not path.exists():
+        return None, None
+    data, err = read_json_file(path)
+    if err:
+        raise SystemExit(f"[ERROR] {err}")
+    if normalize_claims(data):
+        return path, data
+    return None, None
 
 
 def main() -> None:
@@ -374,8 +446,13 @@ def main() -> None:
     parser.add_argument("--clean-pages")
     parser.add_argument("--state")
     parser.add_argument("--brief")
+    parser.add_argument("--claim-map", help="Path to deck_claim_map.json. If omitted, a non-empty project default is used.")
+    parser.add_argument("--gap-registry", help="Path to deck_gap_registry.json")
+    parser.add_argument("--capacity-plan", help="Path to deck_capacity_plan.json")
+    parser.add_argument("--source-digest", help="Path to deck_source_digest.md")
     parser.add_argument("--output-md")
     parser.add_argument("--output-json")
+    parser.add_argument("--question-queue", help="Path to deck_question_queue.md")
     args = parser.parse_args()
 
     project_dir = Path(args.project_dir).expanduser().resolve()
@@ -384,28 +461,54 @@ def main() -> None:
     brief_path = Path(args.brief or project_dir / "deck_brief.md").expanduser().resolve()
     output_md = Path(args.output_md or project_dir / "interview_preparation.md").expanduser().resolve()
     output_json = Path(args.output_json or project_dir / "interview_preparation.json").expanduser().resolve()
+    question_queue = Path(args.question_queue or project_dir / "deck_question_queue.md").expanduser().resolve()
+    gap_registry_path = Path(args.gap_registry or project_dir / "deck_gap_registry.json").expanduser().resolve()
+    capacity_plan_path = Path(args.capacity_plan or project_dir / "deck_capacity_plan.json").expanduser().resolve()
+    source_digest_path = Path(args.source_digest or project_dir / "deck_source_digest.md").expanduser().resolve()
 
-    if not clean_pages.exists():
-        raise SystemExit(f"[ERROR] clean pages not found: {clean_pages}")
-
-    text = clean_pages.read_text(encoding="utf-8")
     state = load_json(state_path)
     brief_concerns = extract_brief_concerns(brief_path)
 
-    # Extract claims
-    claims = extract_claims(text, state)
+    claim_map_path, claim_map = _default_claim_map(project_dir, args.claim_map)
+    gap_registry = _load_optional_json(gap_registry_path) if (args.gap_registry or gap_registry_path.exists()) else None
+    capacity_plan = _load_optional_json(capacity_plan_path) if (args.capacity_plan or capacity_plan_path.exists()) else None
+    governance_summary = None
+
+    if claim_map is not None:
+        claims = extract_claims_from_claim_map(claim_map, gap_registry)
+        if not claims:
+            raise SystemExit(f"[ERROR] claim map has no claims: {claim_map_path}")
+        registry_gaps = normalize_gap_registry(gap_registry) if gap_registry is not None else []
+        governance_summary = {
+            "source": "content_governance",
+            "claim_map": str(claim_map_path) if claim_map_path else "",
+            "gap_registry": str(gap_registry_path) if gap_registry_path.exists() else "",
+            "capacity_plan": str(capacity_plan_path) if capacity_plan_path.exists() else "",
+            "source_digest": str(source_digest_path) if source_digest_path.exists() else "",
+            "capacity": capacity_summary(capacity_plan, project_dir),
+            "blocking_gaps": sum(1 for gap in registry_gaps if is_blocking_gap(gap)),
+        }
+    else:
+        if not clean_pages.exists():
+            raise SystemExit(f"[ERROR] clean pages not found: {clean_pages}")
+        text = clean_pages.read_text(encoding="utf-8")
+        claims = extract_claims(text, state)
 
     # Detect gaps and compute richness for each claim
     for claim in claims:
-        claim["gaps"] = detect_gaps(claim, brief_concerns)
-        claim["richness_score"] = compute_richness(claim)
+        if not claim.get("gaps"):
+            claim["gaps"] = detect_gaps(claim, brief_concerns)
+        if not isinstance(claim.get("richness_score"), int):
+            claim["richness_score"] = compute_richness(claim)
 
     # Prioritize gaps
     prioritized_gaps = prioritize_gaps(claims)
 
     # Write outputs
-    write_output(claims, prioritized_gaps, output_md)
-    write_json(claims, prioritized_gaps, output_json)
+    write_output(claims, prioritized_gaps, output_md, governance_summary)
+    write_json(claims, prioritized_gaps, output_json, governance_summary)
+    if question_queue != output_md:
+        write_output(claims, prioritized_gaps, question_queue, governance_summary)
 
     hero_count = sum(1 for c in claims if c["is_hero"])
     gap_count = sum(len(c["gaps"]) for c in claims)
@@ -414,6 +517,8 @@ def main() -> None:
     print(f"[OK] {hero_count} hero claims, {len(prioritized_gaps)} prioritized gaps")
     print(f"[OK] wrote {output_md}")
     print(f"[OK] wrote {output_json}")
+    if question_queue != output_md:
+        print(f"[OK] wrote {question_queue}")
 
 
 if __name__ == "__main__":
