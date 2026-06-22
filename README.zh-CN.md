@@ -56,6 +56,15 @@ python3 scripts/run_deck_pipeline.py init \
   --project-dir ./formal-bid-deck --pages 60 --production-mode expert \
   --production-sub-mode formal_bid_image_led
 
+# Deck Master 桥接：导入生产派发包
+python3 scripts/run_deck_pipeline.py deck-master-import \
+  --input <deck-master-run>/generation_dispatch/dispatch_package.json \
+  --project-dir ./deck-master-bridge-work
+
+# 完成 HTML 组装和截图后，导出标准 v2 结果
+python3 scripts/run_deck_pipeline.py deck-master-export \
+  --project-dir ./deck-master-bridge-work
+
 # Expert Mode（v2.0）：提取 claims + gaps，准备专家访谈
 python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
@@ -318,6 +327,20 @@ python3 scripts/run_deck_pipeline.py doctor --project-dir ./my-deck
 当启用 `formal_bid_image_led` 时，`generate-assets` 会读取 `page_registry.md`，并按源页面 ID 与实际 PPT 页码派生整页图片生成任务。
 
 Go 决策记录完成后，使用 `assemble-formal-images` 把已批准的源 ID 图片复制成按实际页码排序的 PPT 装配目录。
+
+## Deck Master 桥接
+
+Deck Master 生产 run 可以通过 `generation_dispatch/dispatch_package.json` 把生成任务派发给 PPT Deck Pro Max。
+
+桥接流程：
+
+1. 用 `deck-master-import` 导入 Deck Master 派发包。
+2. 按 PPT Deck Pro Max 的正常流程完成页面生产。
+3. 运行 HTML 组装和 `screenshot-pages`，确保每页都有真实 HTML 来源和 PNG 预览。
+4. 用 `deck-master-export` 导出 `deck_generation_result.v2` 文件。
+5. 回到 Deck Master，从 `<deck-master-run>/generation_results` 导入这些结果。
+
+`deck-master-export` 会把已有项目产物复制进 Deck Master run 目录，并为每个任务写一份结果 JSON。缺少组装 HTML、截图、run/session 绑定、source fingerprint 或安全相对路径时，命令会失败。
 
 最小 smoke test：
 

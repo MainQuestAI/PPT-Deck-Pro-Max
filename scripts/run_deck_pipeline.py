@@ -7,6 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from deck_master_bridge import export_deck_master_results, import_deck_master_dispatch
 from init_deck_project import init_project
 from init_slide_state import PRODUCTION_SUB_MODES, build_state
 
@@ -117,6 +118,16 @@ def cmd_init(args: argparse.Namespace) -> None:
             print(f"  - {item}")
     if args.preset:
         print(f"[OK] applied preset shortcut: {args.preset}")
+
+
+def cmd_deck_master_import(args: argparse.Namespace) -> None:
+    payload = import_deck_master_dispatch(args.input, args.project_dir)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+def cmd_deck_master_export(args: argparse.Namespace) -> None:
+    payload = export_deck_master_results(args.project_dir, args.output_dir)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 def cmd_build_context(args: argparse.Namespace) -> None:
@@ -730,6 +741,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--preset", choices=PRESET_CHOICES)
     p_init.add_argument("--force-state", action="store_true")
     p_init.set_defaults(func=cmd_init)
+
+    p_dm_import = sub.add_parser("deck-master-import", help="Import a Deck Master generation dispatch package")
+    p_dm_import.add_argument("--input", required=True, help="Deck Master generation_dispatch/dispatch_package.json")
+    p_dm_import.add_argument("--project-dir", required=True)
+    p_dm_import.set_defaults(func=cmd_deck_master_import)
+
+    p_dm_export = sub.add_parser("deck-master-export", help="Export Deck Master generation_result.v2 files")
+    p_dm_export.add_argument("--project-dir", required=True)
+    p_dm_export.add_argument("--output-dir")
+    p_dm_export.set_defaults(func=cmd_deck_master_export)
 
     p_ctx = sub.add_parser("build-context", help="Generate a minimal build context bundle")
     p_ctx.add_argument("--project-dir", required=True)

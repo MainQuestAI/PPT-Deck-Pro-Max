@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/deck-master-dispatch-package.v1.schema.json",
+  "title": "Deck Master Dispatch Package v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "session_id",
+    "source_fingerprint",
+    "tasks"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_generation_dispatch_package.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "task_id",
+          "page_id"
+        ],
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!\\.{1,2}$)[^/\\\\]+$"
+          },
+          "page_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!\\.{1,2}$)[^/\\\\]+$"
+          },
+          "beat_id": {
+            "type": "string",
+            "pattern": "^(?!\\.{1,2}$)[^/\\\\]+$"
+          },
+          "page_title": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

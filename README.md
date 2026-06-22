@@ -56,6 +56,15 @@ python3 scripts/run_deck_pipeline.py init \
   --project-dir ./formal-bid-deck --pages 60 --production-mode expert \
   --production-sub-mode formal_bid_image_led
 
+# Deck Master bridge: import a production dispatch package
+python3 scripts/run_deck_pipeline.py deck-master-import \
+  --input <deck-master-run>/generation_dispatch/dispatch_package.json \
+  --project-dir ./deck-master-bridge-work
+
+# After HTML assemble and screenshot-pages finish, export canonical v2 results
+python3 scripts/run_deck_pipeline.py deck-master-export \
+  --project-dir ./deck-master-bridge-work
+
 # Expert Mode (v2.0): extract claims + gaps for expert interview
 python3 scripts/run_deck_pipeline.py expert-interview \
   --project-dir ./my-deck
@@ -318,6 +327,20 @@ When content governance is required, add `--content-governance` to `validate`. T
 When `formal_bid_image_led` is active, `generate-assets` also reads `page_registry.md` and derives full-page image jobs from source IDs and actual PPT page numbers.
 
 Use `assemble-formal-images` after Go decisions are recorded to copy approved source-id images into an actual-page image directory for PPT assembly.
+
+## Deck Master Bridge
+
+Deck Master production runs can dispatch generation tasks to PPT Deck Pro Max through `generation_dispatch/dispatch_package.json`.
+
+Bridge flow:
+
+1. Import the Deck Master dispatch package with `deck-master-import`.
+2. Build the requested pages through the normal PPT Deck Pro Max flow.
+3. Run HTML assemble and `screenshot-pages` so each page has a real HTML source and PNG preview.
+4. Export `deck_generation_result.v2` files with `deck-master-export`.
+5. Import those result files back into Deck Master from `<deck-master-run>/generation_results`.
+
+`deck-master-export` copies existing project artifacts into the Deck Master run directory and writes one result JSON per task. It fails when assembled HTML, screenshots, run/session binding, source fingerprint, or safe run-relative paths are missing.
 
 Minimal smoke path:
 
