@@ -65,6 +65,75 @@ SPEAKER_NOTE_PATTERN = re.compile(
     r"^>\s*演讲备注\s*[:：]\s*(.+?)$",
     re.MULTILINE,
 )
+SPEAKER_SCRIPT_LABELS = {"讲者话术"}
+LEGACY_SPEAKER_NOTE_LABELS = {"演讲备注"}
+PRODUCTION_NOTE_LABELS = {"制作备注"}
+SPEAKER_CUE_LABELS = {"讲者提示"}
+BLOCKQUOTE_FIELD_PATTERN = re.compile(r"^>\s*([^:：]+)\s*[:：]\s*(.*)$")
+
+
+def _extract_blockquote_fields(
+    text: str,
+    labels: set[str],
+    *,
+    allow_continuation: bool = True,
+) -> dict[int, list[str]]:
+    slices = extract_page_slices(text)
+    fields: dict[int, list[str]] = {}
+    for page_no, section in slices.items():
+        current_label: str | None = None
+        for raw_line in section.splitlines():
+            line = raw_line.strip()
+            if not line.startswith(">"):
+                current_label = None
+                continue
+            match = BLOCKQUOTE_FIELD_PATTERN.match(line)
+            if match:
+                label = match.group(1).strip()
+                value = match.group(2).strip()
+                current_label = label if label in labels else None
+                if current_label and value:
+                    fields.setdefault(page_no, []).append(value)
+                continue
+            if allow_continuation and current_label in labels:
+                continuation = line[1:].strip()
+                if continuation:
+                    fields.setdefault(page_no, []).append(continuation)
+    return fields
+
+
+def _join_field_values(values_by_page: dict[int, list[str]]) -> dict[int, str]:
+    return {
+        page_no: " ".join(value.strip() for value in values if value.strip())
+        for page_no, values in values_by_page.items()
+        if any(value.strip() for value in values)
+    }
+
+
+def extract_speaker_scripts(text: str, *, allow_legacy: bool = True) -> dict[int, str]:
+    """Extract customer-sayable speaker scripts from deck_clean_pages.md.
+
+    Preferred format: > 讲者话术: ...
+    Legacy format: > 演讲备注: ... (only when allow_legacy=True and no new script exists on the same page)
+    """
+    scripts = _join_field_values(_extract_blockquote_fields(text, SPEAKER_SCRIPT_LABELS))
+    if not allow_legacy:
+        return scripts
+
+    legacy_notes = extract_speaker_notes(text)
+    for page_no, note in legacy_notes.items():
+        scripts.setdefault(page_no, note)
+    return scripts
+
+
+def extract_production_notes(text: str) -> dict[int, str]:
+    """Extract private production notes. These must never be exported as speaker notes."""
+    return _join_field_values(_extract_blockquote_fields(text, PRODUCTION_NOTE_LABELS))
+
+
+def extract_speaker_cues(text: str) -> dict[int, str]:
+    """Extract private speaker operation cues such as pauses or transitions."""
+    return _join_field_values(_extract_blockquote_fields(text, SPEAKER_CUE_LABELS))
 
 
 def extract_speaker_notes(text: str) -> dict[int, str]:

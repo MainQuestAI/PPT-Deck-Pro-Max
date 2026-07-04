@@ -9,7 +9,8 @@ from pathlib import Path
 
 from check_layout_stability import detect_layout_stability_issues
 from generate_review_package import summarize_expert_mode
-from page_parser import extract_page_slices, extract_speaker_notes
+from page_parser import extract_page_slices, extract_speaker_scripts
+from validate_external_language_contract import DEFAULT_FORBIDDEN_TERMS, first_forbidden_term
 
 try:
     from PIL import Image, ImageDraw
@@ -292,7 +293,7 @@ def detect_missing_speaker_notes(state: dict, clean_pages_text: str | None) -> d
     issues: dict[str, list[str]] = {}
     if not clean_pages_text:
         return issues
-    notes = extract_speaker_notes(clean_pages_text)
+    notes = extract_speaker_scripts(clean_pages_text, allow_legacy=True)
     for page in state.get("pages", []):
         role = page.get("role", "")
         if not role.startswith("hero_"):
@@ -304,6 +305,10 @@ def detect_missing_speaker_notes(state: dict, clean_pages_text: str | None) -> d
         page_no = int(match.group(1))
         if page_no not in notes:
             issues.setdefault(page_id, []).append("speaker_notes_missing")
+            continue
+        term = first_forbidden_term(notes[page_no], list(DEFAULT_FORBIDDEN_TERMS))
+        if term:
+            issues.setdefault(page_id, []).append(f"internal_language_leak:{term}")
     return issues
 
 

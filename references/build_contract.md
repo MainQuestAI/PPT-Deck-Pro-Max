@@ -33,10 +33,10 @@
 
 ### Speaker Notes
 
-如果 `speaker_notes.json` 或 `build_context.json` 中包含 speaker notes，写入：
+如果 `speaker_notes.json` 或 `build_context.json` 中包含 speaker notes，只写入 `speaker_script`：
 
 ```html
-<aside class="notes" aria-hidden="true">演讲备注内容</aside>
+<aside class="notes" aria-hidden="true">现场可说的话术</aside>
 ```
 
 ### 配图资产
@@ -71,10 +71,12 @@
 用 `python-pptx` 写入：
 
 ```python
-slide.notes_slide.notes_text_frame.text = "演讲备注内容"
+slide.notes_slide.notes_text_frame.text = "现场可说的话术"
 ```
 
 或使用 `scripts/inject_speaker_notes.py` 后处理注入。
+
+`> 制作备注:`、`> 讲者提示:`、`production_note`、`agent_trace` 等私有字段禁止进入 PPTX notes 或 HTML notes。
 
 ### 配图资产
 

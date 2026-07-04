@@ -1,0 +1,19 @@
+{
+  "audience": "客户高层 / 业务负责人",
+  "scenario": "现场汇报",
+  "voice": {
+    "allowed": ["结论先行", "业务结果导向", "证据驱动"],
+    "forbidden": ["生产过程描述", "页面职责说明", "prompt 元数据"]
+  },
+  "forbidden_terms": [
+    "这一页负责",
+    "proof",
+    "回答客户顾虑"
+  ],
+  "expression_examples": [
+    {
+      "internal_form": "这一页负责回答客户顾虑",
+      "customer_form": "客户最关心的风险可以被提前识别、量化并闭环"
+    }
+  ]
+}

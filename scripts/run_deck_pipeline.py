@@ -9,11 +9,14 @@ from pathlib import Path
 
 from init_deck_project import init_project
 from init_slide_state import PRODUCTION_SUB_MODES, build_state
+from page_parser import extract_page_slices
+from validate_external_language_contract import DEFAULT_FORBIDDEN_TERMS
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_ROOT = SCRIPT_DIR.parent
 PRESET_CHOICES = ["solution_deck", "product_intro", "internal_strategy", "industry_pov", "business_partnership"]
+LANGUAGE_CONTRACT_PRESET_CHOICES = ["solution_deck", "formal_bid_image_led", "internal_strategy", "industry_pov"]
 
 
 def run_script(script_name: str, *args: str) -> None:
@@ -33,6 +36,26 @@ def load_json(path: Path) -> dict:
 
 def save_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def unique_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        text = str(value).strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        result.append(text)
+    return result
+
+
+def load_language_contract_preset(preset: str) -> dict:
+    presets_path = SKILL_ROOT / "references" / "language_contract_presets.json"
+    presets = load_json(presets_path)
+    if preset not in presets:
+        raise SystemExit(f"[ERROR] language contract preset not found: {preset}")
+    return json.loads(json.dumps(presets[preset], ensure_ascii=False))
 
 
 def upsert_brief_field(brief_path: Path, field: str, value: str) -> None:
@@ -241,7 +264,113 @@ def cmd_validate(args: argparse.Namespace) -> None:
         cmd.append("--content-governance")
     if getattr(args, "longform_governance", False):
         cmd.append("--longform-governance")
+    if getattr(args, "external_language_contract", False):
+        cmd.append("--external-language-contract")
     run_script("validate_deck_outputs.py", *cmd)
+
+
+def cmd_language_contract(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    output = Path(args.output).expanduser().resolve() if args.output else project_dir / "audience_language_contract.json"
+    if output.exists() and not args.force:
+        print(f"[OK] language contract already exists: {output}")
+        return
+    preset_name = args.preset or "solution_deck"
+    payload = load_language_contract_preset(preset_name)
+    payload["preset"] = preset_name
+    if args.audience:
+        payload["audience"] = args.audience
+    if args.scenario:
+        payload["scenario"] = args.scenario
+    preset_terms = payload.get("forbidden_terms", [])
+    payload["forbidden_terms"] = unique_strings([*DEFAULT_FORBIDDEN_TERMS, *preset_terms])
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[OK] wrote {output}")
+
+
+def _customer_safe_lines(section: str) -> list[str]:
+    lines: list[str] = []
+    for raw_line in section.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(">"):
+            continue
+        if line.startswith("#"):
+            continue
+        if line.startswith("- "):
+            line = line[2:].strip()
+        if line:
+            lines.append(line)
+    return lines
+
+
+def cmd_external_message_pack(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    clean_pages = Path(args.clean_pages).expanduser().resolve() if args.clean_pages else project_dir / "deck_clean_pages.md"
+    output = Path(args.output).expanduser().resolve() if args.output else project_dir / "deck_external_message_pack.json"
+    if not clean_pages.exists():
+        raise SystemExit(f"[ERROR] clean pages not found: {clean_pages}")
+    if output.exists() and not args.force:
+        print(f"[OK] external message pack already exists: {output}")
+        return
+    pages = []
+    for page_no, section in sorted(extract_page_slices(clean_pages.read_text(encoding="utf-8")).items()):
+        lines = _customer_safe_lines(section)
+        pages.append(
+            {
+                "page_id": f"slide_{page_no:02d}",
+                "business_problem": lines[0] if lines else "",
+                "customer_relevance": "",
+                "allowed_claims": lines[:3],
+                "evidence_refs": [],
+                "visual_refs": [],
+            }
+        )
+    payload = {"pages": pages}
+    output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[OK] wrote {output}")
+
+
+def cmd_validate_language(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir), "--require-contract"]
+    if args.language_contract:
+        cmd.extend(["--language-contract", str(Path(args.language_contract).expanduser().resolve())])
+    if args.clean_pages:
+        cmd.extend(["--clean-pages", str(Path(args.clean_pages).expanduser().resolve())])
+    if args.message_pack:
+        cmd.extend(["--message-pack", str(Path(args.message_pack).expanduser().resolve())])
+    if args.customer_copy:
+        cmd.extend(["--customer-copy", str(Path(args.customer_copy).expanduser().resolve())])
+    if args.speaker_notes:
+        cmd.extend(["--speaker-notes", str(Path(args.speaker_notes).expanduser().resolve())])
+    if args.html_path:
+        cmd.extend(["--html-path", str(Path(args.html_path).expanduser().resolve())])
+    if args.pptx_path:
+        cmd.extend(["--pptx-path", str(Path(args.pptx_path).expanduser().resolve())])
+    if args.json_output:
+        cmd.extend(["--json-output", str(Path(args.json_output).expanduser().resolve())])
+    if args.report_output:
+        cmd.extend(["--report-output", str(Path(args.report_output).expanduser().resolve())])
+    if args.no_report:
+        cmd.append("--no-report")
+    run_script("validate_external_language_contract.py", *cmd)
+
+
+def cmd_migrate_language(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    cmd = ["--project-dir", str(project_dir)]
+    if args.clean_pages:
+        cmd.extend(["--clean-pages", str(Path(args.clean_pages).expanduser().resolve())])
+    if args.dry_run:
+        cmd.append("--dry-run")
+    if args.write:
+        cmd.append("--write")
+    if args.confirm_production_notes:
+        cmd.append("--confirm-production-notes")
+    if args.report_output:
+        cmd.extend(["--report-output", str(Path(args.report_output).expanduser().resolve())])
+    run_script("migrate_language_notes.py", *cmd)
 
 
 def cmd_preset(args: argparse.Namespace) -> None:
@@ -782,8 +911,48 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
     p_validate.add_argument("--content-governance", action="store_true", help="Also check source digest, claim map, capacity plan, and gap gate")
     p_validate.add_argument("--longform-governance", action="store_true", help="Also check budget tiers, section packages, and dense archetype coverage")
+    p_validate.add_argument("--external-language-contract", action="store_true", help="Also check customer-visible language boundaries")
     p_validate.add_argument("--production-sub-mode", choices=PRODUCTION_SUB_MODES, help="Override inferred production sub-mode")
     p_validate.set_defaults(func=cmd_validate)
+
+    p_language = sub.add_parser("language-contract", help="Create a default audience language contract")
+    p_language.add_argument("--project-dir", required=True)
+    p_language.add_argument("--preset", choices=LANGUAGE_CONTRACT_PRESET_CHOICES, default="solution_deck")
+    p_language.add_argument("--audience")
+    p_language.add_argument("--scenario")
+    p_language.add_argument("--output")
+    p_language.add_argument("--force", action="store_true")
+    p_language.set_defaults(func=cmd_language_contract)
+
+    p_pack = sub.add_parser("external-message-pack", help="Create a customer-safe input pack scaffold")
+    p_pack.add_argument("--project-dir", required=True)
+    p_pack.add_argument("--clean-pages")
+    p_pack.add_argument("--output")
+    p_pack.add_argument("--force", action="store_true")
+    p_pack.set_defaults(func=cmd_external_message_pack)
+
+    p_validate_language = sub.add_parser("validate-language", help="Validate customer-visible language boundaries")
+    p_validate_language.add_argument("--project-dir", required=True)
+    p_validate_language.add_argument("--language-contract")
+    p_validate_language.add_argument("--clean-pages")
+    p_validate_language.add_argument("--message-pack")
+    p_validate_language.add_argument("--customer-copy")
+    p_validate_language.add_argument("--speaker-notes")
+    p_validate_language.add_argument("--html-path")
+    p_validate_language.add_argument("--pptx-path")
+    p_validate_language.add_argument("--json-output")
+    p_validate_language.add_argument("--report-output")
+    p_validate_language.add_argument("--no-report", action="store_true")
+    p_validate_language.set_defaults(func=cmd_validate_language)
+
+    p_migrate_language = sub.add_parser("migrate-language", help="Migrate legacy speaker note labels")
+    p_migrate_language.add_argument("--project-dir", required=True)
+    p_migrate_language.add_argument("--clean-pages")
+    p_migrate_language.add_argument("--dry-run", action="store_true")
+    p_migrate_language.add_argument("--write", action="store_true")
+    p_migrate_language.add_argument("--confirm-production-notes", action="store_true")
+    p_migrate_language.add_argument("--report-output")
+    p_migrate_language.set_defaults(func=cmd_migrate_language)
 
     p_preset = sub.add_parser("preset", help="Apply a common deck preset")
     p_preset.add_argument("--project-dir", required=True)
@@ -814,7 +983,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_handoff = sub.add_parser("handoff", help="Generate a ready-to-send AI worker handoff prompt")
     p_handoff.add_argument("--project-dir", required=True)
-    p_handoff.add_argument("--role", required=True, choices=["brief", "visual", "build", "review"])
+    p_handoff.add_argument("--role", required=True, choices=["brief", "visual", "build", "review", "external-expression"])
     p_handoff.add_argument("--page-ids", nargs="*", default=[])
     p_handoff.add_argument("--batch-id")
     p_handoff.add_argument("--output")

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audience Language Contract",
+  "type": "object",
+  "required": ["audience", "scenario", "voice", "forbidden_terms", "expression_examples"],
+  "properties": {
+    "audience": { "type": "string", "minLength": 1 },
+    "scenario": { "type": "string", "minLength": 1 },
+    "preset": { "type": "string" },
+    "voice": {
+      "type": "object",
+      "required": ["allowed", "forbidden"],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbidden": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "forbidden_terms": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expression_examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["internal_form", "customer_form"],
+        "properties": {
+          "internal_form": { "type": "string", "minLength": 1 },
+          "customer_form": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

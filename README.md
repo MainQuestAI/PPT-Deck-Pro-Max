@@ -82,6 +82,29 @@ python3 scripts/run_deck_pipeline.py finalize-interview \
 python3 scripts/run_deck_pipeline.py visual-composition \
   --project-dir ./my-deck
 
+# Customer-language-first command chain
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./my-deck --pages 8
+
+python3 scripts/run_deck_pipeline.py language-contract \
+  --project-dir ./my-deck --preset solution_deck
+
+python3 scripts/run_deck_pipeline.py external-message-pack \
+  --project-dir ./my-deck
+
+python scripts/run_deck_pipeline.py handoff \
+  --project-dir ./my-deck --role external-expression
+
+python3 scripts/run_deck_pipeline.py validate-language \
+  --project-dir ./my-deck --json-output ./my-deck/language_gate_result.json
+
+python3 scripts/inject_speaker_notes.py \
+  --project-dir ./my-deck --json-output ./my-deck/speaker_notes.json
+
+# Legacy migration preview
+python3 scripts/run_deck_pipeline.py migrate-language \
+  --project-dir ./my-deck --dry-run
+
 # Generate a handoff prompt for Build AI
 python scripts/run_deck_pipeline.py handoff \
   --project-dir ./my-deck --role build --page-ids slide_05

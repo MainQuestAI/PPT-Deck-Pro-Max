@@ -7,7 +7,7 @@ from pathlib import Path
 
 from context_manager import read as read_text, select_clean_pages
 from generate_role_prompt import build_build_prompt
-from page_parser import extract_page_slices, extract_speaker_notes, page_id_to_number
+from page_parser import extract_page_slices, extract_speaker_scripts, page_id_to_number
 
 
 def load_json(path: Path) -> dict:
@@ -38,7 +38,7 @@ def build_page_context(
     selected, warnings = select_clean_pages(clean_pages_text, [page_id], False)
     bundle["inputs"]["deck_clean_pages"] = selected
     bundle["warnings"].extend(warnings)
-    notes = extract_speaker_notes(clean_pages_text)
+    notes = extract_speaker_scripts(clean_pages_text, allow_legacy=True)
     page_no = page_id_to_number(page_id)
     if page_no and page_no in notes:
         bundle["inputs"]["speaker_notes"] = {page_id: notes[page_no]}

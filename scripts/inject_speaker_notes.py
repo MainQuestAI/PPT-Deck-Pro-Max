@@ -9,7 +9,8 @@ import argparse
 import json
 from pathlib import Path
 
-from page_parser import extract_speaker_notes
+from page_parser import extract_speaker_notes, extract_speaker_scripts
+from validate_external_language_contract import first_forbidden_term, load_forbidden_terms
 
 try:
     from pptx import Presentation
@@ -45,6 +46,28 @@ def write_notes_json(notes: dict[int, str], output_path: Path) -> None:
     output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def validate_notes(
+    notes: dict[int, str],
+    forbidden_terms: list[str],
+    *,
+    project_dir: Path,
+) -> None:
+    for page_no, note in sorted(notes.items()):
+        term = first_forbidden_term(note, forbidden_terms)
+        if term:
+            payload = {
+                "file": "deck_clean_pages.md",
+                "page_id": f"slide_{page_no:02d}",
+                "field": "speaker_script",
+                "forbidden_term": term,
+                "next_command": (
+                    "python3 scripts/run_deck_pipeline.py handoff "
+                    f"--project-dir {project_dir} --role external-expression"
+                ),
+            }
+            raise SystemExit("[ERROR] speaker script contains internal language:\n" + json.dumps(payload, ensure_ascii=False, indent=2))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Inject speaker notes into PPTX and export speaker_notes.json.")
     parser.add_argument("--project-dir", required=True)
@@ -52,18 +75,31 @@ def main() -> None:
     parser.add_argument("--pptx-path", help="PPTX file to inject notes into")
     parser.add_argument("--pptx-output", help="Output PPTX path (default: overwrite input)")
     parser.add_argument("--json-output", help="Output speaker_notes.json path")
+    parser.add_argument("--language-contract", help="Path to audience_language_contract.json")
+    parser.add_argument("--allow-missing-language-contract", action="store_true", help="Use default forbidden terms if no language contract exists")
+    parser.add_argument("--legacy-speaker-notes", action="store_true", help="Allow legacy `> 演讲备注:` as a speaker script source")
     args = parser.parse_args()
 
     project_dir = Path(args.project_dir).expanduser().resolve()
     clean_pages = Path(args.clean_pages or project_dir / "deck_clean_pages.md").expanduser().resolve()
+    language_contract = Path(args.language_contract or project_dir / "audience_language_contract.json").expanduser().resolve()
 
     if not clean_pages.exists():
         raise SystemExit(f"[ERROR] clean pages not found: {clean_pages}")
+    if not language_contract.exists() and not args.allow_missing_language_contract:
+        raise SystemExit(f"[ERROR] language contract not found: {language_contract}")
 
-    notes = extract_speaker_notes(clean_pages.read_text(encoding="utf-8"))
+    clean_pages_text = clean_pages.read_text(encoding="utf-8")
+    legacy_notes = extract_speaker_notes(clean_pages_text)
+    if legacy_notes and not args.legacy_speaker_notes:
+        raise SystemExit("[ERROR] legacy speaker note format detected. Use `> 讲者话术:` or pass --legacy-speaker-notes.")
+
+    notes = extract_speaker_scripts(clean_pages_text, allow_legacy=args.legacy_speaker_notes)
     if not notes:
-        print("[OK] no speaker notes found in clean pages")
+        print("[OK] no speaker scripts found in clean pages")
         return
+    forbidden_terms = load_forbidden_terms(language_contract if language_contract.exists() else None)
+    validate_notes(notes, forbidden_terms, project_dir=project_dir)
 
     # Export JSON (always)
     json_output = Path(args.json_output or project_dir / "speaker_notes.json").expanduser().resolve()

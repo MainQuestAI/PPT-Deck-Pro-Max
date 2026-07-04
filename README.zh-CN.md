@@ -82,6 +82,29 @@ python3 scripts/run_deck_pipeline.py finalize-interview \
 python3 scripts/run_deck_pipeline.py visual-composition \
   --project-dir ./my-deck
 
+# 客户语域优先完整命令链
+python3 scripts/run_deck_pipeline.py init \
+  --project-dir ./my-deck --pages 8
+
+python3 scripts/run_deck_pipeline.py language-contract \
+  --project-dir ./my-deck --preset solution_deck
+
+python3 scripts/run_deck_pipeline.py external-message-pack \
+  --project-dir ./my-deck
+
+python scripts/run_deck_pipeline.py handoff \
+  --project-dir ./my-deck --role external-expression
+
+python3 scripts/run_deck_pipeline.py validate-language \
+  --project-dir ./my-deck --json-output ./my-deck/language_gate_result.json
+
+python3 scripts/inject_speaker_notes.py \
+  --project-dir ./my-deck --json-output ./my-deck/speaker_notes.json
+
+# 旧格式迁移预检
+python3 scripts/run_deck_pipeline.py migrate-language \
+  --project-dir ./my-deck --dry-run
+
 # 为 Build AI 生成交接 prompt
 python scripts/run_deck_pipeline.py handoff \
   --project-dir ./my-deck --role build --page-ids slide_05
@@ -344,7 +367,7 @@ QA 引擎在 9 大类下检查 25+ 项：
 - **密度** — 文字溢出、文档模式下限（150 字）、hero 页阈值
 - **组件漂移** — 未定义的视觉组件
 - **几何稳定性** — 中心偏移、连线断裂、占比
-- **演讲备注** — hero 页必须有演讲备注
+- **讲者话术** — hero 页必须有 `> 讲者话术:`
 - **配图** — 证据页必须有截图或概念化 UI
 - **视觉平坦** — 缺少视觉主角的页面
 - **世界观闭合度** — 翻完后是否觉得"系统已存在"

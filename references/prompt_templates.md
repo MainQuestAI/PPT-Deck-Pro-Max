@@ -44,7 +44,7 @@
 - 不写技术实现
 - 不写风格语言
 - 如果 `deck_narrative_arc.md` 已存在，后续页面文稿必须尊重 beat 序列和过渡逻辑
-- hero pages 的 clean pages 必须附带 `> 演讲备注:` 区块
+- hero pages 的 clean pages 必须附带 `> 讲者话术:` 区块；旧 `> 演讲备注:` 只用于 legacy 兼容
 - proof beat 和 hero 页应使用 `> 配图:` 声明所需的产品截图（参见 `references/asset_pipeline_guide.md`）
 - 如果需要补充后续页面文稿约束，统一要求 `deck_clean_pages.md` 使用 `## 第 N 页` 作为分页符
 - 如果处于返工期，优先接收按角色过滤后的 rework handoff，不要自行扫描完整 rollback plan
@@ -90,7 +90,8 @@
 - 如果 visual_composition 指定了 gauge_chart / radar_chart / bar_chart / flow_chain / loop_diagram，必须用 SVG 或 CSS 渲染出来
 - 如果 visual_composition 指定了 icon，必须使用 SVG icon（不是 emoji）
 - 如果 visual_composition 包含 illustrative data，渲染图表时使用这些数据
-- 如果 clean pages 包含 `> 演讲备注:`，必须传递到成品
+- 如果 clean pages 包含 `> 讲者话术:`，必须把它作为成品 speaker notes 来源
+- 不得把 `> 制作备注:` 或 `> 讲者提示:` 写入成品 speaker notes
 - 如果 build context 包含 `assets` 字段，按路径引用图片嵌入
 - 如果需要回补 `deck_clean_pages.md`，必须保持 `## 第 N 页` 分页格式
 - 如果处于返工期，只处理 build rework handoff 中列出的页面
@@ -139,5 +140,5 @@
 - 如果 `review_package.json.longform_governance_summary.enabled=true`，先检查页数预算、章节重复风险、章节包完成度和 dense archetype 覆盖
 - 重点检查是否有普通 AI 味、视觉层级是否清晰、关键页是否失焦、是否偏离既定视觉系统
 - 检查叙事弧线是否连贯：beat 序列是否合理、过渡逻辑是否成立、有无节奏单调
-- 检查 hero pages 是否有演讲备注
+- 检查 hero pages 是否有 `> 讲者话术:`
 - findings 会被系统自动映射成 `review_rollback_plan.json/.md`，所以 `type` 必须认真选择，不能滥用 `other`

@@ -264,10 +264,53 @@ def build_review_prompt(project_dir: Path, review_package_path: Path | None = No
     )
 
 
+def build_external_expression_prompt(project_dir: Path) -> str:
+    language_contract = project_dir / "audience_language_contract.json"
+    message_pack = project_dir / "deck_external_message_pack.json"
+    customer_copy = project_dir / "customer_visible_copy.json"
+    return "\n".join(
+        [
+            "# External Expression AI Handoff",
+            "",
+            "请只基于客户安全输入包生成客户可见标题、正文、insight 和现场可说话术。",
+            "",
+            "## 必看输入",
+            "",
+            "- `audience_language_contract.json`",
+            "- `deck_external_message_pack.json`",
+            "",
+            "## 输出文件",
+            "",
+            "- `customer_visible_copy.json`",
+            "",
+            "## 输出要求",
+            "",
+            "- 每页输出 `page_id`、`customer_title`、`customer_body`、`customer_insight`、`speaker_script`",
+            "- `speaker_script` 必须是现场能直接说出口的话",
+            "- 不输出讲者停顿、手势、转场操作提示",
+            "- 不输出制作备注、页面职责、模型过程或任务状态",
+            "- 不使用 `audience_language_contract.json.forbidden_terms` 中的表达",
+            "- 如果输入不足以写出客户可见表达，输出 blocking reason，不要补造事实",
+            "",
+            "## 当前语言契约",
+            "",
+            f"`{language_contract}`",
+            "",
+            "## 客户安全输入包",
+            "",
+            f"`{message_pack}`",
+            "",
+            "## 写入目标",
+            "",
+            f"`{customer_copy}`",
+        ]
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a ready-to-send handoff prompt for a specific deck role.")
     parser.add_argument("--project-dir", required=True)
-    parser.add_argument("--role", required=True, choices=["brief", "visual", "build", "review"])
+    parser.add_argument("--role", required=True, choices=["brief", "visual", "build", "review", "external-expression"])
     parser.add_argument("--page-ids", nargs="*", default=[])
     parser.add_argument("--batch-id")
     parser.add_argument("--context-path")
@@ -289,6 +332,8 @@ def main() -> None:
             Path(args.context_path).expanduser().resolve() if args.context_path else None,
             args.batch_id,
         )
+    elif args.role == "external-expression":
+        text = build_external_expression_prompt(project_dir)
     else:
         text = build_review_prompt(
             project_dir,

@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from content_governance import validate_content_governance, validate_longform_governance
+from validate_external_language_contract import validate_project_language
 
 
 CORE_ARTIFACTS = [
@@ -103,6 +104,7 @@ def main() -> None:
     parser.add_argument("--expert-mode", action="store_true", help="Also check expert interview artifacts")
     parser.add_argument("--content-governance", action="store_true", help="Also check source digest, claim map, capacity plan, and gap gate")
     parser.add_argument("--longform-governance", action="store_true", help="Also check budget tiers, section packages, and dense archetype coverage")
+    parser.add_argument("--external-language-contract", action="store_true", help="Also check customer-visible language boundaries")
     parser.add_argument("--production-sub-mode", choices=["standard_deck", "formal_bid_image_led"], help="Override inferred production sub-mode")
     args = parser.parse_args()
 
@@ -130,6 +132,13 @@ def main() -> None:
     elif args.content_governance:
         governance_errors, _ = validate_content_governance(project_dir)
         missing.extend(f"content_governance:{err}" for err in governance_errors)
+
+    if args.external_language_contract:
+        language_errors = validate_project_language(project_dir, require_contract=True)
+        missing.extend(
+            "external_language:" + json.dumps(error, ensure_ascii=False, sort_keys=True)
+            for error in language_errors
+        )
 
     if getattr(args, "expert_mode", False):
         expert_artifacts = ["deck_expert_context.md", "interview_session.json"]
