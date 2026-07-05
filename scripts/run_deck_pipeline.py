@@ -10,7 +10,13 @@ from pathlib import Path
 from init_deck_project import init_project
 from init_slide_state import PRODUCTION_SUB_MODES, build_state
 from page_parser import extract_page_slices
-from validate_external_language_contract import DEFAULT_FORBIDDEN_TERMS
+from validate_external_language_contract import (
+    DEFAULT_FORBIDDEN_TERMS,
+    DEFAULT_REPORT_NAME,
+    build_language_gate_report,
+    resolve_scanned_files,
+    validate_project_language,
+)
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -35,6 +41,11 @@ def load_json(path: Path) -> dict:
 
 
 def save_json(path: Path, payload: dict) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def write_json_file(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
@@ -371,6 +382,187 @@ def cmd_migrate_language(args: argparse.Namespace) -> None:
     if args.report_output:
         cmd.extend(["--report-output", str(Path(args.report_output).expanduser().resolve())])
     run_script("migrate_language_notes.py", *cmd)
+
+
+def _external_expression_command(project_dir: Path) -> str:
+    return f"python3 scripts/run_deck_pipeline.py handoff --project-dir {project_dir} --role external-expression"
+
+
+def _pipeline_failure(
+    project_dir: Path,
+    step: str,
+    error: str,
+    *,
+    file: str | None = None,
+    field: str | None = None,
+    forbidden_term: str = "",
+) -> dict:
+    return {
+        "status": "failed",
+        "step": step,
+        "error": error,
+        "violations": [
+            {
+                "step": step,
+                "file": file or str(project_dir),
+                "page_id": "__global__",
+                "field": field or step,
+                "forbidden_term": forbidden_term,
+                "next_command": _external_expression_command(project_dir),
+            }
+        ],
+        "next_command": _external_expression_command(project_dir),
+    }
+
+
+def _emit_customer_pipeline_result(args: argparse.Namespace, payload: dict, *, failed: bool = False) -> None:
+    if args.json_output:
+        write_json_file(Path(args.json_output).expanduser().resolve(), payload)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    if failed:
+        raise SystemExit(1)
+
+
+def _run_customer_step(project_dir: Path, steps: list[dict], step: str, action) -> None:
+    try:
+        detail = action() or {}
+    except SystemExit as exc:
+        raise SystemExit(_pipeline_failure(project_dir, step, str(exc), field=step))
+    except Exception as exc:
+        raise SystemExit(_pipeline_failure(project_dir, step, str(exc), field=step))
+    payload = {"step": step, "status": "ok"}
+    payload.update(detail)
+    steps.append(payload)
+
+
+def cmd_customer_language_first(args: argparse.Namespace) -> None:
+    project_dir = Path(args.project_dir).expanduser().resolve()
+    steps: list[dict] = []
+    contract_path = project_dir / "audience_language_contract.json"
+    message_pack_path = project_dir / "deck_external_message_pack.json"
+    handoff_path = project_dir / "external-expression_handoff.md"
+    report_output = Path(args.report_output).expanduser().resolve() if args.report_output else project_dir / DEFAULT_REPORT_NAME
+    speaker_notes_path = project_dir / "speaker_notes.json"
+
+    if not project_dir.exists():
+        payload = _pipeline_failure(project_dir, "project-dir", f"project dir not found: {project_dir}", file=str(project_dir), field="project_dir")
+        _emit_customer_pipeline_result(args, payload, failed=True)
+
+    try:
+        def ensure_contract() -> dict:
+            if contract_path.exists() and not args.force_contract:
+                return {"status": "skipped_existing", "file": str(contract_path)}
+            cmd_language_contract(
+                argparse.Namespace(
+                    project_dir=str(project_dir),
+                    preset=args.preset,
+                    audience=None,
+                    scenario=None,
+                    output=str(contract_path),
+                    force=args.force_contract,
+                )
+            )
+            return {"file": str(contract_path), "preset": args.preset}
+
+        _run_customer_step(project_dir, steps, "language-contract", ensure_contract)
+
+        def ensure_message_pack() -> dict:
+            if message_pack_path.exists() and not args.force_message_pack:
+                return {"status": "skipped_existing", "file": str(message_pack_path)}
+            cmd_external_message_pack(
+                argparse.Namespace(
+                    project_dir=str(project_dir),
+                    clean_pages=None,
+                    output=str(message_pack_path),
+                    force=args.force_message_pack,
+                )
+            )
+            return {"file": str(message_pack_path)}
+
+        _run_customer_step(project_dir, steps, "external-message-pack", ensure_message_pack)
+
+        def write_handoff() -> dict:
+            run_script(
+                "generate_role_prompt.py",
+                "--project-dir", str(project_dir),
+                "--role", "external-expression",
+                "--output", str(handoff_path),
+            )
+            return {"file": str(handoff_path)}
+
+        _run_customer_step(project_dir, steps, "external-expression", write_handoff)
+
+        violations = validate_project_language(project_dir, require_contract=True)
+        violations = [{"step": "validate-language", **violation} for violation in violations]
+        scanned_files = resolve_scanned_files(project_dir)
+        report = build_language_gate_report(project_dir, violations, scanned_files)
+        write_json_file(report_output, report)
+        if violations:
+            payload = {
+                "status": "failed",
+                "step": "validate-language",
+                "project_dir": str(project_dir),
+                "violations": violations,
+                "summary": report,
+                "next_command": _external_expression_command(project_dir),
+            }
+            _emit_customer_pipeline_result(args, payload, failed=True)
+        steps.append(
+            {
+                "step": "validate-language",
+                "status": "ok",
+                "report": str(report_output),
+                "scanned_file_count": report["scanned_file_count"],
+            }
+        )
+
+        def export_notes() -> dict:
+            if args.skip_notes:
+                return {"status": "skipped", "reason": "skip-notes"}
+            cmd = [
+                "--project-dir", str(project_dir),
+                "--json-output", str(speaker_notes_path),
+            ]
+            if args.legacy_speaker_notes:
+                cmd.append("--legacy-speaker-notes")
+            run_script("inject_speaker_notes.py", *cmd)
+            return {"file": str(speaker_notes_path), "legacy": bool(args.legacy_speaker_notes)}
+
+        _run_customer_step(project_dir, steps, "speaker-notes", export_notes)
+    except SystemExit as exc:
+        if isinstance(exc.code, dict):
+            _emit_customer_pipeline_result(args, exc.code, failed=True)
+        raise
+
+    payload = {
+        "status": "passed",
+        "project_dir": str(project_dir),
+        "preset": args.preset,
+        "steps": steps,
+        "outputs": {
+            "audience_language_contract": str(contract_path),
+            "external_message_pack": str(message_pack_path),
+            "external_expression_handoff": str(handoff_path),
+            "language_gate_report": str(report_output),
+            "speaker_notes": None if args.skip_notes else str(speaker_notes_path),
+        },
+    }
+    _emit_customer_pipeline_result(args, payload)
+
+
+def cmd_sync_install(args: argparse.Namespace) -> None:
+    cmd = ["--source-root", str(SKILL_ROOT)]
+    if args.deck_master_current:
+        cmd.extend(["--deck-master-current", str(Path(args.deck_master_current).expanduser().resolve())])
+    if args.write:
+        cmd.append("--write")
+    else:
+        cmd.append("--dry-run")
+    if args.json:
+        cmd.append("--json")
+    if args.json_output:
+        cmd.extend(["--json-output", str(Path(args.json_output).expanduser().resolve())])
+    run_script("sync_install.py", *cmd)
 
 
 def cmd_preset(args: argparse.Namespace) -> None:
@@ -829,9 +1021,16 @@ def cmd_doctor(args: argparse.Namespace) -> None:
         cmd.extend(["--project-dir", str(Path(args.project_dir).expanduser().resolve())])
     if args.json:
         cmd.append("--json")
+    if args.install_status:
+        cmd.append("--install-status")
+    if args.deck_master_current:
+        cmd.extend(["--deck-master-current", str(Path(args.deck_master_current).expanduser().resolve())])
     if args.strict:
         cmd.append("--strict")
-    run_script("doctor.py", *cmd)
+    script_path = SCRIPT_DIR / "doctor.py"
+    result = subprocess.run([sys.executable, str(script_path), *cmd])
+    if result.returncode:
+        raise SystemExit(result.returncode)
 
 
 def cmd_generate_placeholders(args: argparse.Namespace) -> None:
@@ -953,6 +1152,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_migrate_language.add_argument("--confirm-production-notes", action="store_true")
     p_migrate_language.add_argument("--report-output")
     p_migrate_language.set_defaults(func=cmd_migrate_language)
+
+    p_customer_language = sub.add_parser("customer-language-first", help="Run the customer-language-first production chain")
+    p_customer_language.add_argument("--project-dir", required=True)
+    p_customer_language.add_argument("--preset", choices=LANGUAGE_CONTRACT_PRESET_CHOICES, default="solution_deck")
+    p_customer_language.add_argument("--force-contract", action="store_true")
+    p_customer_language.add_argument("--force-message-pack", action="store_true")
+    p_customer_language.add_argument("--json-output")
+    p_customer_language.add_argument("--report-output")
+    p_customer_language.add_argument("--skip-notes", action="store_true")
+    p_customer_language.add_argument("--legacy-speaker-notes", action="store_true")
+    p_customer_language.set_defaults(func=cmd_customer_language_first)
+
+    p_sync_install = sub.add_parser("sync-install", help="Inspect or sync the local ppt-deck-pro-max install entry")
+    p_sync_mode = p_sync_install.add_mutually_exclusive_group()
+    p_sync_mode.add_argument("--dry-run", action="store_true")
+    p_sync_mode.add_argument("--write", action="store_true")
+    p_sync_install.add_argument("--deck-master-current")
+    p_sync_install.add_argument("--json", action="store_true")
+    p_sync_install.add_argument("--json-output")
+    p_sync_install.set_defaults(func=cmd_sync_install)
 
     p_preset = sub.add_parser("preset", help="Apply a common deck preset")
     p_preset.add_argument("--project-dir", required=True)
@@ -1176,6 +1395,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_doctor = sub.add_parser("doctor", help="Check dependencies, schemas, starters, and optional project health")
     p_doctor.add_argument("--project-dir")
     p_doctor.add_argument("--json", action="store_true")
+    p_doctor.add_argument("--install-status", action="store_true")
+    p_doctor.add_argument("--deck-master-current")
     p_doctor.add_argument("--strict", action="store_true", help="Treat warnings as failures")
     p_doctor.set_defaults(func=cmd_doctor)
 

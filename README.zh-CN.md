@@ -43,6 +43,10 @@
 # 先检查本地环境健康度
 python3 scripts/run_deck_pipeline.py doctor
 
+# 检查本机已安装入口是否和当前源码一致
+python3 scripts/run_deck_pipeline.py sync-install --dry-run
+python3 scripts/run_deck_pipeline.py doctor --install-status
+
 # 初始化一套 12 页的方案型 Deck
 python3 scripts/run_deck_pipeline.py init \
   --project-dir ./my-deck --pages 12 --preset solution_deck --production-mode expert
@@ -82,17 +86,38 @@ python3 scripts/run_deck_pipeline.py finalize-interview \
 python3 scripts/run_deck_pipeline.py visual-composition \
   --project-dir ./my-deck
 
-# 客户语域优先完整命令链
+# 新项目：客户语域优先主链路
 python3 scripts/run_deck_pipeline.py init \
   --project-dir ./my-deck --pages 8
 
+python3 scripts/run_deck_pipeline.py customer-language-first \
+  --project-dir ./my-deck --preset solution_deck
+
+# 旧项目：先迁移旧讲者备注标签，再进入同一条主链路
+python3 scripts/run_deck_pipeline.py migrate-language \
+  --project-dir ./my-deck --dry-run
+
+python3 scripts/run_deck_pipeline.py migrate-language \
+  --project-dir ./my-deck --write
+
+python3 scripts/run_deck_pipeline.py customer-language-first \
+  --project-dir ./my-deck --preset solution_deck
+
+# 本机安装：只同步 ppt-deck-pro-max 兼容入口
+python3 scripts/run_deck_pipeline.py sync-install --dry-run
+
+python3 scripts/run_deck_pipeline.py sync-install --write
+
+python3 scripts/run_deck_pipeline.py doctor --install-status
+
+# 高级排障：必要时仍可逐段运行客户语域命令
 python3 scripts/run_deck_pipeline.py language-contract \
   --project-dir ./my-deck --preset solution_deck
 
 python3 scripts/run_deck_pipeline.py external-message-pack \
   --project-dir ./my-deck
 
-python scripts/run_deck_pipeline.py handoff \
+python3 scripts/run_deck_pipeline.py handoff \
   --project-dir ./my-deck --role external-expression
 
 python3 scripts/run_deck_pipeline.py validate-language \

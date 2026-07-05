@@ -43,6 +43,10 @@ Every page gets a visual protagonist (chart, icon chain, gauge, diagram, concept
 # Check local health first
 python3 scripts/run_deck_pipeline.py doctor
 
+# Check whether the installed local skill entry matches this source checkout
+python3 scripts/run_deck_pipeline.py sync-install --dry-run
+python3 scripts/run_deck_pipeline.py doctor --install-status
+
 # Initialize a 12-page solution deck
 python3 scripts/run_deck_pipeline.py init \
   --project-dir ./my-deck --pages 12 --preset solution_deck --production-mode expert
@@ -82,17 +86,38 @@ python3 scripts/run_deck_pipeline.py finalize-interview \
 python3 scripts/run_deck_pipeline.py visual-composition \
   --project-dir ./my-deck
 
-# Customer-language-first command chain
+# Customer-language-first path for new projects
 python3 scripts/run_deck_pipeline.py init \
   --project-dir ./my-deck --pages 8
 
+python3 scripts/run_deck_pipeline.py customer-language-first \
+  --project-dir ./my-deck --preset solution_deck
+
+# Existing projects: migrate old speaker-note labels, then run the same chain
+python3 scripts/run_deck_pipeline.py migrate-language \
+  --project-dir ./my-deck --dry-run
+
+python3 scripts/run_deck_pipeline.py migrate-language \
+  --project-dir ./my-deck --write
+
+python3 scripts/run_deck_pipeline.py customer-language-first \
+  --project-dir ./my-deck --preset solution_deck
+
+# Local install alignment: update only the ppt-deck-pro-max compatibility entry
+python3 scripts/run_deck_pipeline.py sync-install --dry-run
+
+python3 scripts/run_deck_pipeline.py sync-install --write
+
+python3 scripts/run_deck_pipeline.py doctor --install-status
+
+# Advanced: run individual customer-language stages when debugging
 python3 scripts/run_deck_pipeline.py language-contract \
   --project-dir ./my-deck --preset solution_deck
 
 python3 scripts/run_deck_pipeline.py external-message-pack \
   --project-dir ./my-deck
 
-python scripts/run_deck_pipeline.py handoff \
+python3 scripts/run_deck_pipeline.py handoff \
   --project-dir ./my-deck --role external-expression
 
 python3 scripts/run_deck_pipeline.py validate-language \

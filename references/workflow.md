@@ -57,7 +57,10 @@
 
 ```bash
 python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n> --output-mode pptx+html
+python3 scripts/run_deck_pipeline.py sync-install --dry-run
+python3 scripts/run_deck_pipeline.py doctor --install-status
 python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n> --output-mode pptx+html --production-sub-mode formal_bid_image_led
+python3 scripts/run_deck_pipeline.py customer-language-first --project-dir <project-dir> --preset solution_deck
 python3 scripts/run_deck_pipeline.py build-context --project-dir <project-dir> --page-ids slide_01
 python3 scripts/run_deck_pipeline.py stage --project-dir <project-dir> --global-status building
 python3 scripts/run_deck_pipeline.py manifest --project-dir <project-dir> --merge-existing
@@ -78,6 +81,25 @@ python3 scripts/run_deck_pipeline.py assemble-formal-images --project-dir <proje
 这样可以减少手工拼接多个脚本调用时的错误率。
 
 正式评审版建议在 QA 与 validate 阶段同时打开 review、commercial scorecard、layout manifest 相关门禁。
+
+客户语域优先链路建议作为逐页稿后的默认入口：
+
+```bash
+# 新项目：init → customer-language-first → build
+python3 scripts/run_deck_pipeline.py init --project-dir <project-dir> --pages <n>
+python3 scripts/run_deck_pipeline.py customer-language-first --project-dir <project-dir> --preset solution_deck
+python3 scripts/run_deck_pipeline.py handoff --project-dir <project-dir> --role build --page-ids slide_01
+
+# 旧项目：migrate-language --dry-run → --write → customer-language-first
+python3 scripts/run_deck_pipeline.py migrate-language --project-dir <project-dir> --dry-run
+python3 scripts/run_deck_pipeline.py migrate-language --project-dir <project-dir> --write
+python3 scripts/run_deck_pipeline.py customer-language-first --project-dir <project-dir> --preset solution_deck
+
+# 本机安装：sync-install --dry-run → --write → doctor --install-status
+python3 scripts/run_deck_pipeline.py sync-install --dry-run
+python3 scripts/run_deck_pipeline.py sync-install --write
+python3 scripts/run_deck_pipeline.py doctor --install-status
+```
 
 ## 常用快捷入口
 
@@ -246,6 +268,32 @@ python3 scripts/run_deck_pipeline.py section-handoff \
 出图 AI 只吃纯净逐页稿和视觉施工图，不吃长文档。
 每页必须有视觉主角定义（`deck_visual_composition.md`）。
 proof beat 和 hero 页应完成配图需求梳理（`deck_asset_plan.md`），用户已确认获取方式。
+
+### Gate 4.5：客户语域边界通过
+
+客户可见稿、讲者话术、HTML notes 和 PPTX notes 必须只来自客户语域字段。
+
+必须产出或确认：
+
+- `audience_language_contract.json`
+- `deck_external_message_pack.json`
+- `external-expression_handoff.md`
+- `language_gate_report.json`
+- `speaker_notes.json`（存在 `> 讲者话术:` 时）
+
+推荐默认命令：
+
+```bash
+python3 scripts/run_deck_pipeline.py customer-language-first \
+  --project-dir <project-dir> --preset solution_deck
+```
+
+旧 `> 演讲备注:` 只作为迁移兼容入口。旧项目先运行：
+
+```bash
+python3 scripts/run_deck_pipeline.py migrate-language --project-dir <project-dir> --dry-run
+python3 scripts/run_deck_pipeline.py migrate-language --project-dir <project-dir> --write
+```
 
 ### Gate 5：Visual System 锁定
 
